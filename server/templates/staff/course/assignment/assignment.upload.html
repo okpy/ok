@@ -63,14 +63,19 @@
                   </section>
                   <br/>
                   <section class="form-area csv-area visible">
-                    <h4>Upload Using CSV Files</h4>
+                    <h4>Upload using CSV Files</h4>
                     {{ forms.render_field(upload_form.upload_files, label_visible=false, multiple="", id="file-select") }}
                     {{ forms.render_field(upload_form.email, label_visible=true, placeholder='e.g. "Email"') }}
                     {{ forms.render_field(upload_form.score, label_visible=true, placeholder='e.g. "Score"') }}
                   </section>
                   <section class="form-area text-area">
-                    <h4>Upload Using Text</h4>
+                    <h4>Upload using Text</h4>
                     {{ forms.render_field(upload_form.textarea, label_visible=false, placeholder='Email, Score') }}
+                  </section>
+                  <section class="form-area emails-area">
+                    <h4>Upload using Same Score for Emails</h4>
+                    {{ forms.render_field(upload_form.emails_area, label_visible=false, placeholder='Emails (separated by lines and/or commas)') }}
+                    {{ forms.render_field(upload_form.score_amount, label_visible=true, value=1) }}
                   </section>
 
                     {{ forms.render_field(upload_form.kind, label_visible=true) }}

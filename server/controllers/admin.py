@@ -862,10 +862,9 @@ def upload(cid, aid):
             user_id=current_user.id,
             # params
             assign_id=assign.id,
-            email_label=upload_form.labels['email'],
-            score_label=upload_form.labels['score'],
-            uploaded_csv=upload_form.parsed,
-            kind=upload_form.kind.data)
+            rows=upload_form.parsed,
+            kind=upload_form.kind.data,
+            invalid=upload_form.invalid)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
         # if not error:
         #     flash('Successfully added scores for {}'.format(assign.display_name), 'success')

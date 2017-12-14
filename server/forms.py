@@ -383,6 +383,7 @@ class BatchCSVScoreForm(SubmissionTimeForm):
         choices=[
             ('csv', 'CSV'),
             ('text', 'Text'),
+            ('emails', 'Emails Only')
         ],
         default='csv',
         validators=[validators.required()],
@@ -397,6 +398,10 @@ class BatchCSVScoreForm(SubmissionTimeForm):
     # Text Fields
     textarea = TextAreaField('text')
 
+    # Email only
+    emails_area = TextAreaField('emails only')
+    score_amount = DecimalField('Score (to assign to each email)', default=1)
+
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                 validators=[validators.required()])
     error = None
@@ -406,14 +411,10 @@ class BatchCSVScoreForm(SubmissionTimeForm):
         return email_re.fullmatch(s) is not None
 
     def is_number(self, s):
-        if s == '':
-            return True
         try:
-            float(s)
+            return bool(s and float(s))
         except Exception:
             return False
-        else:
-            return True
 
     def validate(self):
 
@@ -428,21 +429,41 @@ class BatchCSVScoreForm(SubmissionTimeForm):
                 assert self.score.data, 'Score label name is required'
                 self.labels = {'email': self.email.data, 'score': self.score.data}
                 rows = self.upload_files.data.read().decode('utf-8').splitlines()
-            else:
+            elif self.use_csv.data == 'text':
                 self.input_field = self.textarea
                 assert self.textarea.data, 'textarea cannot be empty'
                 self.labels = {'email': 'Email', 'score': 'Score'}
                 rows = self.textarea.data.splitlines()
                 rows.insert(0, 'Email,Score')
+            else:  # emails only
+                self.input_field = self.emails_area
+                assert self.emails_area.data, 'Emails textarea cannot be empty'
+                assert self.score_amount.data, 'Score field cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                emails_lines = self.emails_area.data.splitlines()
+                emails = [email.strip() for line in emails_lines for email in line.split(',') if email]
+                scores = [self.score_amount.data] * len(emails)
+                rows = ['{},{}'.format(*fields) for fields in zip(emails, scores)]
+                rows.insert(0, 'Email,Score')
 
-            self.parsed = list(csv.DictReader(rows))
+            rows = list(csv.DictReader(rows))
 
-            for row in self.parsed:
-                print(row)
-                email, score = self.labels['email'].strip(), self.labels['score'].strip()
-                assert self.labels.values() & row.keys(), "`{0}` must have a {1} and {2} field".format(row, email, score)
-                assert self.is_email(row[email]), "`{0}` is not a valid email (row: {1})".format(row[email], row)
-                assert self.is_number(row[score]), "`{0}` is not a valid score (row: {1})".format(row[score], row)
+            self.parsed = []
+            self.invalid = []
+
+            for linenum, row in enumerate(rows, 1):
+                if self.labels.values() & row.keys():
+                    email_label = self.labels['email'].strip()
+                    score_label = self.labels['score'].strip()
+
+                    email, score = row[email_label], row[score_label]
+
+                    if self.is_email(email) and self.is_number(score):
+                        score = (score and float(score)) or 0
+                        self.parsed.append({'email': email, 'score': score})
+                        continue
+
+                self.invalid.append(linenum)
 
         except AssertionError as e:
             logging.error(e)
@@ -451,12 +472,12 @@ class BatchCSVScoreForm(SubmissionTimeForm):
             return False
         except KeyError as e:
             missing = str(e).lstrip('KeyError: ')
-            self.error = 'No such column {}'.format(missing)
+            self.error = 'Column name "{}" doesn\'t exist.'.format(missing)
             self.input_field.errors.append(self.error)
             return False
         except csv.Error as e:
             logging.error(e)
-            self.error = 'The CSV could not be parsed'
+            self.error = "We couldn't parse the CSV; Check to make sure it's formatted properly."
             self.input_field.errors.append(self.error)
             return False
 

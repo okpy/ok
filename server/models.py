@@ -1002,7 +1002,6 @@ class Backup(Model):
                 creator=creator, submit=submit, created=created,
                 custom_submission_time=custom_submission_time)
         db.session.add(backup)
-        db.session.commit()
 
         assignment = assignment or Assignment.query.get(assignment_id)
         extension = Extension.get_extension(submitter or creator, assignment, time=created)
