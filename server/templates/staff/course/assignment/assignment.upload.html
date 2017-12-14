@@ -65,8 +65,8 @@
                   <section class="form-area csv-area visible">
                     <h4>Upload using CSV Files</h4>
                     {{ forms.render_field(upload_form.upload_files, label_visible=false, multiple="", id="file-select") }}
-                    {{ forms.render_field(upload_form.email, label_visible=true, placeholder='e.g. "Email"') }}
-                    {{ forms.render_field(upload_form.score, label_visible=true, placeholder='e.g. "Score"') }}
+                    {{ forms.render_field(upload_form.email, label_visible=true, value='Email') }}
+                    {{ forms.render_field(upload_form.score, label_visible=true, value='Total Score') }}
                   </section>
                   <section class="form-area text-area">
                     <h4>Upload using Text</h4>
