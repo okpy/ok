@@ -402,8 +402,11 @@ class BatchCSVScoreForm(SubmissionTimeForm):
     emails_area = TextAreaField('emails only')
     score_amount = DecimalField('Score (to assign to each email)', default=1)
 
+    # Common
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                 validators=[validators.required()])
+
+    message = StringField('Message', validators=[validators.required()])
     error = None
 
     def is_email(self, s):
