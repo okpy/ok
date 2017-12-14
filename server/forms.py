@@ -443,7 +443,7 @@ class BatchCSVScoreForm(SubmissionTimeForm):
                 assert self.emails_area.data, 'Emails textarea cannot be empty'
                 assert self.score_amount.data, 'Score field cannot be empty'
                 self.labels = {'email': 'Email', 'score': 'Score'}
-                emails = [email for email in re.split('[, \n]+', self.emails_area.data) if email]
+                emails = [email for email in re.split('[, \r\n\t]+', self.emails_area.data) if email]
                 scores = [self.score_amount.data] * len(emails)
                 rows = ['{},{}'.format(*fields) for fields in zip(emails, scores)]
                 rows.insert(0, 'Email,Score')
