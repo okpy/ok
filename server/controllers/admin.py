@@ -32,7 +32,7 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify, checkpoint, effort)
+                         scores_notify, checkpoint, effort, upload_scores)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -835,6 +835,44 @@ def autograde(cid, aid):
             assignment_id=assign.id)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     return redirect(url_for('.assignment', cid=cid, aid=aid))
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/upload",
+            methods=["GET","POST"])
+@is_staff(course_arg='cid')
+def upload(cid, aid):
+    courses, current_course = get_courses(cid)
+    upload_form = forms.BatchCSVScoreForm(kind='total')
+    upload_form.submission_time.data = 'deadline'
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    if upload_form.validate_on_submit():
+        job = jobs.enqueue_job(
+            upload_scores.score_from_csv,
+            description='Upload Scores for {}'.format(assign.display_name),
+            result_kind='link',
+            timeout=600,  # 5 mins
+            course_id=cid,
+            user_id=current_user.id,
+            # params
+            assign_id=assign.id,
+            rows=upload_form.parsed,
+            kind=upload_form.kind.data,
+            message=upload_form.message.data,
+            invalid=upload_form.invalid)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+    elif upload_form.error:
+        flash(upload_form.error, 'error')
+    return render_template('staff/course/assignment/assignment.upload.html',
+                       upload_form=upload_form,
+                       courses=courses,
+                       current_course=current_course,
+                       assignment=assign)
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/effort",
              methods=["GET", "POST"])

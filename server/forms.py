@@ -1,6 +1,6 @@
 from flask import request
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 import requests.exceptions
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
@@ -376,6 +376,115 @@ class SubmissionTimeForm(BaseForm):
 
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
+
+class BatchCSVScoreForm(SubmissionTimeForm):
+    use_csv = RadioField(
+        'Upload Scores Using',
+        choices=[
+            ('csv', 'CSV'),
+            ('text', 'Email, Score'),
+            ('emails', 'Emails Only')
+        ],
+        default='csv',
+        validators=[validators.required()],
+    )
+
+    # CSV Fields
+    upload_files = FileField('csv', validators=[
+        FileAllowed(['csv'], 'csvs only!')])
+    email = StringField('Email Label Name')
+    score = StringField('Score Label Name')
+
+    # Text Fields
+    textarea = TextAreaField('text')
+
+    # Email only
+    emails_area = TextAreaField('emails only')
+    score_amount = DecimalField('Score (to assign to each email)', default=1)
+
+    # Common
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
+                validators=[validators.required()])
+
+    message = StringField('Message', validators=[validators.required()])
+    error = None
+
+    def is_email(self, s):
+        email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        return email_re.fullmatch(s) is not None
+
+    def is_number(self, s):
+        try:
+            return bool(s and float(s))
+        except Exception:
+            return False
+
+    def validate(self):
+
+        if not super().validate():
+            return False
+
+        try:
+            if self.use_csv.data == 'csv':
+                self.input_field = self.upload_files
+                assert self.upload_files.data, 'CSV file is required'
+                assert self.email.data, 'Email label name is required'
+                assert self.score.data, 'Score label name is required'
+                self.labels = {'email': self.email.data, 'score': self.score.data}
+                rows = self.upload_files.data.read().decode('utf-8').splitlines()
+            elif self.use_csv.data == 'text':
+                self.input_field = self.textarea
+                assert self.textarea.data, 'textarea cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                rows = self.textarea.data.splitlines()
+                rows.insert(0, 'Email,Score')
+            else:  # emails only
+                self.input_field = self.emails_area
+                assert self.emails_area.data, 'Emails textarea cannot be empty'
+                assert self.score_amount.data, 'Score field cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                emails = [email for email in re.split('[, \r\n\t]+', self.emails_area.data) if email]
+                scores = [self.score_amount.data] * len(emails)
+                rows = ['{},{}'.format(*fields) for fields in zip(emails, scores)]
+                rows.insert(0, 'Email,Score')
+
+            rows = list(csv.DictReader(rows))
+
+            self.parsed = []
+            self.invalid = []
+
+            for linenum, row in enumerate(rows, 1):
+                if self.labels.values() & row.keys():
+                    email_label = self.labels['email'].strip()
+                    score_label = self.labels['score'].strip()
+
+                    email, score = row[email_label], row[score_label]
+
+                    if self.is_email(email) and self.is_number(score):
+                        score = (score and float(score)) or 0
+                        self.parsed.append({'email': email, 'score': score})
+                        continue
+
+                self.invalid.append(linenum)
+
+        except AssertionError as e:
+            logging.error(e)
+            self.error = str(e)
+            self.input_field.errors.append(self.error)
+            return False
+        except KeyError as e:
+            missing = str(e).lstrip('KeyError: ')
+            self.error = 'Column name "{}" doesn\'t exist.'.format(missing)
+            self.input_field.errors.append(self.error)
+            return False
+        except csv.Error as e:
+            logging.error(e)
+            self.error = "We couldn't parse the CSV; Check to make sure it's formatted properly."
+            self.input_field.errors.append(self.error)
+            return False
+
+        return True
+
 
 class ExtensionForm(SubmissionTimeForm):
     assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])

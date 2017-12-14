@@ -1,0 +1,140 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %}  Batch Score Upload - {{ assignment.display_name }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }} Score Upload
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+            <i class="fa fa-list"></i> Assignments
+        </a></li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">
+          <i class="fa fa-book"></i> {{ assignment.display_name }}
+        </a></li>
+        <li><a href="#">
+            <i class="fa fa-upload"></i>Upload Scores
+        </a></li>
+
+      </ol>
+  </section>
+
+  <section class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+      <div class="col-md-12 col-xs-12">
+        <!-- Default box -->
+        <!--  Box -->
+
+        <div class="box">
+          <div class="box-body">
+              <h3>Upload Scores</h4>
+              <p class="upload-directions">
+                  {% if assignment.upload_info %}
+                   {{ assignment.upload_info }}
+                  {% endif %}
+
+                  {% if assignment.files %}
+                   Required Files: scores.csv
+                  {% endif %}
+              </p>
+
+              {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
+                  <section class="input-choice">
+                    <p>Upload Scores Using</p>
+                    {{ forms.render_radio_field(upload_form.use_csv) }}
+                  </section>
+                  <br/>
+                  <section class="form-area csv-area visible">
+                    <h4>Upload using CSV Files</h4>
+                    {{ forms.render_field(upload_form.upload_files, label_visible=false, multiple="", id="file-select") }}
+                    {{ forms.render_field(upload_form.email, label_visible=true, placeholder='e.g. "Email"') }}
+                    {{ forms.render_field(upload_form.score, label_visible=true, placeholder='e.g. "Score"') }}
+                  </section>
+                  <section class="form-area text-area">
+                    <h4>Upload using Text</h4>
+                    {{ forms.render_field(upload_form.textarea, label_visible=false, placeholder='Email, Score') }}
+                  </section>
+                  <section class="form-area emails-area">
+                    <h4>Upload using Same Score for Emails</h4>
+                    {{ forms.render_field(upload_form.emails_area, label_visible=false, placeholder='Emails (can be separated by commas, spaces, and/or newlines)') }}
+                    {{ forms.render_field(upload_form.score_amount, label_visible=true, value=1) }}
+                  </section>
+                    <section class="kind-choice">
+                      {{ forms.render_field(upload_form.kind, label_visible=true) }}
+                    </section>
+                    {{ forms.render_field(upload_form.message, value=('Total Score for ' + assignment.display_name)) }}
+                    <label class="control-label">Submission time: </label>
+                    {{ forms.render_radio_field(upload_form.submission_time) }}
+                    {{ forms.render_field(
+                      upload_form.custom_submission_time,
+                      placeholder='YYYY-MM-DD hh:mm:ss',
+                      label_visible=false) }}
+              {% endcall %}
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- </body> do not close body in template-->
+{% endblock %}
+
+{% block page_css %}
+<style>
+.form-area {
+  display: none;
+}
+.form-area.visible {
+  display: block;
+}
+</style>
+{% endblock %}
+
+{% block page_js %}
+<script>
+
+$(".input-choice .radio").on("click", function(e) {
+  var input = $(this).find("input")
+  if (input.length > 0) {
+    $(".form-area").removeClass("visible")
+    console.log(input[0].value)
+    $("." + input[0].value + "-area").addClass("visible")
+  }
+})
+
+$(".kind-choice select").change(function(e) {
+  var kind = $(this).find("option:selected").text()
+  $("#message").val(kind + " Score for " + "{{ assignment.display_name }}")
+})
+
+$(".form-area").removeClass("visible")
+var checked = $("input[name='use_csv'][checked='checked']").attr('value')
+console.log(checked)
+$("." + checked + "-area").addClass("visible")
+
+
+</script>
+{% endblock %}
+
