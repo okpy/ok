@@ -827,6 +827,7 @@ def autograde(cid, aid):
         job = jobs.enqueue_job(
             autograder.autograde_assignment,
             description='Autograde {}'.format(assign.display_name),
+            result_kind='link',
             timeout=2 * 60 * 60,  # 2 hours
             course_id=cid,
             user_id=current_user.id,
@@ -1012,6 +1013,7 @@ def checkpoint_grading(cid, aid):
             checkpoint.assign_scores,
             description='Checkpoint Scoring for {}'.format(assign.display_name),
             timeout=600,
+            result_kind='link',
             course_id=cid,
             user_id=current_user.id,
             assign_id=assign.id,
@@ -1019,7 +1021,8 @@ def checkpoint_grading(cid, aid):
             kind=form.kind.data,
             message=form.message.data,
             deadline=form.deadline.data,
-            include_backups=form.include_backups.data)
+            include_backups=form.include_backups.data,
+            grade_backups=form.grade_backups.data)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         if not form.kind.data:

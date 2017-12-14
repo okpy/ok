@@ -4,10 +4,11 @@ from collections import defaultdict
 from server import jobs
 from server.models import Assignment, Score, Backup, db
 from server.utils import server_time_obj
+from server.autograder import autograde_backups
 
 @jobs.background_job
 def assign_scores(assign_id, score, kind, message, deadline,
-                     include_backups=True):
+                     include_backups=True, grade_backups=False):
     logger = jobs.get_job_logger()
     current_user = jobs.get_current_job().user
 
@@ -31,28 +32,49 @@ def assign_scores(assign_id, score, kind, message, deadline,
                     .format(deadline))
         return "No Scores Created"
 
-    total_count = len(all_backups)
-    logger.info("Found {} eligible submissions...".format(total_count))
-
     score_counter, seen = 0, set()
 
+    unique_backups = []
+
     for back in all_backups:
-        if back.creator in seen:
+        if back.creator not in seen:
+            unique_backups.append(back)
+            seen |= back.owners()
+
+    total_count = len(unique_backups)
+    logger.info("Found {} unique and eligible submissions...".format(total_count))
+
+    if grade_backups:
+        logger.info('\nAutograding {} backups'.format(total_count))
+        backup_ids = [back.id for back in unique_backups]
+        try:
+            autograde_backups(assignment, current_user.id, backup_ids, logger)
+        except ValueError:
+            logger.info('Could not autograde backups - Please add an autograding key.')
+    else:
+        for back in unique_backups:
+            new_score = Score(score=score, kind=kind, message=message,
+                              user_id=back.submitter_id,
+                              assignment=assignment, backup=back,
+                              grader=current_user)
+
+            db.session.add(new_score)
+            new_score.archive_duplicates()
+
             score_counter += 1
-            continue
-        new_score = Score(score=score, kind=kind, message=message,
-                          user_id=back.submitter_id,
-                          assignment=assignment, backup=back,
-                          grader=current_user)
-        db.session.add(new_score)
-        new_score.archive_duplicates()
+            if score_counter % 100 == 0:
+                logger.info("Scored {} of {}".format(score_counter, total_count))
+
+        # only commit if all scores were successfully added
         db.session.commit()
 
-        score_counter += 1
-        if score_counter % 5 == 0:
-            logger.info("Scored {} of {}".format(score_counter, total_count))
-        seen |= back.owners()
+    logger.info("Left {} '{}' scores of {}".format(score_counter, kind.title(), score))
+    return '/admin/course/{cid}/assignments/{aid}/scores'.format(
+                cid=jobs.get_current_job().course_id, aid=assignment.id)
 
-    result = "Left {} '{}' scores of {}".format(score_counter, kind.title(), score)
-    logger.info(result)
-    return result
+
+
+
+
+
+
