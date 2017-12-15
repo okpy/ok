@@ -1152,10 +1152,11 @@ def checkpoint_grading(cid, aid):
 
     form = forms.CheckpointCreditForm()
     if form.validate_on_submit():
+        timeout = 3600 if form.grade_backups.data else 600
         job = jobs.enqueue_job(
             checkpoint.assign_scores,
             description='Checkpoint Scoring for {}'.format(assign.display_name),
-            timeout=600,
+            timeout=timeout,
             result_kind='link',
             course_id=cid,
             user_id=current_user.id,

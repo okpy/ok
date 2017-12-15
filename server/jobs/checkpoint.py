@@ -20,7 +20,7 @@ def assign_scores(assign_id, score, kind, message, deadline,
     backups = Backup.query.filter(
         Backup.assignment_id == assign_id,
         or_(Backup.created <= deadline, Backup.custom_submission_time <= deadline)
-    ).order_by(Backup.created.desc()).group_by(Backup.submitter_id)
+    ).group_by(Backup.submitter_id).order_by(Backup.created.desc())
 
     if not include_backups:
         backups = backups.filter(Backup.submit == True)
