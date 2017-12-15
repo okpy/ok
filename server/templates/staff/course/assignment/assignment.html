@@ -116,6 +116,9 @@
                   <li> <a href="{{ url_for('.checkpoint_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-check"></i> Checkpoint Grading
                   </a></li>
+                  <li> <a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
+                    <i class="fa fa-upload"></i> Upload Scores
+                  </a></li>
                   <li> <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-file-archive-o"></i> Download Submissions
                   </a></li>

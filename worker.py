@@ -17,5 +17,6 @@ if __name__ == '__main__':
         sentry_dsn = os.getenv('SENTRY_DSN')
         if sentry_dsn:
             client = Client(sentry_dsn, transport=HTTPTransport)
-            register_sentry(client, worker)
+            # disable sentry for now (causes worker CrashLoopBackOff in kubernetes)
+            # register_sentry(client, worker)
         worker.work()
