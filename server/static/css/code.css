@@ -1,5 +1,5 @@
 /* Source file and diff rendering */
-.source-file {
+.source-file-box {
   position: relative;
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
   font-size: 12px;
