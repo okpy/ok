@@ -235,7 +235,6 @@ def autograde_backups(assignment, user_id, backup_ids, logger):
     message = '{} graded, {} failed'.format(
         statuses[GradingStatus.DONE], statuses[GradingStatus.FAILED])
     logger.info(message)
-    return message
 
 
 @jobs.background_job
@@ -251,5 +250,11 @@ def autograde_assignment(assignment_id):
     assignment = Assignment.query.get(assignment_id)
     course_submissions = assignment.course_submissions(include_empty=False)
     backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
-    return autograde_backups(assignment, jobs.get_current_job().user_id, backup_ids, logger)
+    try:
+        autograde_backups(assignment, current_user.id, backup_ids, logger)
+    except ValueError:
+        logger.info('Could not autograde backups - Please add an autograding key.')
+        return
+    return '/admin/course/{cid}/assignments/{aid}/scores'.format(
+                cid=jobs.get_current_job().course_id, aid=assignment.id)
 

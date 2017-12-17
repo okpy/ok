@@ -137,7 +137,7 @@
 {% endmacro %}
 
 {% macro source_file(backup, filename, file, moss_diff) %}
-  <div class="box source-file">
+  <div class="box source-file-box">
     <div class="box-header source-file-header">
       <div class="source-file-name fixed-width-font">
         {{ filename }}
@@ -160,7 +160,7 @@
           </button>
       </div>
     </div>
-    <div class="box-body table-responsive"
+    <div class="box-body source-file table-responsive"
       data-backup-id={{ utils.encode_id(backup.id) }}
       data-filename={{ filename }}>
       <table class="highlight">

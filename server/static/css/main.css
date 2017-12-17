@@ -206,3 +206,12 @@ img.desaturate{
   margin: 0px auto;
   color: #717171;
 }
+
+.checkbox {
+  display: inline-block;
+}
+
+.checkbox + .help-block{
+  display: inline-block;
+  margin-left: 8px;
+}

@@ -317,6 +317,10 @@ class CheckpointCreditForm(GradeForm):
                              description="Award points to all submissions before this time")
     include_backups = BooleanField('Include Backups', default=True,
                                    description='Include backups (as well as submissions)')
+    grade_backups = BooleanField('Grade Backups', default=False,
+                                   description='Grade backups using the autograder')
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS if 'checkpoint' in c.lower()],
+                       validators=[validators.required()])
 
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
