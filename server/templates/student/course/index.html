@@ -24,13 +24,11 @@
 
         </div>
         <!-- start desktop/tablet version -->
-        {{ table.render_assign(active, course=course, categories=categories, 
-        tname="Assignments", empty=True) }}
+        {{ table.render_categories(course, categories, uncategorized, empty=False) }}
         <!-- end desktop/tablet version -->
 
         <!-- start mobile version -->
-        {{ table.render_assign_mobile(active, course=course, categories=categories,
-        tname="Assignments", empty=True) }}
+        {{ table.render_categories_mobile(course, categories, uncategorized, empty=False) }}
         <!-- end mobile version -->
       </section>
     </main>

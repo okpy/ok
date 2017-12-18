@@ -20,6 +20,9 @@ i, br {
     font-weight:300;
     letter-spacing:normal;
   }
+.subcontent {
+  margin-bottom: 30px;
+}
 .content h2 {
   font-size:2em;
   font-weight:300;
@@ -200,6 +203,9 @@ section {
     }
   table {
     width:100%;
+  }
+  .subcontent .wrap table {
+    background-color: #f6f6f6;
   }
   tr.header {
     color:#767676;
@@ -433,39 +439,44 @@ header .logo {
   }
 
   .invite-input {
-    width: 95%;
-    margin:1.5em 0 0 1em;
+
+    width: 300px;
+    margin:1em 0 1.5em 14px;
     color:#666;
     outline: none;
     border-top: none;
     border-left: none;
     border-right: none;
-    border-bottom-width: 1px;
-    border-bottom-style: dashed;
-    border-bottom-color: rgb(153, 153, 153);
+    padding: 14px 0;
+    border-bottom: 1px solid #ccc;
+  }
+  .invite-input:focus {
+    border-bottom: 1px solid black;
+    color: black;
   }
   .btn-invite {
-    margin:1em 0 0 0;
+    margin-top: 2em;
   }
   .btn-accept {
      margin-bottom: 1em;
      outline: none;
   }
+.subcontent.list .wrap {
+  margin-bottom: 2em;
+}
 .content h1 {
   padding:0 14px;
 }
 .content h2 {
-  padding:0 14px 10px 14px;
+  padding:0 14px;
 }
 .cell {
-  padding:2em;
+  padding: 1em 2em;
+  background-color:#f6f6f6;
+  font-size: 0.9em;
 }
 .upload-cell {
   background-color: #f6f6f6;
-}
-
-.cell:nth-child(even) {
-  background-color:#f6f6f6;
 }
   .cell-title {
     font-size:1.5em;

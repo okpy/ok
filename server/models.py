@@ -276,6 +276,20 @@ class Course(Model):
         return Course.query.filter_by(offering=name).one_or_none()
 
     @property
+    def categories(self):
+        return Category.query.filter_by(
+            course=self
+        ).order_by(Category.name).all()
+
+    @property
+    def uncategorized(self):
+        return Assignment.query.filter_by(
+            course=self,
+            category=None  # uncategorized
+        ).all()
+
+
+    @property
     def display_name_with_semester(self):
         year = self.offering[-2:]
         if "fa" in self.offering[-4:]:
@@ -492,19 +506,19 @@ class Assignment(Model):
             })
         return stats
 
-    @staticmethod
+    @classmethod
     @cache.memoize(1000)
-    def name_to_assign_info(name):
-        assign = Assignment.query.filter_by(name=name).one_or_none()
+    def name_to_assign_info(cls, name):
+        assign = cls.query.filter_by(name=name).one_or_none()
         if assign:
             info = assign.as_dict()
             info['active'] = assign.active
             return info
 
-    @staticmethod
-    def by_name(name):
+    @classmethod
+    def by_name(cls, name):
         """ Return assignment object when given a name."""
-        return Assignment.query.filter_by(name=name).one_or_none()
+        return cls.query.filter_by(name=name).one_or_none()
 
     def user_timeline(self, user_id, current_backup_id=None):
         """ Timeline of user submissions. Returns a dictionary

@@ -1,405 +1,214 @@
-{% macro render_assign(assignments, course, categories, tname="Assignments", empty=False, show_scores=False) %}
-  {% if categories %}
-  <div class="subcontent list hidden-xs hidden-sm">
-      {% for category, assignments in categories %}
-      <div class="wrap">
-        <h2>{{ category.name }}</h2>
-        <table>
-          <tbody>
-          {% if assignments%}
-            <tr class="header">
-                <th>Name</th>
-                <th>Due Date</th>
-                <th>Status</th>
-                <th>Group</th>
-            </tr>
-          {% else %}
-            <tr>
-                <td>No Assignments</td>
-            </tr>
-          {% endif %}
-          {% for assign, subm_time, group, fs, scores in assignments %}
-          <tr>
-            <td>
-              <span>
-                <a class="dashed"  href="{{ url_for('.assignment', name=assign.name)}}">
-                    {{assign.display_name}}
-                </a>
-              </span>
-            </td>
-              {% if show_scores %}
-              <td>
-                  {% for score in scores %}
-                  <a class="label label-default score-inline" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
-                      {{ score.kind.title() }}: {{ score.score | round(2) }}
-                  </a>
-                  {% else %}
-                  <span class="no-dash">&mdash;</span>
-                  {% endfor %}
-              </td>
-              {% else %}
-                <td>
-                {% if assign.active %}
-                <div class="due-dot green"></div>
-                <div class="due">
-                  <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
-                  <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-                </div>
-                {% elif subm_time %}
-                <div class="due-dot grey"></div>
-                <div class="due">
-                  <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
-                  <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-                </div>
-                {% else %}
-                <div class="due-dot red"></div>
-                <div class="due">
-                  <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
-                  <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-                </div>
-              {% endif %}
-            </td>
-            {% endif %}
-            <td>
-            {% if subm_time %}
-              <div class="due-dot green"></div>
-              <div class="due">
-                <span class="due-text green">Submitted</span>
-                <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
-              </div>
-              {% else %}
-              <div class="due-dot grey"></div>
-              <div class="due">
-                <span class="due-text grey">No Submission</span>
-                <span class="due-text grey">Did you run <code>--submit</code>?</span>
-              </div>
-            {% endif %}
-            </td>
-            {% if group %}
-            <td class="tip-trigger">
-                {% if group.is_pending() %}
-                <div class="due-dot red"></div>
-                  <div class="due">
-                        <span class="due-text red"> Invitation Pending </span>
-                        <span class="due-date error"> Waiting for a response from: </span>
-                        {% for member in group.members %}
-                             {% if member.status == "pending" %}
-                              <span class="due-date red">{{ member.user.email }} </span>
-                             {% endif %}
-                        {% endfor %}
-                    {% else %}
-                    <div class="due-dot green"></div>
-                      <div class="due">
-
-                      <span class="due-text"> {{ group.members | length }} Members </span>
-                      <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
-                    {% endif %}
-                    <div class="tip group-members">
-                        {% for member in group.members %}
-                             {% if member.status == "active" %}
-                              <span><i class="fa fa-user"></i> {{ member.user.email }} </span>
-                             {% else %}
-                              <span><i class="fa fa-inbox red"></i> Pending invite for: {{ member.user.email }}  </span>
-
-                             {% endif %}
-                        {% endfor %}
-                    </div>
-                  </div>
-            </td>
-            {% elif assign.max_group_size == 1 %}
-            <td>
-              <div class="due-dot"></div>
-              <div class="due">
-                <span class="due-text">Indvidual Assignment</span>
-                <span class="due-date">No Partners Allowed</span>
-              </div>
-            </td>
+{% macro render_assigns(course, assignments) %}
+  <table>
+    <tbody>
+    {% if not assignments %}
+      <tr>
+          <td>No Assignments</td>
+      </tr>
+    {% endif %}
+    {% for assign, subm_time, group, fs, scores in assignments %}
+    <tr>
+      <td>
+        <span>
+          <a class="dashed"  href="{{ url_for('.assignment', name=assign.name)}}">
+              {{assign.display_name}}
+          </a>
+        </span>
+      </td>
+        {% if show_scores %}
+        <td>
+            {% for score in scores %}
+            <a class="label label-default score-inline" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
+                {{ score.kind.title() }}: {{ score.score | round(2) }}
+            </a>
             {% else %}
-            <td class="tip-trigger">
-                  <div class="due-dot grey"></div>
-                  <div class="due">
-                    <span class="due-text">No group</span>
-                    <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
-                    <div class="tip group-members">
-                      <span> Maximum Group Size is {{assign.max_group_size }} </span>
-                    </div>
-
-                  </div>
-              </td>
-
-            {% endif %}
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% endfor %}
-  </div>
-  {% elif assignments %}
-  <div class="subcontent list hidden-xs hidden-sm">
-    <div class="wrap">
-      <h2>{{ tname }}</h2>
-      <table>
-        <tr class="header">
-          <th class="col-name">Name</th>
-          {% if show_scores %}
-            <th class="col-scores">Scores</th>
+            <span class="no-dash">&mdash;</span>
+            {% endfor %}
+        </td>
+        {% else %}
+          <td>
+          {% if assign.active %}
+          <div class="due-dot green"></div>
+          <div class="due">
+            <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
+            <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+          </div>
+          {% elif subm_time %}
+          <div class="due-dot grey"></div>
+          <div class="due">
+            <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
+            <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+          </div>
           {% else %}
-            <th class="col-due-date">Due Date</th>
-          {% endif %}
-          <th class="col-status">Status</th>
-          <th class="col-group">Group</th>
-        </tr>
-        {% for assign, subm_time, group, fs, scores in assignments %}
-        <tr>
-          <td>
-            <span>
-              <a class="dashed"  href="{{ url_for('.assignment', name=assign.name)}}">
-                  {{assign.display_name}}
-              </a>
-            </span>
-          </td>
-            {% if show_scores %}
-            <td>
-                {% for score in scores %}
-                <a class="label label-default score-inline" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
-                    {{ score.kind.title() }}: {{ score.score | round(2) }}
-                </a>
-                {% else %}
-                <span class="no-dash">&mdash;</span>
-                {% endfor %}
-            </td>
-            {% else %}
-              <td>
-              {% if assign.active %}
-              <div class="due-dot green"></div>
-              <div class="due">
-                <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
-                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-              </div>
-              {% elif subm_time %}
-              <div class="due-dot grey"></div>
-              <div class="due">
-                <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
-                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-              </div>
-              {% else %}
-              <div class="due-dot red"></div>
-              <div class="due">
-                <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
-                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-              </div>
-            {% endif %}
-          </td>
-          {% endif %}
-          <td>
-          {% if subm_time %}
-            <div class="due-dot green"></div>
+          <div class="due-dot red"></div>
+          <div class="due">
+            <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
+            <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+          </div>
+        {% endif %}
+      </td>
+      {% endif %}
+      <td>
+      {% if subm_time %}
+        <div class="due-dot green"></div>
+        <div class="due">
+          <span class="due-text green">Submitted</span>
+          <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
+        </div>
+        {% else %}
+        <div class="due-dot grey"></div>
+        <div class="due">
+          <span class="due-text grey">No Submission</span>
+          <span class="due-text grey">Did you run <code>--submit</code>?</span>
+        </div>
+      {% endif %}
+      </td>
+      {% if group %}
+      <td class="tip-trigger">
+          {% if group.is_pending() %}
+          <div class="due-dot red"></div>
             <div class="due">
-              <span class="due-text green">Submitted</span>
-              <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
+                  <span class="due-text red"> Invitation Pending </span>
+                  <span class="due-date error"> Waiting for a response from: </span>
+                  {% for member in group.members %}
+                       {% if member.status == "pending" %}
+                        <span class="due-date red">{{ member.user.email }} </span>
+                       {% endif %}
+                  {% endfor %}
+              {% else %}
+              <div class="due-dot green"></div>
+                <div class="due">
+
+                <span class="due-text"> {{ group.members | length }} Members </span>
+                <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
+              {% endif %}
+              <div class="tip group-members">
+                  {% for member in group.members %}
+                       {% if member.status == "active" %}
+                        <span><i class="fa fa-user"></i> {{ member.user.email }} </span>
+                       {% else %}
+                        <span><i class="fa fa-inbox red"></i> Pending invite for: {{ member.user.email }}  </span>
+
+                       {% endif %}
+                  {% endfor %}
+              </div>
             </div>
-            {% else %}
+      </td>
+      {% elif assign.max_group_size == 1 %}
+      <td>
+        <div class="due-dot"></div>
+        <div class="due">
+          <span class="due-text">Indvidual Assignment</span>
+          <span class="due-date">No Partners Allowed</span>
+        </div>
+      </td>
+      {% else %}
+      <td class="tip-trigger">
             <div class="due-dot grey"></div>
             <div class="due">
-              <span class="due-text grey">No Submission</span>
-              <span class="due-text grey">Did you run <code>--submit</code>?</span>
+              <span class="due-text">No group</span>
+              <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
+              <div class="tip group-members">
+                <span> Maximum Group Size is {{assign.max_group_size }} </span>
+              </div>
+
             </div>
-          {% endif %}
-          </td>
-          {% if group %}
-          <td class="tip-trigger">
-              {% if group.is_pending() %}
-              <div class="due-dot red"></div>
-                <div class="due">
-                      <span class="due-text red"> Invitation Pending </span>
-                      <span class="due-date error"> Waiting for a response from: </span>
-                      {% for member in group.members %}
-                           {% if member.status == "pending" %}
-                            <span class="due-date red">{{ member.user.email }} </span>
-                           {% endif %}
-                      {% endfor %}
-                  {% else %}
-                  <div class="due-dot green"></div>
-                    <div class="due">
+        </td>
 
-                    <span class="due-text"> {{ group.members | length }} Members </span>
-                    <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
-                  {% endif %}
-                  <div class="tip group-members">
-                      {% for member in group.members %}
-                           {% if member.status == "active" %}
-                            <span><i class="fa fa-user"></i> {{ member.user.email }} </span>
-                           {% else %}
-                            <span><i class="fa fa-inbox red"></i> Pending invite for: {{ member.user.email }}  </span>
-
-                           {% endif %}
-                      {% endfor %}
-                  </div>
-                </div>
-          </td>
-          {% elif assign.max_group_size == 1 %}
-          <td>
-            <div class="due-dot"></div>
-            <div class="due">
-              <span class="due-text">Indvidual Assignment</span>
-              <span class="due-date">No Partners Allowed</span>
-            </div>
-          </td>
-          {% else %}
-          <td class="tip-trigger">
-                <div class="due-dot grey"></div>
-                <div class="due">
-                  <span class="due-text">No group</span>
-                  <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
-                  <div class="tip group-members">
-                    <span> Maximum Group Size is {{assign.max_group_size }} </span>
-                  </div>
-
-                </div>
-            </td>
-
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-  </div>
-  {% elif empty %}
-  <div class="subcontent list hidden-xs hidden-sm">
-    <div class="wrap">
-      <h2>No {{ tname }}</h2>
-    </div>
-  </div>
-  {% endif %}
+      {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 {% endmacro %}
 
-{% macro render_assign_mobile(assignments, course, categories, tname="Assignments", admin=False, empty=False, show_scores=False) %}
-  {% if categories %}
-  <div class="subcontent list hidden-md hidden-lg">
-   {% for category, assignments in categories %}
+{% macro render_categories(course, categories, uncategorized, tname="Assignments", empty=False, show_scores=False) %}
+  <div class="subcontent list hidden-xs hidden-sm">
+    {% for category, assignments in categories %}
+      {% if assignments or empty %}
+      <div class="wrap">
+        <h2>{{ category.name }}</h2>
+        {{ render_assigns(course, assignments) }}
+      </div>
+      {% endif %}
+    {% endfor %}
+    {% if uncategorized or empty %}
     <div class="wrap">
-      <h2>{{ category.name }}</h2>
-      {% for assign, subm_time, group, fs, scores in assignments %}
-      <div class="cell col-xs-12">
-        <div class="cell-title">
-          <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
-              {{assign.display_name}} &raquo;
-          </a>
-        </div>
+      <h2>Uncategorized</h2>
+      {{ render_assigns(course, uncategorized) }}
+    </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_assigns_mobile(course, assignments) %}
+  {% if not assignments %}
+    <div class="cell">No Assignments</div>
+  {% endif %}
+  {% for assign, subm_time, group, fs, scores in assignments %}
+  <div class="cell">
+    <div class="cell-title">
+      <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
+          {{assign.display_name}} &raquo;
+      </a>
+    </div>
+    <div class="cell-text">
+      {% if subm_time %}
+        <span class="due-dot green"></span>
+        <span class="green">Submitted</span>
+        <span>{{ utils.local_time(subm_time, course) }}</span>
+      {% endif %}
+    </div>
+    {% if show_scores %}
+        {% if scores %}
         <div class="cell-text">
-          {% if subm_time %}
-            <span class="due-dot green"></span>
-            <span class="green">Submitted</span>
-            <span>{{ utils.local_time(subm_time, course) }}</span>
-          {% else %}
-          <!-- <span class="due-dot grey">
-          <span class="grey">No Submission</span>
-          <span>Did you run --submit<?</span> -->
-          {% endif %}
+            Scores:
+            {% for score in scores %}
+               <span>
+                <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
+                 <b>{{score.kind}}:</b> {{score.score | round(2)}}
+                </a>
+              </span>
+            {% endfor %}
         </div>
-        {% if show_scores %}
-            {% if scores %}
-            <div class="cell-text">
-                Scores:
-                {% for score in scores %}
-                   <span>
-                    <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
-                     <b>{{score.kind}}:</b> {{score.score | round(2)}}
-                    </a>
-                  </span>
-                {% endfor %}
-            </div>
-            {% elif fs %}
-            <div class="cell-text"><span>Scores are not available on OK</span></div>
-            {% endif %}
+        {% elif fs %}
+        <div class="cell-text"><span>Scores are not available on OK</span></div>
         {% endif %}
-        <div class="cell-status">
-          {% if assign.active %}
-          <span class="due-dot green">
-        </div>
+    {% endif %}
+    <div class="cell-status">
+      {% if assign.active %}
+        <span class="due-dot green"></span>
         <span class="green">Due: {{ utils.natural_time(assign.due_date) }}</span>
         <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% elif subm_time %}
-          <span class="due-dot grey">
-         </div>
+      {% elif subm_time %}
+        <span class="due-dot grey"></span>
         <span class="grey">Due: {{ utils.natural_time(assign.due_date) }}</span>
         <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% else %}
-          <span class="due-dot red">
-         </div>
+      {% else %}
+        <span class="due-dot red"></span>
         <span class=" red">Due: {{ utils.natural_time(assign.due_date) }}</span>
         <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% endif %}
+      {% endif %}
     </div>
-    {% endfor %}
   </div>
   {% endfor %}
-</div>
-  {% elif assignments %}
+{% endmacro %}
+
+{% macro render_categories_mobile(course, categories, uncategorized, tname="Assignments", admin=False, empty=False, show_scores=False) %}
   <div class="subcontent list hidden-md hidden-lg">
-    <div class="wrap">
-      <h2>{{ tname }}</h2>
-      {% for assign, subm_time, group, fs, scores in assignments %}
-      <div class="cell col-xs-12">
-        <div class="cell-title">
-          <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
-              {{assign.display_name}} &raquo;
-          </a>
-        </div>
-        <div class="cell-text">
-          {% if subm_time %}
-            <span class="due-dot green"></span>
-            <span class="green">Submitted</span>
-            <span>{{ utils.local_time(subm_time, course) }}</span>
-          {% else %}
-          <!-- <span class="due-dot grey">
-          <span class="grey">No Submission</span>
-          <span>Did you run --submit<?</span> -->
-          {% endif %}
-        </div>
-        {% if show_scores %}
-            {% if scores %}
-            <div class="cell-text">
-                Scores:
-                {% for score in scores %}
-                   <span>
-                    <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
-                     <b>{{score.kind}}:</b> {{score.score | round(2)}}
-                    </a>
-                  </span>
-                {% endfor %}
-            </div>
-            {% elif fs %}
-            <div class="cell-text"><span>Scores are not available on OK</span></div>
-            {% endif %}
-        {% endif %}
-        <div class="cell-status">
-          {% if assign.active %}
-          <span class="due-dot green">
-        </div>
-        <span class="green">Due: {{ utils.natural_time(assign.due_date) }}</span>
-        <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% elif subm_time %}
-          <span class="due-dot grey">
-         </div>
-        <span class="grey">Due: {{ utils.natural_time(assign.due_date) }}</span>
-        <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% else %}
-          <span class="due-dot red">
-         </div>
-        <span class=" red">Due: {{ utils.natural_time(assign.due_date) }}</span>
-        <span>({{ utils.local_time(assign.due_date, course) }})</span>
-          {% endif %}
-    </div>
+    {% for category, assignments in categories %}
+      {% if assignments or empty %}
+      <div class="wrap">
+        <h2>{{ category.name }}</h2>
+        {{ render_assigns_mobile(course, assignments) }}
+      </div>
+      {% endif %}
     {% endfor %}
-  </div>
-</div>
-  {% elif empty %}
-  <div class="subcontent list hidden-md hidden-lg">
+    {% if uncategorized or empty %}
     <div class="wrap">
-      <h2>No {{ tname }}</h2>
+      <h2>Uncategorized</h2>
+      {{ render_assigns_mobile(course, uncategorized) }}
     </div>
+    {% endif %}
   </div>
-  {% endif %}
 {% endmacro %}

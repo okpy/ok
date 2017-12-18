@@ -438,15 +438,10 @@ def edit_category(cid, category_id):
 @is_staff(course_arg='cid')
 def course_assignments(cid):
     courses, current_course = get_courses(cid)
-    categories = current_course.categories
-    uncategorized = Assignment.query.filter_by(
-            course=current_course,
-            category=None
-        ).all()
     return render_template('staff/course/assignment/assignments.html',
            current_course=current_course,
-           categories=categories,
-           uncategorized=uncategorized)
+           categories=current_course.categories,
+           uncategorized=current_course.uncategorized)
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')
@@ -490,6 +485,8 @@ def assignment(cid, aid):
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Assignment edited successfully.", "success")
+    else:
+        form.set_defaults()
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
                            form=form, courses=courses,
