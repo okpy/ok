@@ -1,0 +1,39 @@
+{% extends "staff/base.html" %}fu
+{% import "staff/_formhelpers.html" as forms %}
+
+{% block title %} Export Grades - {{ course.display_name_with_semester }} {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        Export Grades for {{ course.display_name }}
+        <small>{{ course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('.course', cid=course.id) }}">
+            <i class="fa fa-university"></i> {{ course.offering }}
+        </a></li>
+        <li class="active"><a href="{{ url_for('.export_grades_job', cid=course.id) }}">
+            <i class="fa fa-file-text"></i>Export Grades</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+  {% include 'alerts.html' %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-file-text"></i>
+          <h3 class="box-title">Export Grades for {{ course.display_name }} </h3>
+        </div>
+        <div class="box-body">
+          {% call forms.render_form(form, action_text='Export Grades', class_='form') %}
+            {{ forms.render_field(form.included, required='true', class_="checkbox-list") }}
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
