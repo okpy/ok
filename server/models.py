@@ -374,7 +374,7 @@ class Category(Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-    points = db.Column(db.Integer, default=0.0)
+    points = db.Column(db.Integer, default=0)
     visible = db.Column(db.Boolean, default=True)
     ceil = db.Column(db.Boolean, default=True)
     # assignments (from Assignment backref)
