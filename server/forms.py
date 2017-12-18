@@ -162,20 +162,19 @@ class AssignmentForm(BaseForm):
         self.course = course
         self.obj = obj
         super(AssignmentForm, self).__init__(obj=obj, **kwargs)
+
+        # dynamically set values
+        self.category.choices = [(c.id, c.name) for c in course.categories]
+        self.category.choices.insert(0, (0, 'Uncategorized'))
+
         if obj:
             if obj.due_date == self.due_date.data:
                 self.due_date.data = utils.local_time_obj(obj.due_date, course)
             if obj.lock_date == self.lock_date.data:
                 self.lock_date.data = utils.local_time_obj(
                     obj.lock_date, course)
-
-        # dynamically set values
-        categories = Category.query.filter_by(
-                course=course
-            ).order_by(Category.name).all()
-        self.category.choices = [(str(c.id), c.name) for c in categories]
-        self.category.choices.insert(0, ('0', 'Uncategorized'))
-        self.category.default = 'Uncategorized'
+            self.category.default = obj.category.id or 0
+            self.process() # process changes!
 
     display_name = StringField('Name',
                                validators=[validators.required()])
