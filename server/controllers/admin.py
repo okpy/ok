@@ -389,7 +389,7 @@ def export_grades_job(cid):
         job = jobs.enqueue_job(
             export_grades.export_grades,
             description="Export Grades for {}".format(current_course.offering),
-            timeout=1 * 60 * 60, # 1 hour
+            timeout=2 * 60 * 60, # 1 hour
             course_id=cid,
             result_kind='link',
             # no arguments
