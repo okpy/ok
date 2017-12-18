@@ -161,6 +161,7 @@ class AssignmentForm(BaseForm):
     display_name = StringField('Name',
                                validators=[validators.required()])
     category = SelectField('Grading Category')
+    points = IntegerField('Points')
     name = StringField(description='Endpoint',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',

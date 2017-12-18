@@ -372,7 +372,7 @@ class Category(Model):
         e.g. "Drop lowest X", "Cap at X points", "Never drop X"
     """
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True, default="Uncategorized")
+    name = db.Column(db.String(255), index=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
     points = db.Column(db.Integer, default=0.0)
     visible = db.Column(db.Boolean, default=True)
@@ -396,12 +396,8 @@ class Category(Model):
         return is_staff
 
     def archive(self):
-        uncategorized = Category.query.filter_by(
-                course=self.course,
-                name='Uncategorized'
-            ).first()
-        for assignment in self.assignments:
-            assignment.category = uncategorized
+        for assignment in self.assignments[:]:
+            assignment.category = None
 
 
 class Assignment(Model):

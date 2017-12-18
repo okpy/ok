@@ -421,6 +421,7 @@ def edit_category(cid, category_id):
     if request.method == 'POST' and form.validate(editing=True):
         if form.delete.data == True:
             category.archive()
+            db.session.delete(category)
             db.session.commit()
             msg = "Category \"{}\" was deleted.".format(category.name)
             flash(msg, "error")
