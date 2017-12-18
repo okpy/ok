@@ -276,6 +276,20 @@ class Course(Model):
         return Course.query.filter_by(offering=name).one_or_none()
 
     @property
+    def categories(self):
+        return Category.query.filter_by(
+            course=self
+        ).order_by(Category.name).all()
+
+    @property
+    def uncategorized(self):
+        return Assignment.query.filter_by(
+            course=self,
+            category=None  # uncategorized
+        ).all()
+
+
+    @property
     def display_name_with_semester(self):
         year = self.offering[-2:]
         if "fa" in self.offering[-4:]:
@@ -358,9 +372,9 @@ class Category(Model):
         e.g. "Drop lowest X", "Cap at X points", "Never drop X"
     """
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True, default="Uncategorized")
+    name = db.Column(db.String(255), index=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-    points = db.Column(db.Integer, default=0.0)
+    points = db.Column(db.Integer, default=0)
     visible = db.Column(db.Boolean, default=True)
     ceil = db.Column(db.Boolean, default=True)
     # assignments (from Assignment backref)
@@ -382,12 +396,8 @@ class Category(Model):
         return is_staff
 
     def archive(self):
-        uncategorized = Category.query.filter_by(
-                course=self.course,
-                name='Uncategorized'
-            ).first()
-        for assignment in self.assignments:
-            assignment.category = uncategorized
+        for assignment in self.assignments[:]:
+            assignment.category = None
 
 
 class Assignment(Model):
@@ -492,19 +502,19 @@ class Assignment(Model):
             })
         return stats
 
-    @staticmethod
+    @classmethod
     @cache.memoize(1000)
-    def name_to_assign_info(name):
-        assign = Assignment.query.filter_by(name=name).one_or_none()
+    def name_to_assign_info(cls, name):
+        assign = cls.query.filter_by(name=name).one_or_none()
         if assign:
             info = assign.as_dict()
             info['active'] = assign.active
             return info
 
-    @staticmethod
-    def by_name(name):
+    @classmethod
+    def by_name(cls, name):
         """ Return assignment object when given a name."""
-        return Assignment.query.filter_by(name=name).one_or_none()
+        return cls.query.filter_by(name=name).one_or_none()
 
     def user_timeline(self, user_id, current_backup_id=None):
         """ Timeline of user submissions. Returns a dictionary

@@ -150,8 +150,8 @@
                     {% call forms.render_form(form, action_url="", action_text='Update Assignment', class_='form') %}
                         {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
                         {{ forms.render_field(form.name, label_visible=false, value=current_course.offering + '/hog', type='text', id="assignment-name") }}
-                        {{ forms.render_field(form.category, label_visible=true,
-                                        required="required", type='text', id="category") }}
+                        {{ forms.render_field(form.category, label_visible=true, required="required", type='text', id="category") }}
+                        {{ forms.render_field(form.points, label_visible=true, required="required", type='text', id="points") }}
                         {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1') }}
                         {{ forms.render_field(form.due_date, label_visible=true, placeholder=utils.new_due_date(current_course), type='text', class='form-control datepicker') }}
                         {{ forms.render_field(form.lock_date, label_visible=true, placeholder=utils.new_lock_date(current_course), type='text', class='form-control datepicker') }}

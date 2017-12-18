@@ -158,28 +158,10 @@ class CategoryForm(BaseForm):
 
 class AssignmentForm(BaseForm):
 
-    def __init__(self, course, obj=None, **kwargs):
-        self.course = course
-        self.obj = obj
-        super(AssignmentForm, self).__init__(obj=obj, **kwargs)
-        if obj:
-            if obj.due_date == self.due_date.data:
-                self.due_date.data = utils.local_time_obj(obj.due_date, course)
-            if obj.lock_date == self.lock_date.data:
-                self.lock_date.data = utils.local_time_obj(
-                    obj.lock_date, course)
-
-        # dynamically set values
-        categories = Category.query.filter_by(
-                course=course
-            ).order_by(Category.name).all()
-        self.category.choices = [(str(c.id), c.name) for c in categories]
-        self.category.choices.insert(0, ('0', 'Uncategorized'))
-        self.category.default = 'Uncategorized'
-
     display_name = StringField('Name',
                                validators=[validators.required()])
     category = SelectField('Grading Category')
+    points = IntegerField('Points')
     name = StringField(description='Endpoint',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
@@ -204,6 +186,26 @@ class AssignmentForm(BaseForm):
     visible = BooleanField('Visible On Student Dashboard', default=True)
     autograding_key = StringField('Autograder Key',
                                   validators=[validators.optional()])
+
+    def __init__(self, course, obj=None, **kwargs):
+        self.course = course
+        super(AssignmentForm, self).__init__(obj=obj, **kwargs)
+
+        # dynamically set values
+        self.category.choices = [(str(c.id), c.name) for c in course.categories]
+        self.category.choices.insert(0, ('0', 'Uncategorized'))
+
+        self.obj = obj
+        if obj:
+            self.due_date.data = utils.local_time_obj(obj.due_date, self.course)
+            self.lock_date.data = utils.local_time_obj(obj.lock_date, self.course)
+
+    def set_defaults(self):
+        if self.obj:
+            category = self.obj.category
+            self.category.data = str(category and category.id or 0)
+
+
     @property
     def endpoint(self):
         return '{}/{}'.format(self.course.offering, self.display_name.data)
@@ -211,12 +213,13 @@ class AssignmentForm(BaseForm):
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
         category_id = int(self.category.data)
-        if self.category.data:
-            self.category.data = Category.query.get(category_id)
-        super(AssignmentForm, self).populate_obj(obj)
+        self.category.data = Category.query.get(category_id)
+        super().populate_obj(obj)
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)
         obj.name = self.endpoint
+        self.obj = obj
+        self.category.data = str(category_id)
 
     def validate(self):
         if not super(AssignmentForm, self).validate():

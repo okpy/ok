@@ -88,8 +88,14 @@ def course(offering):
         'inactive': [a.user_status(current_user) for a in course.assignments
                      if not a.active and a.visible]
     }
+
+    user_assigns = lambda assigns: [a.user_status(current_user) for a in assigns if a.visible]
+    categories = [(c, user_assigns(c.assignments)) for c in course.categories]
+    uncategorized = user_assigns(course.uncategorized)
+    print(uncategorized)
     return render_template('student/course/index.html', course=course,
-                           **assignments)
+                           categories=categories,
+                           uncategorized=uncategorized)
 
 
 @student.route('/<assignment_name:name>/')
