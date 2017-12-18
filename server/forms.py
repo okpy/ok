@@ -644,6 +644,19 @@ class EffortGradingForm(BaseForm):
                     default=0.0,
                     description="Decimal ratio that is multiplied to the final score of a late submission.")
 
+class ExportGradesForm(BaseForm):
+    included = MultiCheckboxField('Included Assignments')
+
+    def __init__(self, assignments):
+        super().__init__()
+
+        self.included.choices = [(str(a.id), a.display_name) for a in assignments]
+        self.included.data = [str(a.id) for a in assignments if a.published_scores]
+
+    def validate(self):
+        return super().validate() and len(self.included.data) > 0
+
+
 ########
 # Jobs #
 ########
