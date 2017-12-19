@@ -56,7 +56,7 @@ def export_student_grades(student, assignments):
         status = assign.user_status(student.user)
         scores = {s.kind.lower(): s.score for s in status.scores}
         scores = score_policy(scores)
-        score_types = get_score_types(assignment)
+        score_types = get_score_types(assign)
         for score_type in score_types:
             if score_type in scores:
                 student_row.append(scores[score_type])
