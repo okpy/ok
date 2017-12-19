@@ -16,6 +16,7 @@ API.py - /api/{version}/endpoints
     api.add_resource(UserAPI, '/v3/user')
 """
 from functools import wraps
+from datetime import datetime as dt
 
 from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
@@ -23,12 +24,10 @@ import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
 
-from server.autograder import submit_continous
-
+from server import models, utils
+from server.autograder import submit_continuous
 from server.constants import STAFF_ROLES, VALID_ROLES
 from server.controllers import files
-from server.extensions import cache
-import server.models as models
 from server.utils import encode_id, decode_id
 
 endpoints = Blueprint('api', __name__)
@@ -65,6 +64,8 @@ def envelope_api(data, code, headers=None):
         code is the HTTP status code as an int
         message will always be sucess since the request did not fail.
     """
+    if request.args.get('envelope') == 'false':
+        return output_json(data, code, headers)
     message = 'success'
     if 'message' in data:
         message = data['message']
@@ -143,7 +144,7 @@ def make_backup(user, assignment_id, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user, assignment_id=assignment_id,
+    backup = models.Backup.create(submitter=user, assignment_id=assignment_id,
                            submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
@@ -351,15 +352,28 @@ class BackupSchema(APISchema):
         if not assignment:
             raise ValueError('Assignment does not exist')
         lock_flag = not assignment['active']
+        past_due = dt.utcnow() > assignment['due_date']
 
         # Do not allow submissions after the lock date
-        elgible_submit = args['submit'] and not lock_flag
+        eligible_submit = args['submit'] and not lock_flag
         backup = make_backup(user, assignment['id'], args['messages'],
-                             elgible_submit)
-        if args['submit'] and lock_flag:
-            raise ValueError('Late Submission of {}'.format(args['assignment']))
-        if elgible_submit and assignment['autograding_key']:
-            submit_continous(backup)
+                             eligible_submit)
+        if args['submit'] and past_due:
+            assign_obj = models.Assignment.by_name(args['assignment'])
+            extension = models.Extension.get_extension(user, assign_obj, time=backup.created)
+            # Submissions after the deadline with an extension are allowed
+            if extension:
+                backup.submit = True  # Need to set if the assignment is inactive
+                backup.custom_submission_time = extension.custom_submission_time or assign_obj.due_date
+                eligible_submit = True
+            elif lock_flag:
+                raise ValueError('Late Submission of {}'.format(args['assignment']))
+
+        models.db.session.commit()
+
+        if (eligible_submit and assignment['autograding_key']
+                and assignment['continuous_autograding']):
+            submit_continuous(backup)
         return backup
 
 
@@ -374,6 +388,24 @@ class VersionSchema(APISchema):
     get_fields = {
         'results': fields.List(fields.Nested(version_fields))
     }
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('current_version', type=str, required=True,
+                                 help='Current assignment')
+        self.parser.add_argument('download_link', type=str, required=True,
+                                 help='Download link')
+
+    def edit_version(self, name):
+        args = self.parse_args()
+        if not current_user.is_admin:
+            restful.abort(403)
+        if not utils.check_url(args['download_link']):
+            restful.abort(400, message='URL is not valid')
+        version = models.Version.query.filter_by(name=name).first_or_404()
+        version.current_version = args['current_version']
+        version.download_link = args['download_link']
+        version.save()
 
 
 class ScoreSchema(APISchema):
@@ -410,6 +442,19 @@ class ScoreSchema(APISchema):
 
 class CommentSchema(APISchema):
     post_fields = {}
+    comment_fields = {
+        'id': HashIDField,
+        'filename': fields.String,
+        'line': fields.Integer,
+        'message': fields.Raw,
+        'author': fields.Nested(UserSchema.simple_fields),
+        'updated': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
+    }
+    get_fields = {
+        'comments': fields.List(fields.Nested(comment_fields))
+    }
+
 
     def __init__(self):
         APISchema.__init__(self)
@@ -760,23 +805,27 @@ class Score(Resource):
 
 class Version(PublicResource):
     """ Current version of a client
-    Permissions: World Readable
-    Used by: Ok Client Auth
+    Permissions: World Readable, Staff Writable
+    Used by: Ok Client updates, automated Ok Client deploys
     """
     model = models.Version
     schema = VersionSchema()
     required_scopes = {
-        'get': []
+        'get': [],
+        'post': ['all'],
     }
 
     @marshal_with(schema.get_fields)
-    @cache.memoize(600)
     def get(self, name=None):
-        if name:
-            versions = self.model.query.filter_by(name=name).all()
-        else:
-            versions = self.model.query.all()
+        versions = models.Version.get_current_versions(name)
         return {'results': versions}
+
+    @check_scopes
+    def post(self, name=None):
+        if not name:
+            restful.abort(404)
+        self.schema.edit_version(name)
+        return {}
 
 class Assignment(Resource):
     """ Infromation about an assignment
@@ -888,6 +937,19 @@ class Comment(Resource):
             restful.abort(403)
 
         return self.schema.store_comment(user, backup)
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, backup_id):
+        backup = models.Backup.query.get(backup_id)
+        if not backup:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Backup.can(backup, user, "view"):
+            restful.abort(403)
+        return {"comments": backup.comments}
+
 
 class File(Resource):
     """ Redirect (or download) a file. No Schema due to redirect

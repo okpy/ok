@@ -14,7 +14,7 @@
         {% if (field.type != 'HiddenField' and field.type !='CSRFTokenField') and label_visible %}
             <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
         {% endif %}
-       {% if field.description %}
+        {% if field.description %}
             <p class="help-block">{{ field.description }}</p>
         {% endif %}
 

@@ -4,12 +4,13 @@
 The ok.py server collects submissions and displays analysis of student progress
 based on logging sent from client scripts.
 
-Contact us to use our hosted service (http://okpy.org) for your course.
+Courses can sign up for our free hosted service on [okpy.org](https://okpy.org)
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
 [![Build Status](https://circleci.com/gh/Cal-CS-61A-Staff/ok.svg?style=shield)](https://circleci.com/gh/Cal-CS-61A-Staff/ok)
 [![Coverage Status](https://coveralls.io/repos/github/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/github/Cal-CS-61A-Staff/ok)
+[![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
 
 View Documentation at [OK Documentation](https://okpy.github.io/documentation)
 
@@ -22,13 +23,14 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Create a virtualenv with `virtualenv -p python3 env`
 * Activate the virtualenv with `source env/bin/activate`
+* (Optional, but reccomended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
 
 Local Server
 ------------
 To run the server locally:
 
 ```bash
-$ source env/bin/activate
+$ source env/bin/activate # for virtualenv
 $ pip install -r requirements.txt  # to install libraries
 $ ./manage.py createdb
 $ ./manage.py seed
@@ -36,6 +38,21 @@ $ ./manage.py server
 ```
 
 The server will listen on http://localhost:5000.
+
+If you are running into issues - see `documentation/SETUP.md` or file an issue
+
+Running Workers
+---------------
+To run workers locally:
+
+```bash
+$ ./manage.py worker
+```
+
+To be able to run the workers you should have a `redis` server installed and running.
+
+If `redis` is not installed you can install it using your distribution's package
+manager or follow [Redis Quick Start](https://redis.io/topics/quickstart).
 
 Command Line Manager
 ------------------------
@@ -47,7 +64,7 @@ Customizing seed content
 
 Server Development
 ------------------
-The server is developed in Python 3.4+ using Flask.
+The server is developed in Python 3.5+ using Flask.
 
 Core Features
 -------------
@@ -64,16 +81,18 @@ Autograding
 Projects using ok.py
 --------------------
 - [CS61A](http://cs61a.org) uses ok.py for all assignments.
-- 3 other UC Berkeley CS courses use ok.py
+- Many other UC Berkeley CS courses use ok.py
 
 Developer Guidelines
 --------------------
 See `documentation/CONTRIBUTING.md`
 
+Recent activity:
+
+[![Throughput Graph](https://graphs.waffle.io/Cal-CS-61A-Staff/ok/throughput.svg)](https://waffle.io/Cal-CS-61A-Staff/ok/metrics/throughput)
+
 Deploying
 ---------
-[![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
-
 Docker + Kubernetes on Google Container Engine. See `kubernetes/kubernetes.md` for more info.
 
 The ok-server also supports deployments to Heroku or servers on any major hosting service.

@@ -1,12 +1,12 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms with context %}
 
-{% block title %} New Assignment - {{ current_course.display_name_with_semester }}{% endblock %}
+{% block title %} Create Assignment - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
       <h1>
-        New assignment
+        Create Assignment
         <small id="course-offering">{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
@@ -16,7 +16,7 @@
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active hidden-xs"><a href="#"><i class="fa fa-plus"></i> New Assignment</a></li>
+        <li class="active hidden-xs"><a href="#"><i class="fa fa-plus"></i> Create Assignment</a></li>
       </ol>
   </section>
 
@@ -34,7 +34,7 @@
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
                                         required="required", type='text', id="display-name") }}
                   {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
-                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-offering") }}
+                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-name") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>
@@ -46,6 +46,7 @@
                 <fieldset>
                     {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                     {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                    {{ forms.render_checkbox_field(form.continuous_autograding, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
                     {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}
@@ -86,10 +87,10 @@ function registerDisplayName(courseOffering) {
     $('#display-name').on('change, keyup', debounce(function () {
         if (!nameTweaked) {
             displayName = $('#display-name').val().toLowerCase().split(' ').join('')
-            $('#assignment-offering').val(courseOffering + '/' + displayName)
+            $('#assignment-name').val(courseOffering + '/' + displayName)
         }
     }, 25))
-    $('#assignment-offering').keyup(function () {
+    $('#assignment-name').keyup(function () {
         nameTweaked = true;
     })
 }

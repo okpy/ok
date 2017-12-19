@@ -89,6 +89,12 @@
                   <li> <a href="{{ url_for('.view_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-eye"></i> View Scores
                   </a></li>
+                  <li> <a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-calendar"></i> Grant Extension
+                  </a></li>
+                  <li> <a href="{{ url_for('.effort_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-thumbs-up"></i> Effort Grading
+                  </a></li>
                   <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
                         <i class="fa fa-gear"></i> Configure Autograder
                   </a></li>
@@ -107,8 +113,20 @@
                   <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-inbox"></i> Grading Queues
                   </a></li>
+                  <li> <a href="{{ url_for('.checkpoint_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-check"></i> Checkpoint Grading
+                  </a></li>
+                  <li> <a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
+                    <i class="fa fa-upload"></i> Upload Scores
+                  </a></li>
+                  <li> <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-file-archive-o"></i> Download Submissions
+                  </a></li>
                   <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-gavel"></i> Run MOSS
+                  </a></li>
+                  <li> <a href="{{ url_for('.assignment_moss_results', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-list"></i> Moss Results
                   </a></li>
                   <li> <a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-github"></i> Search Github
@@ -141,6 +159,7 @@
                         {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog/ (Optional)', type='text') }}
                         {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                         {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                        {{ forms.render_checkbox_field(form.continuous_autograding, label_visible=true) }}
                         {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
                         {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
                         {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}

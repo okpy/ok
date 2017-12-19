@@ -5,136 +5,229 @@ import glob
 import tempfile
 import re
 import difflib
+import socket
+import requests
+from collections import OrderedDict
+from datetime import datetime
+from html.parser import HTMLParser
 
-from server.models import Assignment, Backup, db
-from server.utils import encode_id
+from server.models import Assignment, Backup, MossResult, db
+from server.utils import encode_id, decode_id
+from server.highlight import highlight_diff
 from server import jobs
 
-@jobs.background_job
-def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
-                   subtract_template=False):
-    logger = jobs.get_job_logger()
-    logger.info('Starting MOSS Export...')
+MAX_MATCHES = 1000
+NUM_RESULTS = 250
 
-    assign = Assignment.query.filter_by(id=assignment_id).one_or_none()
-    if not assign:
-        logger.info("Could not find assignment")
+def moss_submit(moss_id, submissions, ref_submissions, language, template,
+            review_threshold=101, max_matches=MAX_MATCHES, file_regex='.*',
+            num_results=NUM_RESULTS):
+    """ Sends SUBMISSIONS and REF_SUBMISSIONS to Moss using MOSS_ID,
+    LANGUAGE, and MAX_MATCHES.
+    Stores results involving SUBMISSIONS in database.
+    """
+
+    # ISSUE:  Does not work for .ipynb files well (maybe just use sources?)
+
+    logger = jobs.get_job_logger()
+    logger.info('Connecting to Moss...')
+    moss = socket.socket()
+    moss.connect(('moss.stanford.edu', 7690))
+    moss.send('moss {}\n'.format(moss_id).encode())
+    moss.send('directory 1\n'.encode())
+    moss.send('X 0\n'.encode())
+    moss.send('maxmatches {}\n'.format(max_matches).encode())
+    moss.send('show {}\n'.format(num_results).encode())
+    print(num_results)
+    moss.send('language {}\n'.format(language).encode())
+    moss_success = moss.recv(1024).decode().strip()
+    print(moss_success)
+    moss_success = moss_success == 'yes'
+    if not moss_success:
+        moss.close()
+        logger.info('FAILED to connect to Moss.  Common issues:') 
+        logger.info('- Make sure your Moss ID is a number, and not your email address.')
+        logger.info('- Check you typed your Moss ID correctly.')
         return
 
-    subms = assign.course_submissions(include_empty=False)
-
     subm_keys = set()
-    for subm in subms:
-        if subm['backup']['id'] in subm_keys:
-            continue
-        else:
-            subm_keys.add(subm['backup']['id'])
-
-        if subm['group']:
-            group_members = subm['group']['group_member_emails'] or []
-            group_members.append(subm['user']['email'])
-            logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
-                                          ', '.join(group_members)))
-        else:
-            logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
-                                          subm['user']['email']))
+    hashed_subm_keys = set()
+    for subm in submissions:
+        subm_keys.add(subm['backup']['id'])
+        hashed_subm_keys.add(encode_id(subm['backup']['id']))
+    for subm in ref_submissions:
+        subm_keys.add(subm['backup']['id'])
 
     backup_query = (Backup.query.options(db.joinedload('messages'))
                           .filter(Backup.id.in_(subm_keys))
                           .order_by(Backup.created.desc())
                           .all())
 
-    logger.info("Retreived {} final submissions".format(len(subm_keys)))
-    # TODO: Customize the location of the tmp writing (especially useful during dev)
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        # Copy in the moss script
-        with open('server/jobs/moss-submission.pl', 'r') as f:
-            moss_script = f.read()
-
-        moss_script = moss_script.replace('YOUR_USER_ID_HERE', str(moss_id))
-        with open(tmp_dir + "/moss.pl", 'w') as script:
-            script.write(moss_script)
-
-        match_pattern = re.compile(file_regex)
-        ignored_files = set()
-
-        template_files = []
-        for template in assign.files:
-            dest = os.path.join(tmp_dir, template)
-            with open(dest, 'w') as f:
-                f.write(assign.files[template])
-            template_files.append(template)
-        logger.info("Using template files: {}".format(' '.join(template_files)))
-
-        if subtract_template:
-            logger.info("Subtract Template Enabled: Not sending templates through MOSS")
-            templates = ''
-        else:
-            templates = ' '.join(["-b {file}".format(file=f) for f in template_files])
-
-        for backup in backup_query:
-            # Write file into file
-            file_contents = [m for m in backup.messages if m.kind == 'file_contents']
-            if not file_contents:
-                logger.info("{} didn't have any file contents".format(backup.hashid))
+    match_pattern = re.compile(file_regex)
+    if template:
+        logger.info('Uploading template...')
+        merged_contents = ""
+        for filename in template:
+            if filename == 'submit' or not match_pattern.match(filename):
                 continue
-            contents = file_contents[0].contents
-            dest_dir = os.path.join(tmp_dir, backup.hashid)
+            merged_contents += template[filename] + '\n'
+        send_file(moss, 'allcode', merged_contents, 0, language)
+    fid = 0
+    logger.info('Uploading submissions...')
+    for backup in backup_query:
+        file_contents = [m for m in backup.messages if m.kind == 'file_contents']
+        if not file_contents:
+            logger.info("{} didn't have any file contents".format(backup.hashid))
+            continue
+        contents = file_contents[0].contents
+        merged_contents = ""
+        for filename in sorted(contents.keys()):
+            if filename == 'submit' or not match_pattern.match(filename):
+                continue
+            merged_contents += contents[filename] + '\n'
+        fid += 1
+        path = os.path.join(backup.hashid, 'allcode')
+        send_file(moss, path, merged_contents, fid, language)
+    moss.send("query 0 Submitted via okpy.org\n".encode())
+    logger.info('Awaiting response...')
+    url = moss.recv(1024).decode().strip()
+    moss.send("end\n".encode())
+    moss.close()
+    logger.info('Moss results at: {}'.format(url))
+    parse_moss_results(url, hashed_subm_keys, logger, match_pattern,
+                    template, review_threshold)
 
-            if not os.path.isdir(dest_dir):
-                os.makedirs(dest_dir)
+def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_threshold=101):
+    run_time = datetime.now()
+    match = 0
+    # Convert decimal thresholds to percentages
+    if review_threshold < 1:
+        review_threshold *= 100
+    while True:
+        r = requests.get('{}/match{}-top.html'.format(base_url, match))
+        if r.status_code == 404:
+            logger.info('Finished parsing {} results.'.format(match))
+            break
+        match += 1
+        parser = MossParser()
+        parser.feed(r.content.decode())
+        hashidA, hashidB = parser.ids
+        if hashed_ids and hashidA not in hashed_ids and hashidB not in hashed_ids:
+            logger.info('Skipping Moss result #{}.'.format(match))
+            continue
+        submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
+        submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
 
-            for file in contents:
-                if file == 'submit':  # ignore fake file from ok-client
-                    continue
-                if subtract_template and file in assign.files:
-                    # Compare to template and only include lines that new
-                    template, source = assign.files[file], contents[file]
-                    d = difflib.Differ(linejunk=difflib.IS_LINE_JUNK,
-                                       charjunk=difflib.IS_CHARACTER_JUNK)
-                    diff = d.compare(template.splitlines(keepends=True),
-                                     source.splitlines(keepends=True))
-                    added = [line[1:] for line in diff if line[0] == '+']
-                    contents[file] = ''.join(added)
+        similarityA, similarityB = parser.similarities
+        rangesA, rangesB = parser.ranges[::2], parser.ranges[1::2]
+        matchesA = [[int(i) for i in r.split('-')] for r in rangesA]
+        matchesB = [[int(i) for i in r.split('-')] for r in rangesB]
+        matchesA = recalculate_lines(submissionA, matchesA, pattern)
+        matchesB = recalculate_lines(submissionB, matchesB, pattern)
+        similarityA = recalculate_similarity(submissionA, matchesA, template)
+        similarityB = recalculate_similarity(submissionB, matchesB, template)
+        if not hashed_ids or hashidA in hashed_ids:
+            result = MossResult(primary=submissionA, secondary=submissionB,
+                primary_matches=matchesA, secondary_matches=matchesB,
+                tags=['review'] if similarityA >= review_threshold else [], 
+                similarity=similarityA, run_time=run_time)
+            db.session.add(result)
+        if not hashed_ids or hashidB in hashed_ids:
+            result = MossResult(primary=submissionB, secondary=submissionA,
+                primary_matches=matchesB, secondary_matches=matchesA,
+                tags=['review'] if similarityB >= review_threshold else [],
+                similarity=similarityB, run_time=run_time)
+            db.session.add(result)
+        logger.info('Adding Moss result #{}...'.format(match))
+    db.session.commit()
 
-                if match_pattern.match(file):
-                    with open(os.path.join(dest_dir, file), 'w') as f:
-                        f.write(contents[file])
-                else:
-                    ignored_files.add(file)
+class MossParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.last_start = None
+        self.ids = []
+        self.similarities = []
+        self.ranges = []
+    def handle_starttag(self, tag, attrs):
+        self.last_start = tag
+    def handle_data(self, data):
+        data = data.strip()
+        if self.last_start == 'th' and data:
+            ident, percent = data.split('/ (')
+            self.ids.append(ident)
+            self.similarities.append(int(percent[:-2]))
+        elif self.last_start == 'a' and data:
+            self.ranges.append(data)
 
-        # tmp_dir contains folders of the form: backup_hashid/file1.py
-        os.chdir(tmp_dir)
-        all_student_files = glob.glob("*/*")
-
-        logger.info("Wrote all files to {}".format(tmp_dir))
-
-        if ignored_files:
-            logger.info("Regex {} ignored files with names: {}".format(file_regex,
-                                                                       ignored_files))
+def recalculate_lines(submission, raw_matches, pattern):
+    files = submission.files()
+    file_matches = {f:[] for f in files if pattern.match(f)}
+    file_lengths = {f:len(files[f].split('\n')) for f in file_matches}
+    starts = OrderedDict()
+    current = 0
+    for filename in sorted(file_matches.keys()):
+        starts[current] = filename
+        current += file_lengths[filename]
+    def find_file(line):
+        last_line = 0
+        for start_line in starts:
+            if line == start_line:
+                return starts[start_line], start_line
+            if line < start_line:
+                return starts[last_line], last_line
+            last_line = start_line
+        return starts[last_line], last_line
+    sflist = list(starts.values())
+    for match in raw_matches:
+        match = [line - 1 for line in match] # 0 index lines
+        startfile, sf_line = find_file(match[0])
+        endfile, ef_line = find_file(match[1])
+        if startfile == endfile:
+            file_matches[startfile].append([x - sf_line for x in match])
         else:
-            logger.info("Regex {} has captured all possible files".format(file_regex))
+            start_match = [match[0] - sf_line, file_lengths[startfile] - 1]
+            file_matches[startfile].append(start_match)
+            end_match = [0, match[1] - ef_line]
+            file_matches[endfile].append(end_match)
+            midfiles = sflist[sflist.index(startfile) + 1: sflist.index(endfile)]
+            for file in midfiles:
+                file_matches[file].append([0, file_lengths[file] - 1])
+    return file_matches
 
-        if not all_student_files:
-            raise Exception("Did not match any files")
+def recalculate_similarity(submission, matches, template):
+    student_lines, similar_student_lines = 0, 0
+    files = submission.files()
+    for filename in matches:
+        student_code = files[filename]
+        matched_lines = []
+        for m in matches[filename]:
+            matched_lines += list(range(m[0], m[1] + 1))
+        matched_lines = set(matched_lines)
+        template_code = template[filename] if filename in template else ""
+        for line in highlight_diff(filename, template_code, student_code):
+            if line.tag == 'insert':
+                student_lines += 1
+                if line.line_after in matched_lines:
+                    similar_student_lines += 1
+    return round(similar_student_lines * 100 / student_lines)
 
-        # Ensure that all of the files are in the tmp_dir (and not elsewhere)
-        command = ("perl moss.pl -l {lang} {templates} -d {folder}"
-                   .format(lang=language, templates=templates,
-                           folder=' '.join(all_student_files)))
+def send_file(moss, path, contents, fid, language):
+    size = len(contents.encode())
+    path = path.replace(' ', '_')
+    header = "file {} {} {} {}\n".format(fid, language, size, path)
+    msg = header + contents
+    moss.send(msg.encode())
 
-        logger.info("Running {}".format(command[:100] + ' ...'))
-
-        try:
-            process = subprocess.check_output(shlex.split(command),
-                                              stderr=subprocess.STDOUT)
-            moss_output = process.decode("utf-8")
-            logger.info(moss_output)
-            last_line = moss_output
-            if 'moss.stanford' in last_line:
-                return last_line
-        except subprocess.CalledProcessError as e:
-            logger.warning("There was an error running the Moss Upload.")
-            logger.info("{}".format(e.output.decode('utf-8')))
-            raise e
+@jobs.background_job
+def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
+                   review_threshold=101, num_results=NUM_RESULTS):
+    assign = Assignment.query.filter_by(id=assignment_id).one_or_none()
+    if not assign:
+        raise Exception("Could not find assignment")
+    subms = assign.course_submissions(include_empty=False)
+    template = {}
+    if assign.files:
+        for filename in assign.files:
+            template[filename] = assign.files[filename]
+    return moss_submit(moss_id, subms, [], language, template,
+        review_threshold, MAX_MATCHES, file_regex, num_results)

@@ -4,7 +4,7 @@ from werkzeug.exceptions import BadRequest
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-from sqlalchemy import PrimaryKeyConstraint, MetaData, types
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -20,7 +20,7 @@ from collections import namedtuple, Counter
 
 import contextlib
 import csv
-from datetime import datetime as dt
+import datetime as dt
 import json
 import logging
 import shlex
@@ -28,7 +28,8 @@ import urllib.parse
 import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI)
+                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI,
+                              INSTRUCTOR_ROLE, ROLE_DISPLAY_NAMES)
 
 from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
@@ -219,6 +220,14 @@ class User(Model, UserMixin):
         # TODO: Pass in assignment_id (Useful for course dashboard)
         return GradingTask.query.filter_by(grader=self, score_id=None).count()
 
+    def is_staff(self):
+        """ Return True if the user is a staff member in any course. """
+        if self.is_admin:
+            return True
+        query = (Enrollment.query.filter(Enrollment.user_id == self.id)
+                                 .filter(Enrollment.role.in_(STAFF_ROLES)))
+        return query.count() > 0
+
     @staticmethod
     def get_by_id(uid):
         """ Performs .query.get; potentially can be cached."""
@@ -271,8 +280,14 @@ class Course(Model):
             semester = "Fall"
         elif "sp" in self.offering[-4:]:
             semester = "Spring"
-        else:
+        elif "wi" in self.offering[-4:]:
+            semester = "Winter"
+        elif "au" in self.offering[-4:]:
+            semester = "Autumn"
+        elif "su" in self.offering[-4:]:
             semester = "Summer"
+        else:
+            return self.display_name + " (20{0})".format(year)
         return self.display_name + " ({0} 20{1})".format(semester, year)
 
     def statistics(self):
@@ -302,13 +317,31 @@ class Course(Model):
             course=self
         ).count() > 0
 
+    def get_participants(self, roles):
+        return (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role.in_(roles),
+                                  Enrollment.course == self)
+                          .all())
+
     def get_staff(self):
-        return [e for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter(Enrollment.role.in_(STAFF_ROLES),
-                                    Enrollment.course == self)
-                            .all()
-                            )]
+        return self.get_participants(STAFF_ROLES)
+
+    def get_students(self):
+        return self.get_participants([STUDENT_ROLE])
+
+    def initialize_content(self, user):
+        """ When a course is created, add the creating user as an instructor
+        and then create an example assignment.
+        """
+        enroll = Enrollment(course=self, user_id=user.id, role=INSTRUCTOR_ROLE)
+        assign = Assignment(course=self, display_name="Example",
+                            name=self.offering + '/example',
+                            max_group_size=2, uploads_enabled=True,
+                            due_date=dt.datetime.now() + dt.timedelta(days=7),
+                            lock_date=dt.datetime.now() + dt.timedelta(days=8))
+        db.session.add_all([enroll, assign])
+        db.session.commit()
 
 
 class Assignment(Model):
@@ -334,6 +367,7 @@ class Assignment(Model):
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
     revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
+    continuous_autograding = db.Column(db.Boolean(), default=False)
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
     published_scores = db.Column(StringList, nullable=False, default=[])
@@ -347,7 +381,7 @@ class Assignment(Model):
 
     @hybrid_property
     def active(self):
-        return dt.utcnow() <= self.lock_date
+        return dt.datetime.utcnow() <= self.lock_date
 
     @classmethod
     def can(cls, obj, user, action):
@@ -831,7 +865,14 @@ class Enrollment(Model):
     user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participations")
 
-    export_items = ('sid', 'class_account', 'section')
+    export_items = ('sid', 'class_account', 'section', 'role')
+
+    @hybrid_property
+    def export(self):
+        """ CSV export data. Overrides Model.export."""
+        data = self.as_dict()
+        data['role'] = ROLE_DISPLAY_NAMES[self.role]
+        return {k: v for k, v in data.items() if k in self.export_items}
 
     def has_role(self, course, role):
         if self.course != course:
@@ -953,6 +994,26 @@ class Backup(Model):
     db.Index('idx_backupCreated', 'created')
 
     @classmethod
+    def create(cls, submitter, assignment_id=None, assignment=None, submit=False,
+            creator=None, created=None, custom_submission_time=None):
+        created = created or db.func.now()
+        assignment_id = assignment_id or assignment.id
+        backup = cls(submitter=submitter, assignment_id=assignment_id,
+                creator=creator, submit=submit, created=created,
+                custom_submission_time=custom_submission_time)
+        db.session.add(backup)
+
+        assignment = assignment or Assignment.query.get(assignment_id)
+        extension = Extension.get_extension(submitter or creator, assignment, time=created)
+        # Submissions after the deadline with an extension are allowed
+        if extension:
+            backup.submit = True  # Need to set if the assignment is inactive
+            backup.custom_submission_time = extension.custom_submission_time
+
+        db.session.commit()
+        return backup
+
+    @classmethod
     def can(cls, obj, user, action):
         if action == "create":
             return user.is_authenticated
@@ -1050,6 +1111,9 @@ class Backup(Model):
                 case = dict_form["case_id"]
                 return case
         return "Unknown Question"
+
+    def moss_results(self):
+        return MossResult.query.filter(primary=self)
 
     @staticmethod
     @cache.memoize(120)
@@ -1300,12 +1364,17 @@ class Version(Model):
 
     @staticmethod
     @cache.memoize(1800)
-    def get_current_version(name):
-        version = Version.query.filter_by(name=name).one_or_none()
-        if version:
-            return version.current_version, version.download_link
-        return None, None
+    def get_current_versions(name=None):
+        if name:
+            return Version.query.filter_by(name=name).all()
+        else:
+            return Version.query.all()
 
+    def save(self):
+        cache.delete_memoized(Version.get_current_versions, self.name)
+        cache.delete_memoized(Version.get_current_versions, None)
+        db.session.add(self)
+        db.session.commit()
 
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.
@@ -1628,6 +1697,36 @@ class Job(Model):
     result_kind = db.Column(db.Enum(*result_kinds, name='result_kind'), default='string')
     result = db.Column(mysql.MEDIUMTEXT)  # Final output, if the job did not crash
 
+################
+# Moss Results #
+################
+
+class MossResult(Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Time that Moss was run
+    run_time = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    # Primary submission and matches of this result (filter by this)
+    primary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    # Each file key maps to a list of 2 item lists
+    # (which represent the start and end of the range, inclusive)
+    primary_matches = db.Column(JsonBlob, nullable=False)
+
+    # Secondary submission and matches of this result
+    secondary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    secondary_matches = db.Column(JsonBlob, nullable=False)
+
+    # Percentage of primary that is similar to secondary
+    similarity = db.Column(db.Integer, nullable=False)
+
+    # Tags on this result used for organizing
+    tags = db.Column(StringList, nullable=False, default=[])
+
+    primary = db.relationship("Backup", foreign_keys='MossResult.primary_id')
+    secondary = db.relationship("Backup", foreign_keys='MossResult.secondary_id')
+
+
 ##########
 # Canvas #
 ##########
@@ -1746,7 +1845,7 @@ class ExternalFile(Model):
             assignment_id=assignment_id,
             user_id=user_id,
             backup=backup,
-            staff_file=False)
+            staff_file=staff_file)
         db.session.add(external_file)
         db.session.commit()
         return external_file
@@ -1778,3 +1877,86 @@ class ExternalFile(Model):
             group_members = obj.assignment.active_user_ids(obj.user_id)
             return user.id in group_members
         return False
+
+##############
+# Extensions #
+##############
+
+class Extension(Model):
+    """ Extensions allows students to submit after the deadline. """
+    __tablename__ = 'extension'
+    __table_args__ = (
+        UniqueConstraint('assignment_id', 'user_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    staff_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(mysql.MEDIUMTEXT)
+
+    expires = db.Column(db.DateTime(timezone=True), nullable=True)
+    custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
+
+    staff = db.relationship("User", foreign_keys='Extension.staff_id')
+    user = db.relationship("User", foreign_keys='Extension.user_id')
+    assignment = db.relationship("Assignment")
+
+    def members(self):
+        members = self.assignment.active_user_ids(self.user_id)
+        return User.query.filter(User.id.in_(members)).all()
+
+    @property
+    def active(self):
+        return dt.datetime.utcnow() <= self.expires
+
+    @hybrid_property
+    def course(self):
+        return self.assignment.course
+
+    def get_backups(self):
+        """ Returns all backups where this extension applies """
+        return Backup.query.filter(Backup.assignment == self.assignment,
+                Backup.created <= self.expires,
+                Backup.submitter == self.user).all()
+
+    @classmethod
+    def create(cls, staff, assignment, user, expires, custom_submission_time=None, message=None):
+        ext = cls(staff=staff, assignment=assignment, user=user, message=message, expires=expires, custom_submission_time=custom_submission_time)
+        db.session.add(ext)
+        db.session.commit()
+
+        # Retroactively change the submission times of all past late backups
+        # that were created before the expiration time.
+        for backup in ext.get_backups():
+            backup.custom_submission_time = custom_submission_time or assignment.due_date
+            db.session.add(backup)
+
+        db.session.commit()
+        return ext
+
+    @classmethod
+    def delete(cls, ext):
+        for backup in ext.get_backups():
+            backup.custom_submission_time = None
+            db.session.add(backup)
+        db.session.delete(ext)
+        db.session.commit()
+
+    @classmethod
+    def get_extension(cls, student, assignment, time=None):
+        """ Returns the extension if the student has an extension """
+        if time is None:
+            time = db.func.now()
+        group_members = assignment.active_user_ids(student.id)
+        return cls.query.filter(cls.assignment == assignment,
+                                cls.expires >= time,
+                                cls.user_id.in_(group_members)).first()
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if not user:
+            return False
+        if user.is_admin:
+            return True
+        return user.is_enrolled(obj.course.id, STAFF_ROLES)

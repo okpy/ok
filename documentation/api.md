@@ -42,6 +42,24 @@ Access tokens are short lived (10 minutes - 1 day). Once they expire, you must o
 ## Client Version
 If the `client_version` parameter is included in the URL, the API will respond with a 403 if the version is not up to date with the version on the Ok Admin Dashboard. The URL to download the newest version of the client is included in the response.
 
+## Response Format
+
+The OK API responds with JSON data. (Content Type: `application/json`)
+
+### Envelope
+
+All responses from the API are wrapped in an envelope that contains metadata about the response.
+
+Field | Type | Description
+---------- | ------- | -------
+status | int | The HTTP Status Code for the response
+message | string | Describe any errors that were encountered. Default: 'success'
+data | dict | The actual data that the endpoint provided
+
+To disable the envelope - add `envelope=false` as a query parameter to your URL.
+
+> `curl "https://okpy.org/api/v3/endpoint?envelope=false"`
+
 # General Endpoints
 
 ## API Info
@@ -71,7 +89,7 @@ No authentication required.
 #### Query Parameters
 None
 
-## Client Version
+## Get Client Version
 >><h4> Example Response </h4>
 ```
 curl "https://okpy.org/api/v3/version"
@@ -104,6 +122,39 @@ No authentication required.
 If the endpoint is provided with the name of a client in the form of
 `GET https://okpy.org/api/v3/version/name/`, the results will be filtered for clients with that name.
 Currently, the only client name used is `ok-client`
+
+#### Response
+See example response.
+
+## Set Client Version
+>><h4> Example Response </h4>
+```
+curl "https://okpy.org/api/v3/version"
+{
+    "message": "success",
+    "data": {},
+    "code": 200
+}
+```
+
+Set the current version of OK Clients. Used by automated deploys.
+
+#### Permissions
+Must be a staff member in at least one course.
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/version/<string:client-name>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of submitter
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+current_version | String | (Required) New version for client
+download_link | String | (Required) New download link for client
 
 #### Response
 See example response.
@@ -600,6 +651,52 @@ message | String | (Required) Comment contents as raw Markdown text. New lines r
 
 #### Response
 No `data` is returned.
+
+##View a Backup's Comments
+>><h4> Example Response </h4>
+> ```
+python
+import requests
+url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
+access_token = 'test'
+r = requests.get(url.format(access_token))
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+  "data": {
+    "comments":[
+      {
+        'id': 'wdLGDb',
+        'filename': 'lab00.py',
+        'line': 2,
+        'message': "Great job.\nConsider using the use of the `total` variable.",
+        'author': {"email": "test@berkeley.edu", "id": "a4r4gd"},
+        "updated": "2016-06-21T03:05:55",
+        "created": "2016-06-21T03:05:53"
+      },
+      ...
+    ]
+  },
+  "code": 200,
+  "message": "success"
+}
+```
+
+#### Permissions
+The access_token must be authorized in order to view the comments.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/backups/<string:backup_id>/comment/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of viewer
+
+#### Response
+See example response
 
 # Users
 

@@ -1,0 +1,71 @@
+{% if moss_results %}
+{% import 'staff/_helpers.html' as helpers %}
+
+<div class="box">
+    <div class="box-header">
+        <h3 class="box-title"><span>Moss Results</span></h3>
+        <div class="box-tools">
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding table-loading" id="moss-list">
+        <table class="table table-hover">
+            <thead>
+                <th class="sort" data-sort="created">Created</th>
+                {% if show_assignment %}
+                <th class="sort" data-sort="assignment">Assignment</th>
+                {% endif %}
+                <th class="sort" data-sort="submission">Student's Submission</th>
+                <th class="sort" data-sort="other">Similar Student</th>
+                <th class="sort" data-sort="secondary">Similar Submission</th>
+                <th class="sort" data-sort="similarity"> Similarity </th>
+            </thead>
+
+            <tbody class="list">
+                {%- for item in moss_results %}
+                <tr>
+                    <td class="created" data-similarity-b="{{item['run_time']}}">
+                        {{ item['run_time'] }}
+                    </td>
+                    {% if show_assignment %}
+                    <td class="assignment">
+                        <a href="{{url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=item['primary']['assignment_id'])}}">{{ item['primary']['assignment']['display_name'] }}
+                        </a>
+                    </td>
+                    {% endif %}
+                    <td class="submission">
+                      {{ helpers.backup_link(item['primary']['id']) }}
+                    </td>
+                    <td class="other" data-email="{{item['secondary']['submitter']['email']}}"
+                    data-name="{{item['secondary']['submitter']['name']}}">
+                    <a href="{{ url_for('.student_view', cid=current_course.id, email=item['secondary']['submitter']['email'])}}">
+                        {{ item['secondary']['submitter']['identifier'] }}
+                    </a>
+                    <td class="secondary">
+                      {{ helpers.backup_link(item['secondary']['id']) }}
+                    </td>
+                    <td class="similarity">
+                        <a href="{{ url_for('.get_moss_diffs', cid=current_course.id, aid=item['primary']['assignment_id'], mid=item['id'])}}">
+                        {{ item['similarity'] }}%
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+    <div class="box-footer">
+        <div class="pull-left">
+        <h5 class="box-title"><span> Total: {{ moss_results | length }} </span></h5>
+        </div>
+    </div>
+
+</div>
+{% endif %}

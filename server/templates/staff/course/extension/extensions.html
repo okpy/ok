@@ -1,0 +1,91 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %}  Extensions - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        Extensions for {{ current_course.display_name }}
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.list_extensions', cid=current_course.id) }}"><i class="fa fa-life-ring"></i>Extensions</a></li>
+    	</ol>
+  </section>
+
+  <section class="content">
+
+  		{% include 'alerts.html' %}
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                    <h3 class="box-title"> All Extensions </h3>
+                        <div class="box-tools clearfix">
+                            <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.create_extension', cid=current_course.id)}}">
+                                <i class="fa fa-plus"></i> Grant Extension
+                            </a>
+                        </div>
+                    </div>
+                    <div class="box-body table-responsive no-padding">
+                    <table class="table table-striped">
+                        <tbody><tr>
+                            <th>Assignment</th>
+                            <th>Student</th>
+                            <th>Valid Until</th>
+                            <th>Custom Submission Time</th>
+                            <th>Message</th>
+                            <th>Staff</th>
+                            <th>Delete</th>
+                        </tr>
+
+                        {% for extension in extensions %}
+                        <tr>
+                            <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=extension.assignment.id) }}">{{ extension.assignment.display_name }}</a></td>
+                            <td><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=extension.user.email, aid=extension.assignment.id) }}">
+                                {{ extension.user.identifier }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="label label-{{ 'success' if extension.active else 'default'}}">
+                                    {{ utils.local_time(extension.expires, current_course) }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if extension.custom_submission_time %}
+                                {{ utils.local_time(extension.custom_submission_time, current_course) }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ extension.message | default('—', true)}}</td>
+                            <td>{{ extension.staff.email }}</td>
+                            <td>
+                                {% call forms.render_form_bare(csrf_form, action_url=url_for('.delete_extension', cid=current_course.id, ext_id=extension.id), class_='form') %}
+                                    <button class='btn btn-danger btn-flat' data-confirm="Are you sure you want to revoke {{ extension.user.email }}'s extension for {{ extension.assignment.display_name }}?">
+                                        <i class='fa fa-trash-o'></i>
+                                    </button>
+                                {% endcall %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if not extensions %}
+                        <h3 class="table-empty-state-heading">No extensions have been granted</h3>
+                        <h4 class="table-empty-state-details">
+                            To grant an extension to a student, <a href="{{ url_for('.create_extension', cid=current_course.id) }}">click here</a>
+                        </h4>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+  </section>
+{% endblock %}

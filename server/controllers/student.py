@@ -9,12 +9,12 @@ import os
 import time
 
 from server import highlight, models, utils
-from server.autograder import submit_continous
+from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
-from server.utils import (is_safe_redirect_url, group_action_email,
-                          invite_email, send_email)
+from server.models import (User, Course, Assignment, Group, Backup, Message,
+                           ExternalFile, Extension, db)
+from server.utils import is_safe_redirect_url, send_emails, invite_email
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +107,7 @@ def assignment(name):
 
     if group:
         can_invite = len(group.members) < assign.max_group_size
+    has_extension = Extension.get_extension(current_user, assign)
 
     data = {
         'course': assign.course,
@@ -120,6 +121,7 @@ def assignment(name):
         'scores': scores,
         'can_invite': can_invite,
         'can_remove': can_remove,
+        'has_extension': has_extension,
         'csrf_form': CSRFForm()
     }
     return render_template('student/assignment/index.html', **data)
@@ -128,6 +130,7 @@ def assignment(name):
 @student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
 @login_required
 def submit_assignment(name):
+    # TODO: Unify student & staff upload.
     assign = get_assignment(name)
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
@@ -135,20 +138,25 @@ def submit_assignment(name):
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
-    if not assign.active:
-        flash("It's too late to submit this assignment", 'warning')
-        return redirect(url_for('.assignment', name=assign.name))
 
+    extension = None # No need for an extension
+    if not assign.active:
+        extension = Extension.get_extension(current_user, assign)
+        if not extension:
+            flash("It's too late to submit this assignment", 'warning')
+            return redirect(url_for('.assignment', name=assign.name))
 
     if request.method == "POST":
-        backup = Backup(
+        backup = Backup.create(
             submitter=current_user,
             assignment=assign,
             submit=True,
         )
         assignment = backup.assignment
-        templates = assignment.files or []
+        if extension:
+            backup.custom_submission_time = extension.custom_submission_time
 
+        templates = assignment.files or []
         files = {}
 
         def extract_file_index(file_ind):
@@ -193,7 +201,8 @@ def submit_assignment(name):
                 upload.stream.seek(0) # We've already read data, so reset before uploading
                 dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
                 bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
-                                               prefix=dest_folder, course_id=assign.course.id,
+                                               staff_file=False, prefix=dest_folder,
+                                               course_id=assign.course.id,
                                                backup=backup, assignment_id=assign.id)
                 db.session.add(bin_file)
 
@@ -202,6 +211,14 @@ def submit_assignment(name):
 
         db.session.add(backup)
         db.session.commit()
+
+        # Send to continuous autograder
+        if assign.autograding_key and assign.continuous_autograding:
+            try:
+                submit_continuous(backup)
+            except ValueError as e:
+                flash('Did not send to autograder: {}'.format(e), 'warning')
+
         return jsonify({
             'backup': backup.hashid,
             'url': url_for('.code', name=assign.name, submit=backup.submit,
@@ -281,12 +298,18 @@ def download(name, submit, bid, file):
         abort(404)
     response = make_response(contents)
 
-    content_disposition = "inline" if 'raw' in request.args else "attachment"
+    inline = 'raw' in request.args
+
+    content_disposition = "inline" if inline else "attachment"
     response.headers["Content-Disposition"] = ("{0}; filename={1!s}"
                                                .format(content_disposition, file))
     response.headers["Content-Security-Policy"] = "default-src 'none';"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Content-Type"] = "text/plain; charset=UTF-8"
+    if file.endswith('.ipynb') and not inline:
+        # Prevent safari from adding a .txt extension to files
+        response.headers["Content-Type"] = "application/octet-stream; charset=UTF-8"
+    else:
+        response.headers["Content-Type"] = "text/plain; charset=UTF-8"
 
     return response
 
@@ -361,7 +384,7 @@ def group_remove(name):
             else:
                 descriptor = target.email
             body = "{0} removed {1} from the group.".format(current_user.email, descriptor)
-            send_email(members, subject, body)
+            send_emails(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
@@ -380,20 +403,20 @@ def group_respond(name):
         flash("You are not in a group")
     else:
         try:
-
             if action == "accept":
                 group.accept(current_user)
                 subject = "{0} has accepted the invitation to join your group".format(current_user.email)
                 body = "Your group for {0} now has {1} members".format(assignment.display_name,
                                                                        len(group.members))
-                group_action_email(group.members, subject, body)
+                members = [m.user.email for m in group.members]
+                send_emails(members, subject, body)
             elif action == "decline":
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
                 subject = "{0} declined an invite to join the group".format(current_user.email)
                 body = "{0} declined to join the group for {1}".format(current_user.email,
                                                                        assignment.display_name)
-                send_email(members, subject, body)
+                send_emails(members, subject, body)
             elif action == "revoke":
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
@@ -401,8 +424,7 @@ def group_respond(name):
                                                                   target)
                 body = "{0} has revoked the invitation for {1}".format(current_user.email,
                                                                        target)
-                send_email(members, subject, body)
-
+                send_emails(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
