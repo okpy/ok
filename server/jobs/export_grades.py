@@ -41,7 +41,6 @@ def get_score_types(assignment):
 
 def get_headers(assignments):
     headers = ['Email', 'SID']
-    new_assignments = []
     for assignment in assignments:
         new_headers = ['{} ({})'.format(assignment.display_name, score_type.title()) for
                 score_type in get_score_types(assignment)]
@@ -64,21 +63,19 @@ def export_student_grades(student, assignments):
                 student_row.append(0)
     return student_row
 
+
 @jobs.background_job
 def export_grades():
     logger = jobs.get_job_logger()
-
     current_user = jobs.get_current_job().user
     course = Course.query.get(jobs.get_current_job().course_id)
     assignments = course.assignments
     students = (Enrollment.query
-                          .options(db.joinedload('user'))
-                          .filter(Enrollment.role == STUDENT_ROLE,
-                                  Enrollment.course == course)
-                            .all())
+      .options(db.joinedload('user'))
+      .filter(Enrollment.role == STUDENT_ROLE, Enrollment.course == course)
+      .all())
 
     headers, assignments = get_headers(assignments)
-
     logger.info("Using these headers:")
     for header in headers:
         logger.info('\t' + header)
@@ -94,13 +91,10 @@ def export_grades():
             writer.writerow(row)
             if i % 50 == 0:
                 logger.info('Exported {}/{}'.format(i, total_students))
-
         f.seek(0)
-
         created_time = local_time(dt.datetime.now(), course, fmt='%b-%-d %Y at %I-%M%p')
         csv_filename = '{course_name} Grades ({date}).csv'.format(
                 course_name=course.display_name, date=created_time)
-
         # convert to bytes for csv upload
         csv_bytes = io.BytesIO(bytearray(f.read(), 'utf-8'))
         upload = ExternalFile.upload(csv_bytes, user_id=current_user.id, name=csv_filename,
