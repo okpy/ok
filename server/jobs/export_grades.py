@@ -43,7 +43,7 @@ def get_headers(assignments):
     headers = ['Email', 'SID']
     new_assignments = []
     for assignment in assignments:
-        new_headers = ["{} ({})".format(assignment.display_name, score_type.title()) for
+        new_headers = ['{} ({})'.format(assignment.display_name, score_type.title()) for
                 score_type in get_score_types(assignment)]
         if new_headers:
             new_assignments.append(assignment)
