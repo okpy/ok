@@ -41,13 +41,14 @@ def get_score_types(assignment):
 
 def get_headers(assignments):
     headers = ['Email', 'SID']
+    new_assignments = []
     for assignment in assignments:
         new_headers = ['{} ({})'.format(assignment.display_name, score_type.title()) for
                 score_type in get_score_types(assignment)]
         if new_headers:
             new_assignments.append(assignment)
             headers.extend(new_headers)
-    return headers, assignments
+    return headers, new_assignments
 
 def export_student_grades(student, assignments):
     student_row = [student.user.email, student.sid]
