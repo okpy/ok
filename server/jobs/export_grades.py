@@ -26,23 +26,28 @@ def score_policy(scores):
     return scores
 
 
+def get_score_types(assignment):
+    types = []
+    scores = [s.lower() for s in assignment.published_scores]
+    if scores_checker(scores, TOTAL_KINDS):
+        types.append('total')
+    if scores_checker(scores, COMP_KINDS):
+        types.append('composition')
+    if scores_checker(scores, ['checkpoint 1']):
+        types.append('checkpoint 1')
+    if scores_checker(scores, ['checkpoint 2']):
+        types.append('checkpoint 2')
+    return types
+
 def get_headers(assignments):
     headers = ['Email', 'SID']
     new_assignments = []
     for assignment in assignments:
-        scores = [s.lower() for s in assignment.published_scores]
-        new_headers = []
-        if scores_checker(scores, TOTAL_KINDS):
-            new_headers.append('{} (Total)'.format(assignment.display_name))
-        if scores_checker(scores, COMP_KINDS):
-            new_headers.append('{} (Composition)'.format(assignment.display_name))
-        if scores_checker(scores, ['checkpoint 1']):
-            new_headers.append('{} (Checkpoint 1)'.format(assignment.display_name))
-        if scores_checker(scores, ['checkpoint 2']):
-            new_headers.append('{} (Checkpoint 2)'.format(assignment.display_name))
+        new_headers = ['{} ({})'.format(assignment.display_name, score_type.title()) for
+                score_type in get_score_types(assignment)]
         if new_headers:
             new_assignments.append(assignment)
-        headers.extend(new_headers)
+            headers.extend(new_headers)
     return headers, assignments
 
 def export_student_grades(student, assignments):
@@ -51,14 +56,12 @@ def export_student_grades(student, assignments):
         status = assign.user_status(student.user)
         scores = {s.kind.lower(): s.score for s in status.scores}
         scores = score_policy(scores)
-        if 'total' in scores:
-            student_row.append(scores['total'])
-        if 'composition' in scores:
-            student_row.append(scores['composition'])
-        if 'checkpoint 1' in scores:
-            student_row.append(scores['checkpoint 1'])
-        if 'checkpoint 2' in scores:
-            student_row.append(scores['checkpoint 2'])
+        score_types = get_score_types(assign)
+        for score_type in score_types:
+            if score_type in scores:
+                student_row.append(scores[score_type])
+            else:
+                student_row.append(0)
     return student_row
 
 @jobs.background_job
