@@ -217,6 +217,14 @@ class TestApi(OkTestCase):
         self.assert_403(response)
 
         self.login(self.staff1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        # Staff members do not have permission to edit versions
+        self.assert_403(response)
+
+        self.login(self.admin.email)
 
         response = self.client.post('/api/v3/version/ok', data={
             'current_version': 'v1.5.1',
@@ -488,6 +496,52 @@ class TestApi(OkTestCase):
         response = self.client.post(comment_url, data=data)
         self.assert_403(response)
         assert response.json['code'] == 403
+
+        def test_get_comments(self):
+            self._test_backup(True)
+            user = User.lookup(self.user1.email)
+            staff = User.lookup(self.staff1.email)
+            backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+            comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
+            comment1 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 2,
+                message = 'hello world'
+            )
+            comment2 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 5,
+                message = 'wow'
+            )
+            db.session.add(comment1)
+            db.session.add(comment2)
+
+            #check to see if student can view comments on own backup's comments
+            self.login(self.user1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.assertEquals(len(response['data']['comments']), 2)
+            self.assertEquals(response['data']['comments'][0].message, 'hello world')
+            self.assertEquals(response['data']['comments'][1].message, 'wow')
+            self.logout()
+
+            #check to see if staff can access comments
+            self.login(self.staff1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.logout()
+
+            #check to see another student can't see others' backup's comments
+            self.login(self.user2.email)
+            response = self.client.get(comment_url)
+            self.assert_403(response)
+            self.logout()
+
+
 
 
     def test_user_api(self):

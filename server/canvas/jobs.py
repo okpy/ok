@@ -40,7 +40,7 @@ def upload_scores(canvas_assignment_id):
         scores = []
         for enrollment in enrollments:
             user_ids = assignment.active_user_ids(enrollment.user_id)
-            scores.extend(assignment.scores(user_ids))
+            scores.extend(assignment.scores(user_ids, only_published=False))
         scores = [s for s in scores if s.kind in canvas_assignment.score_kinds]
         old_score = old_scores.get(canvas_user_id)
         if not scores:
@@ -74,6 +74,8 @@ def enroll_students(canvas_course_id):
     enrollment_info = []
     logger.info(row_format.format(email='EMAIL', name='NAME', sid='SID'))
     for student in api.get_students(canvas_course):
+        if not student['email']:
+            continue
         info = {
             'email': student['email'],
             'name': student['name'],

@@ -71,6 +71,12 @@
                   <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-inbox"></i> Grading Queues
                   </a></li>
+                  <li>
+                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}
+                        <button type="submit" class="ag-submit-btn" data-confirm="Send all submissions to the autograder?"> <i class="fa fa-send"></i> Queue on Autograder
+                        </button>
+                    {% endcall %}
+                  </li>
                   <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
                         <i class="fa fa-gear"></i> Go To Autograder
                   </a></li>
@@ -82,6 +88,9 @@
                   </a></li>
                   <li> <a href="{{ url_for('.send_scores_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-envelope"></i> Send Score Emails
+                  </a></li>
+                  <li><a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-upload"></i> Upload Scores as CSV
                   </a></li>
                 </ul>
               </div>

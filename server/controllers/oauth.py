@@ -111,6 +111,7 @@ def authorize(*args, **kwargs):
         client_id = kwargs.get('client_id')
         client = Client.query.filter_by(client_id=client_id).first()
         kwargs['client'] = client
+        kwargs['is_staff'] = current_user.is_staff()
         return render_template('auth/oauthorize.html', **kwargs)
 
     confirm = request.form.get('confirm', 'no')

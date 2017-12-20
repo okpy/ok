@@ -144,7 +144,7 @@ def make_backup(user, assignment_id, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user, assignment_id=assignment_id,
+    backup = models.Backup.create(submitter=user, assignment_id=assignment_id,
                            submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
@@ -360,14 +360,16 @@ class BackupSchema(APISchema):
                              eligible_submit)
         if args['submit'] and past_due:
             assign_obj = models.Assignment.by_name(args['assignment'])
-            extension = models.Extension.get_extension(user, assign_obj)
+            extension = models.Extension.get_extension(user, assign_obj, time=backup.created)
             # Submissions after the deadline with an extension are allowed
             if extension:
                 backup.submit = True  # Need to set if the assignment is inactive
-                backup.custom_submission_time = extension.custom_submission_time
+                backup.custom_submission_time = extension.custom_submission_time or assign_obj.due_date
                 eligible_submit = True
             elif lock_flag:
                 raise ValueError('Late Submission of {}'.format(args['assignment']))
+
+        models.db.session.commit()
 
         if (eligible_submit and assignment['autograding_key']
                 and assignment['continuous_autograding']):
@@ -396,8 +398,7 @@ class VersionSchema(APISchema):
 
     def edit_version(self, name):
         args = self.parse_args()
-        is_staff = current_user.is_admin or current_user.enrollments(roles=STAFF_ROLES)
-        if not is_staff:
+        if not current_user.is_admin:
             restful.abort(403)
         if not utils.check_url(args['download_link']):
             restful.abort(400, message='URL is not valid')
@@ -441,6 +442,19 @@ class ScoreSchema(APISchema):
 
 class CommentSchema(APISchema):
     post_fields = {}
+    comment_fields = {
+        'id': HashIDField,
+        'filename': fields.String,
+        'line': fields.Integer,
+        'message': fields.Raw,
+        'author': fields.Nested(UserSchema.simple_fields),
+        'updated': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
+    }
+    get_fields = {
+        'comments': fields.List(fields.Nested(comment_fields))
+    }
+
 
     def __init__(self):
         APISchema.__init__(self)
@@ -923,6 +937,19 @@ class Comment(Resource):
             restful.abort(403)
 
         return self.schema.store_comment(user, backup)
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, backup_id):
+        backup = models.Backup.query.get(backup_id)
+        if not backup:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Backup.can(backup, user, "view"):
+            restful.abort(403)
+        return {"comments": backup.comments}
+
 
 class File(Resource):
     """ Redirect (or download) a file. No Schema due to redirect

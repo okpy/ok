@@ -652,6 +652,52 @@ message | String | (Required) Comment contents as raw Markdown text. New lines r
 #### Response
 No `data` is returned.
 
+##View a Backup's Comments
+>><h4> Example Response </h4>
+> ```
+python
+import requests
+url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
+access_token = 'test'
+r = requests.get(url.format(access_token))
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+  "data": {
+    "comments":[
+      {
+        'id': 'wdLGDb',
+        'filename': 'lab00.py',
+        'line': 2,
+        'message': "Great job.\nConsider using the use of the `total` variable.",
+        'author': {"email": "test@berkeley.edu", "id": "a4r4gd"},
+        "updated": "2016-06-21T03:05:55",
+        "created": "2016-06-21T03:05:53"
+      },
+      ...
+    ]
+  },
+  "code": 200,
+  "message": "success"
+}
+```
+
+#### Permissions
+The access_token must be authorized in order to view the comments.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/backups/<string:backup_id>/comment/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of viewer
+
+#### Response
+See example response
+
 # Users
 
 ## View a specific user

@@ -4,7 +4,7 @@
 The ok.py server collects submissions and displays analysis of student progress
 based on logging sent from client scripts.
 
-Contact us to use our hosted service (http://okpy.org) for your course.
+Courses can sign up for our free hosted service on [okpy.org](https://okpy.org)
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
@@ -23,6 +23,7 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Create a virtualenv with `virtualenv -p python3 env`
 * Activate the virtualenv with `source env/bin/activate`
+* (Optional, but reccomended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
 
 Local Server
 ------------
@@ -40,6 +41,19 @@ The server will listen on http://localhost:5000.
 
 If you are running into issues - see `documentation/SETUP.md` or file an issue
 
+Running Workers
+---------------
+To run workers locally:
+
+```bash
+$ ./manage.py worker
+```
+
+To be able to run the workers you should have a `redis` server installed and running.
+
+If `redis` is not installed you can install it using your distribution's package
+manager or follow [Redis Quick Start](https://redis.io/topics/quickstart).
+
 Command Line Manager
 ------------------------
 * To view available commands run `./manage.py` once the virtualenv is activated.
@@ -50,7 +64,7 @@ Customizing seed content
 
 Server Development
 ------------------
-The server is developed in Python 3.4+ using Flask.
+The server is developed in Python 3.5+ using Flask.
 
 Core Features
 -------------
