@@ -23,7 +23,7 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Create a virtualenv with `virtualenv -p python3 env`
 * Activate the virtualenv with `source env/bin/activate`
-* (Optional, but reccomended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
+* (Optional, but recommended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
 
 Local Server
 ------------
@@ -60,7 +60,7 @@ Command Line Manager
 
 Customizing seed content
 -------------------
-`server/generate.py` intializes the local server with sample content (Users, Assignments, a Course etc). You can customize it by changing the file and running `./manage.py resetdb`.
+`server/generate.py` initializes the local server with sample content (Users, Assignments, a Course etc). You can customize it by changing the file and running `./manage.py resetdb`.
 
 Server Development
 ------------------
