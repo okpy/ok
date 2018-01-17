@@ -286,8 +286,9 @@ class BatchEnrollmentForm(BaseForm):
                 err = "{0} did not have an email".format(row)
                 self.csv.errors.append(err)
                 return False
-            elif "@" not in row[0]:
-                # TODO : Better email check.
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", row[0]):
+                # checking for email
+                # https://stackoverflow.com/questions/8022530/python-check-for-valid-email-address
                 err = "{0} is not a valid email".format(row[0])
                 self.csv.errors.append(err)
                 return False
