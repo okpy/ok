@@ -30,7 +30,10 @@ if driver:
     class WebTest(LiveServerTestCase):
 
         def setUp(self):
-            self.driver = webdriver.PhantomJS()
+            self.driver = webdriver.PhantomJS(
+                    service_args=[
+                        '--ignore-ssl-errors=true',
+                        '--ssl-protocol=any'])
             OkTestCase.setUp(self)
             OkTestCase.setup_course(self)
             self.driver.set_window_size(1268, 1024)
@@ -96,7 +99,7 @@ if driver:
             super(WebTest, self).tearDown()
             self.driver.quit()
 
-        def page_load(self, url):
+        def page_load(self, url, expected_messages=0):
             self.driver.get(url)
 
             # View all requests made by the page
@@ -109,7 +112,8 @@ if driver:
                         raise AssertionError('Request by page did not complete')
 
             # Assert no console messages
-            self.assertEqual([], self.driver.get_log('browser'))
+            num_messages = len(self.driver.get_log('browser'))
+            self.assertTrue(num_messages <= expected_messages)
 
         def _login(self, role="admin"):
             self.driver.get(self.get_server_url() + "/testing-login/")
@@ -148,7 +152,9 @@ if driver:
             self.assertIn('Privacy Policy | Ok', self.driver.title)
 
         def test_phantom_web(self):
-            self.page_load(self.get_server_url())
+            # Youtube throws a console warning, because PhantomJS doesn't support HTML5 video.
+            # This isn't actually an error.
+            self.page_load(self.get_server_url(), 1)
             self.assertEquals("OK", self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
@@ -194,7 +200,6 @@ if driver:
 
             self.driver.find_element_by_id("remove-member").submit()
             self.assertTrue("student1@aol.com" not in self.driver.page_source)
-            self.assertTrue("No Submission" in self.driver.page_source)
 
         def test_student_invalid_hash(self):
             self._seed_course()

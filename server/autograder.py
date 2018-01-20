@@ -148,23 +148,9 @@ RUNNING_TIMEOUT = 5 * 60  # time to wait for an autograder job to run, in second
 WAITING_TIMEOUT = 2 * 60  # time to wait for a score, in seconds
 POLL_INTERVAL = 10        # how often to poll the autograder, in seconds
 
-@jobs.background_job
-def autograde_assignment(assignment_id):
-    """Autograde all enrolled students for this assignment.
+def autograde_backups(assignment, user_id, backup_ids, logger):
+    token = create_autograder_token(user_id)
 
-    We set up a state machine for each backup to check its progress through
-    the autograder. If any step takes too long, we'll retry autograding that
-    backup. Ultimately, a backup is considered done when we confirm that
-    we've received a new score, or if we have reached the retry limit.
-    """
-    logger = jobs.get_job_logger()
-
-    assignment = Assignment.query.get(assignment_id)
-    course_submissions = assignment.course_submissions(include_empty=False)
-    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
-    token = create_autograder_token(jobs.get_current_job().user_id)
-
-    # start by sending a batch of all backups
     start_time = time.time()
     job_ids = send_batch(token, assignment, backup_ids)
     tasks = [
@@ -249,4 +235,26 @@ def autograde_assignment(assignment_id):
     message = '{} graded, {} failed'.format(
         statuses[GradingStatus.DONE], statuses[GradingStatus.FAILED])
     logger.info(message)
-    return message
+
+
+@jobs.background_job
+def autograde_assignment(assignment_id):
+    """Autograde all enrolled students for this assignment.
+
+    We set up a state machine for each backup to check its progress through
+    the autograder. If any step takes too long, we'll retry autograding that
+    backup. Ultimately, a backup is considered done when we confirm that
+    we've received a new score, or if we have reached the retry limit.
+    """
+    logger = jobs.get_job_logger()
+    assignment = Assignment.query.get(assignment_id)
+    course_submissions = assignment.course_submissions(include_empty=False)
+    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
+    try:
+        autograde_backups(assignment, jobs.get_current_job().user_id, backup_ids, logger)
+    except ValueError:
+        logger.info('Could not autograde backups - Please add an autograding key.')
+        return
+    return '/admin/course/{cid}/assignments/{aid}/scores'.format(
+                cid=jobs.get_current_job().course_id, aid=assignment.id)
+

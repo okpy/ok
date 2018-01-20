@@ -16,7 +16,7 @@ VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 
-SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
+SCORE_KINDS = ['composition', 'correctness', 'effort', 'total', 'partner a', 'partner b',
                'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
                'private', 'autograder', 'error']
 
@@ -50,5 +50,5 @@ FORBIDDEN_ASSIGNMENT_NAMES = []
 
 # Maximum file size to show in browser, in characters
 DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
-SOURCE_SIZE_LIMIT = 2 * 1024 * 1024 # 2MB
+SOURCE_SIZE_LIMIT = 10 * 1024 * 1024 # 10MB
 MAX_UPLOAD_FILE_SIZE = 25 * 1024 * 1024 # 25MB

@@ -1,6 +1,6 @@
 from flask import request
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 import requests.exceptions
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
@@ -221,6 +221,16 @@ class AssignmentTemplateForm(BaseForm):
     template_files = FileField('Template Files', [FileRequired()])
 
 
+class EnrollmentExportForm(BaseForm):
+    roles = MultiCheckboxField('Roles', choices=ROLE_DISPLAY_NAMES.items(),
+            validators=[validators.required()])
+
+    def validate(self):
+        if not super().validate():
+            return False
+        return all(role in ROLE_DISPLAY_NAMES.keys() for role in self.roles.data)
+
+
 class EnrollmentForm(BaseForm):
     name = StringField('Name', validators=[validators.required()])
     email = EmailField('Email',
@@ -276,8 +286,9 @@ class BatchEnrollmentForm(BaseForm):
                 err = "{0} did not have an email".format(row)
                 self.csv.errors.append(err)
                 return False
-            elif "@" not in row[0]:
-                # TODO : Better email check.
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", row[0]):
+                # checking for email
+                # https://stackoverflow.com/questions/8022530/python-check-for-valid-email-address
                 err = "{0} is not a valid email".format(row[0])
                 self.csv.errors.append(err)
                 return False
@@ -301,6 +312,16 @@ class CompositionScoreForm(GradeForm):
     kind = HiddenField('Score', default="composition",
                        validators=[validators.required()])
 
+class CheckpointCreditForm(GradeForm):
+    """ Gives credit to all students who submitted before a specific time. """
+    deadline = DateTimeField('Checkpoint Date', validators=[validators.required()],
+                             description="Award points to all submissions before this time")
+    include_backups = BooleanField('Include Backups', default=True,
+                                   description='Include backups (as well as submissions)')
+    grade_backups = BooleanField('Grade Backups', default=False,
+                                   description='Grade backups using the autograder')
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS if 'checkpoint' in c.lower()],
+                       validators=[validators.required()])
 
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
@@ -360,6 +381,115 @@ class SubmissionTimeForm(BaseForm):
 
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
+
+class BatchCSVScoreForm(SubmissionTimeForm):
+    use_csv = RadioField(
+        'Upload Scores Using',
+        choices=[
+            ('csv', 'CSV'),
+            ('text', 'Email, Score'),
+            ('emails', 'Emails Only')
+        ],
+        default='csv',
+        validators=[validators.required()],
+    )
+
+    # CSV Fields
+    upload_files = FileField('csv', validators=[
+        FileAllowed(['csv'], 'csvs only!')])
+    email = StringField('Email Label Name')
+    score = StringField('Score Label Name')
+
+    # Text Fields
+    textarea = TextAreaField('text')
+
+    # Email only
+    emails_area = TextAreaField('emails only')
+    score_amount = DecimalField('Score (to assign to each email)', default=1)
+
+    # Common
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
+                validators=[validators.required()])
+
+    message = StringField('Message', validators=[validators.required()])
+    error = None
+
+    def is_email(self, s):
+        email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        return email_re.fullmatch(s) is not None
+
+    def is_number(self, s):
+        try:
+            return bool(s and float(s))
+        except Exception:
+            return False
+
+    def validate(self):
+
+        if not super().validate():
+            return False
+
+        try:
+            if self.use_csv.data == 'csv':
+                self.input_field = self.upload_files
+                assert self.upload_files.data, 'CSV file is required'
+                assert self.email.data, 'Email label name is required'
+                assert self.score.data, 'Score label name is required'
+                self.labels = {'email': self.email.data, 'score': self.score.data}
+                rows = self.upload_files.data.read().decode('utf-8').splitlines()
+            elif self.use_csv.data == 'text':
+                self.input_field = self.textarea
+                assert self.textarea.data, 'textarea cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                rows = self.textarea.data.splitlines()
+                rows.insert(0, 'Email,Score')
+            else:  # emails only
+                self.input_field = self.emails_area
+                assert self.emails_area.data, 'Emails textarea cannot be empty'
+                assert self.score_amount.data, 'Score field cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                emails = [email for email in re.split('[, \r\n\t]+', self.emails_area.data) if email]
+                scores = [self.score_amount.data] * len(emails)
+                rows = ['{},{}'.format(*fields) for fields in zip(emails, scores)]
+                rows.insert(0, 'Email,Score')
+
+            rows = list(csv.DictReader(rows))
+
+            self.parsed = []
+            self.invalid = []
+
+            for linenum, row in enumerate(rows, 1):
+                if self.labels.values() & row.keys():
+                    email_label = self.labels['email'].strip()
+                    score_label = self.labels['score'].strip()
+
+                    email, score = row[email_label], row[score_label]
+
+                    if self.is_email(email) and self.is_number(score):
+                        score = (score and float(score)) or 0
+                        self.parsed.append({'email': email, 'score': score})
+                        continue
+
+                self.invalid.append(linenum)
+
+        except AssertionError as e:
+            logging.error(e)
+            self.error = str(e)
+            self.input_field.errors.append(self.error)
+            return False
+        except KeyError as e:
+            missing = str(e).lstrip('KeyError: ')
+            self.error = 'Column name "{}" doesn\'t exist.'.format(missing)
+            self.input_field.errors.append(self.error)
+            return False
+        except csv.Error as e:
+            logging.error(e)
+            self.error = "We couldn't parse the CSV; Check to make sure it's formatted properly."
+            self.input_field.errors.append(self.error)
+            return False
+
+        return True
+
 
 class ExtensionForm(SubmissionTimeForm):
     assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
@@ -499,6 +629,35 @@ class PublishScores(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
     )
 
+class EffortGradingForm(BaseForm):
+    full_credit = DecimalField('Full Credit (in points)',
+                    validators=[
+                        validators.required(),
+                        validators.number_range(min=0, message="Points cannot be negative.")],
+                    description="Points received for showing sufficient effort on an assignment.")
+    required_questions = IntegerField('Required Questions',
+                    validators=[
+                        validators.number_range(min=0, message="Questions cannot be negative.")],
+                    description="Number of required questions on the assignment.")
+    late_multiplier = DecimalField('Late Multiplier (as a decimal)',
+                    validators=[
+                        validators.number_range(min=0, max=1, message="Multiplier must be between 0 and 1")],
+                    default=0.0,
+                    description="Decimal ratio that is multiplied to the final score of a late submission.")
+
+class ExportGradesForm(BaseForm):
+    included = MultiCheckboxField('Included Assignments', description='Assignments with any published scores are checked by default')
+
+    def __init__(self, assignments):
+        super().__init__()
+
+        self.included.choices = [(str(a.id), a.display_name) for a in assignments]
+        self.included.data = [str(a.id) for a in assignments if a.published_scores]
+
+    def validate(self):
+        return super().validate() and len(self.included.data) > 0
+
+
 ########
 # Jobs #
 ########
@@ -509,13 +668,15 @@ class TestJobForm(BaseForm):
     duration = IntegerField('Duration (seconds)', default=2)
 
 class MossSubmissionForm(BaseForm):
-    moss_userid = StringField('Your MOSS User ID',
+    moss_userid = StringField('Moss User ID', default='619379711',
                               validators=[validators.required()])
     file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
-    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
-    subtract_template = BooleanField('Subtract Template', default=False,
-                                     description="Only send the changes from the template to MOSS")
+    language = SelectField('Programming Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    review_threshold = DecimalField('Review Threshold', default=0.30,
+        description="Results with this similarity percentage or higher will be tagged for review.")
+    num_results = IntegerField('Number of Results', default=250,
+        description="Number of similarity results to request from Moss.")
 
 class GithubSearchRecentForm(BaseForm):
     access_token = StringField('Github Access Token',
@@ -551,7 +712,6 @@ class EmailScoresForm(BaseForm):
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,
                              description="Enable to remove identifying information from submissions")
-
 
 ##########
 # Canvas #

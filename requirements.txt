@@ -1,22 +1,22 @@
 Flask>=0.12,<0.13
-jinja2==2.9.5
+jinja2==2.9.6
 
 # WSGI Containers
-gunicorn==19.6.0
+gunicorn==19.7.1
 
 # Errors
 raven[flask]==6.0.0
 
 # Database
-pymysql==0.7.10
-sqlalchemy==1.1.6
+pymysql==0.7.11
+sqlalchemy==1.1.9
 
 # Caching
 redis==2.10.5
 
 # Job Queue
-rq==0.7.1
-rq-dashboard==0.3.7
+rq==0.5.3
+rq-dashboard==0.3.7 # pyup: != 0.3.8
 
 # Forms
 WTForms>=2.0,<3.0
@@ -36,7 +36,7 @@ apache-libcloud==1.5.0
 
 # OAuth
 
-oauthlib==2.0.1
+oauthlib==2.0.2
 # Flask-OAuthlib==0.9.3
 # OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
 https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
@@ -52,11 +52,11 @@ Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.3
 
 # Timezones
-pytz==2016.10
+pytz==2017.2
 arrow==0.10.0
 
 # Emailing
-sendgrid==3.6.3
+sendgrid==3.6.3 # pyup: >=3.6,<4.0
 pynliner<1.0
 
 # Autograder Interface
@@ -87,7 +87,7 @@ names==0.3.0
 # Testing
 pytest>=3.0.0,<3.1
 pytest-cov==2.4.0
-selenium==3.3.1
+selenium==3.3.3
 
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip

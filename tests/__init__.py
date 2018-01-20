@@ -13,6 +13,7 @@ class OkTestCase(TestCase):
         return create_app('settings/test.py')
 
     def setUp(self):
+        db.drop_all()
         db.create_all()
 
     def tearDown(self):

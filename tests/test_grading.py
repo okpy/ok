@@ -163,7 +163,7 @@ class TestGrading(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         # No Scores
-        self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,assignment_id,kind,score,message,backup_id,grader\n')
+        self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,role,assignment_id,kind,score,message,backup_id,grader\n')
 
     def test_scores_with_generate(self, generate=False):
         if generate:

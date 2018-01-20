@@ -55,7 +55,7 @@
                 <div class="info-box-content">
                   <span class="info-box-text">Backups</span>
                   <span class="info-box-number">{{ '{:,d}'.format(stats['backup_count']) }}  <small>backups </small> </span>
-                  <span class="info-box-number"> {{ '{:,d}'.format(stats['submit_count'])  }}  <small>submits </small> </span>
+                  <span class="info-box-number"> {{ '{:,d}'.format(stats['submit_count'])  }}  <small>submissions </small> </span>
 
                 </div>
                 <!-- /.info-box-content -->
@@ -107,6 +107,12 @@
                     <a href="{{ url_for('.canvas_course', cid=current_course.id) }}">
                       <i class="fa fa-address-book"></i>
                       bCourses
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.export_grades_job', cid=current_course.id) }}">
+                      <i class="fa fa-download"></i>
+                      Export Grades
                     </a>
                   </li>
                   <li>

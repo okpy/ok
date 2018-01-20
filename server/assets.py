@@ -17,7 +17,7 @@ landing_css = Bundle(
 common_css = Bundle(
     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css',
     'https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700',
-    'https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.css',
     'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css',
     'css/helper.css',
     'css/main.css',

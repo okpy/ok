@@ -147,7 +147,7 @@ def submit_assignment(name):
             return redirect(url_for('.assignment', name=assign.name))
 
     if request.method == "POST":
-        backup = Backup(
+        backup = Backup.create(
             submitter=current_user,
             assignment=assign,
             submit=True,
