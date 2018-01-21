@@ -110,6 +110,12 @@
                     </a>
                   </li>
                   <li>
+                    <a href="{{ url_for('.export_grades_job', cid=current_course.id) }}">
+                      <i class="fa fa-download"></i>
+                      Export Grades
+                    </a>
+                  </li>
+                  <li>
                     <a href="{{ url_for('.course_settings', cid=current_course.id) }}">
                       <i class="fa fa-cogs"></i>
                       Settings

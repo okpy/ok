@@ -252,7 +252,7 @@ def autograde_assignment(assignment_id):
     course_submissions = assignment.course_submissions(include_empty=False)
     backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
     try:
-        autograde_backups(assignment, current_user.id, backup_ids, logger)
+        autograde_backups(assignment, jobs.get_current_job().user_id, backup_ids, logger)
     except ValueError:
         logger.info('Could not autograde backups - Please add an autograding key.')
         return

@@ -32,7 +32,8 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify, checkpoint, effort, upload_scores)
+                         scores_notify, checkpoint, effort, upload_scores,
+                        export_grades)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -377,6 +378,25 @@ def course(cid):
                            needs_intro=needs_intro,
                            stats=current_course.statistics(),
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/grades/export", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def export_grades_job(cid):
+    courses, current_course = get_courses(cid)
+
+    form = forms.ExportGradesForm(current_course.assignments)
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            export_grades.export_grades,
+            description="Export Grades for {}".format(current_course.offering),
+            timeout=2 * 60 * 60, # 1 hour
+            course_id=cid,
+            result_kind='link',
+            # no arguments
+        )
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    return render_template('staff/jobs/export_grades.html', form=form,
+                            courses=courses, course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')

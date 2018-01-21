@@ -286,8 +286,9 @@ class BatchEnrollmentForm(BaseForm):
                 err = "{0} did not have an email".format(row)
                 self.csv.errors.append(err)
                 return False
-            elif "@" not in row[0]:
-                # TODO : Better email check.
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", row[0]):
+                # checking for email
+                # https://stackoverflow.com/questions/8022530/python-check-for-valid-email-address
                 err = "{0} is not a valid email".format(row[0])
                 self.csv.errors.append(err)
                 return False
@@ -643,6 +644,19 @@ class EffortGradingForm(BaseForm):
                         validators.number_range(min=0, max=1, message="Multiplier must be between 0 and 1")],
                     default=0.0,
                     description="Decimal ratio that is multiplied to the final score of a late submission.")
+
+class ExportGradesForm(BaseForm):
+    included = MultiCheckboxField('Included Assignments', description='Assignments with any published scores are checked by default')
+
+    def __init__(self, assignments):
+        super().__init__()
+
+        self.included.choices = [(str(a.id), a.display_name) for a in assignments]
+        self.included.data = [str(a.id) for a in assignments if a.published_scores]
+
+    def validate(self):
+        return super().validate() and len(self.included.data) > 0
+
 
 ########
 # Jobs #
