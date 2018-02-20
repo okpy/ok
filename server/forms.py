@@ -243,6 +243,13 @@ class EnrollmentForm(BaseForm):
     role = SelectField('Role', default=STUDENT_ROLE,
                        choices=ROLE_DISPLAY_NAMES.items())
 
+class SectionForm(BaseForm):
+    name = StringField('Name', validators=[validators.required()])
+    email = EmailField('Email',
+                       validators=[validators.required(), validators.email()])
+    section = StringField('New Section',
+                          validators=[validators.optional()])
+
 
 class VersionForm(BaseForm):
     current_version = StringField('Current Version',

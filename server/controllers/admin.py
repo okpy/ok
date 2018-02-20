@@ -412,6 +412,44 @@ def course_settings(cid):
     return render_template('staff/course/course.edit.html', form=form,
                            courses=courses, current_course=current_course)
 
+@admin.route("/course/<int:cid>/section", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def section_console(cid):
+    courses, current_course = get_courses(cid)
+    assgns = current_course.assignments
+    active_asgns = [a for a in assgns if a.active]
+    due_asgns = [a for a in assgns if not a.active]
+    form = forms.SectionForm()
+    if form.validate_on_submit():
+        email, role = form.email.data, form.role.data
+        #Reimplement the method below, then you can remove fields from section form
+        # 
+        Enrollment.enroll_from_form(cid, form)
+        flash("Added {email} as {role}".format(
+            email=email, role=role), "success")
+
+    roles = current_user.enrollments(roles=STAFF_ROLES)
+    relevant_roles = [role for role in roles if role.course == current_course]
+    #print(relevant_roles)
+    #courses, current_course = get_courses()
+    #res = Enrollment.query.filter_by(user_id=roles[0], course_id=current_course.id).one_or_none()
+    #print(res)
+    section = relevant_roles[0].section
+    print(section)
+    students = (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role.in_([STUDENT_ROLE]),
+                                  Enrollment.section == section,
+                                  Enrollment.course == current_course)
+                          .all())
+    # Filter students by section ^^^^ and then pass to the template!
+    # Query Enrollments table by current_user attributes and get section
+    # Use that section to filter all students list
+    # TODO CLEANUP : Better way to send this data to the template.
+    return render_template('staff/course/section/section.html',
+                           courses=courses, form=form, current_course=current_course,
+                           active_asgns=active_asgns, due_assgns=due_asgns,enrollments=students)
+
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
