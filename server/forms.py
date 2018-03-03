@@ -243,18 +243,6 @@ class EnrollmentForm(BaseForm):
     role = SelectField('Role', default=STUDENT_ROLE,
                        choices=ROLE_DISPLAY_NAMES.items())
 
-class SectionForm(BaseForm):
-    name = StringField('Name', validators=[validators.required()])
-    email = EmailField('Email',
-                       validators=[validators.required(), validators.email()])
-    sid = StringField('SID', validators=[validators.optional()])
-    secondary = StringField('Secondary Auth (e.g Username)',
-                            validators=[validators.optional()])
-    section = StringField('Section',
-                          validators=[validators.optional()])
-    role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=ROLE_DISPLAY_NAMES.items())
-
 class VersionForm(BaseForm):
     current_version = StringField('Current Version',
                                  validators=[validators.required()])

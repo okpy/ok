@@ -426,6 +426,7 @@ def section_console(cid):
             if record:
                 form.sid.data = record.sid
                 form.secondary.data = record.class_account
+                form.role.data = record.role
                 Enrollment.enroll_from_form(cid, form)
                 flash("Changed {email} to Section {section}".format(
                 email=email, section=section), "success")
@@ -433,21 +434,29 @@ def section_console(cid):
             flash("{email} is not enrolled as a {role}".format(
                 email=email, role=role), "error")
 
-    roles = current_user.enrollments(roles=STAFF_ROLES)
-    relevant_roles = [role for role in roles if role.course == current_course]
-    section = relevant_roles[0].section
+    user = User.lookup(current_user.email)
+    staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
+                                   .filter(Enrollment.role.in_(STAFF_ROLES))
+                                   .one_or_none())
+    section = staff_record.section
 
     students = (Enrollment.query
                           .filter(Enrollment.role.in_([STUDENT_ROLE]),
                                   Enrollment.section == section,
                                   Enrollment.course == current_course)
                           .all())
-    # Section Attendance Graph + Mean
-    # Assignment Overview Graph + Mean with Checkboxes
+    student_users = (User.query            
+                         .filter(User.id.in_([student.user_id for student in students])))
 
+    emails = "\n".join(["{name} <{email}>".format(name=stud_usr.name,email=stud_usr.email) for stud_usr in student_users])
+
+    staff = (Enrollment.query
+                          .filter(Enrollment.role.in_(STAFF_ROLES),
+                                  Enrollment.course == current_course)
+                          .all())
     return render_template('staff/course/section/section.html',
                            courses=courses, form=form, current_course=current_course,
-                           enrollments=students)
+                           enrollments=students, staff=staff, emails=emails)
 
 
 @admin.route("/course/<int:cid>/assignments")

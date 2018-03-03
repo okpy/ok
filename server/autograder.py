@@ -13,7 +13,6 @@ import time
 import oauthlib.common
 import requests
 
-from flask_login import current_user
 from server import constants, jobs, utils
 from server.models import User, Assignment, Backup, Client, Score, Token, db
 
