@@ -82,6 +82,25 @@ def is_admin():
         return login_required(wrapper)
     return decorator
 
+def is_oauth_client_owner(oauth_client_id_arg):
+    """ A decorator for OAuth client management routes to ensure the user owns
+        the OAuth client or is an admin."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if current_user.is_authenticated:
+                if current_user.is_admin:
+                    return func(*args, **kwargs)
+                oauth_client_id = kwargs[oauth_client_id_arg]
+                clients = Client.query.filter_by(user_id=current_user.id)
+                if clients.count() > 0:
+                    if oauth_client_id in [c.id for c in clients]:
+                        return func(*args, **kwargs)
+            flash("You do not have access to this OAuth client", "warning")
+            return redirect(url_for("admin.clients"))
+        return login_required(wrapper)
+    return decorator
+
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
         courses = (Course.query.order_by(Course.created.desc())
@@ -1317,7 +1336,7 @@ def clients():
             courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
-@is_admin()
+@is_oauth_client_owner('client_id')
 def client(client_id):
     courses, current_course = get_courses()
 
