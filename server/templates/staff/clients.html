@@ -7,7 +7,7 @@
 <section class="content-header">
   <h1>OAuth Clients</h1>
   <ol class="breadcrumb">
-    <li><i class="fa fa-dashboard"></i>OAuth Clients</li>
+    <li><i class="fa fa-dashboard"></i> OAuth Clients</li>
   </ol>
 </section>
 
@@ -17,13 +17,14 @@
         <div class="col-md-12">
           <div class="box">
             <div class="box-header">
-              <h3 class="box-title">OAuth Clients</h3>
+              <h3 class="box-title">All OAuth Clients</h3>
             </div>
             <div class="box-body table-responsive no-padding">
               <table class="table table-striped">
                 <tbody>
                   <tr>
                     <th>Name</th>
+                    <th>Owner</th>
                     <th>Client ID</th>
                     <th>Confidentiality</th>
                     <th>Redirect URIs</th>
@@ -33,6 +34,7 @@
                   {% for client in clients %}
                   <tr>
                     <td>{{ client.name }}</td>
+                    <td>{{ client.user.name if client.user else 'None' }}</td>
                     <td> <a href="{{ url_for('admin.client',client_id=client.client_id) }}">{{ client.client_id }}</a></td>
                     <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
                     <td>{{ client.redirect_uris | join(', ') }}</td>
