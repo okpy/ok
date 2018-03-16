@@ -1299,6 +1299,7 @@ def enrollment_csv(cid):
 def clients():
     courses, current_course = get_courses()
     clients = Client.query.all()
+    my_clients = [client for client in clients if client.user_id == current_user.id]
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
         client = Client(user=current_user)
@@ -1309,7 +1310,11 @@ def clients():
         flash('OAuth client "{}" added'.format(client.name), "success")
         return redirect(url_for(".clients"))
 
-    return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
+    return render_template('staff/clients.html',
+            clients=clients,
+            my_clients=my_clients,
+            form=form,
+            courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
 @is_admin()
