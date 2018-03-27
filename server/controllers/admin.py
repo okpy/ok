@@ -1314,7 +1314,7 @@ def enrollment_csv(cid):
     return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/clients/", methods=['GET', 'POST'])
-@is_admin()
+@is_staff()
 def clients():
     courses, current_course = get_courses()
     clients = Client.query.all()
