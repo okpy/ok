@@ -20,6 +20,12 @@ else:
 
 SQLALCHEMY_DATABASE_URI = db_url
 
+# If using sqlite use absolute path (otherwise we break migrations)
+sqlite_prefix = 'sqlite:///'
+if SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
+    SQLALCHEMY_DATABASE_URI = (sqlite_prefix +
+            os.path.abspath(SQLALCHEMY_DATABASE_URI[len(sqlite_prefix) + 1:]))
+
 WTF_CSRF_CHECK_DEFAULT = False
 WTF_CSRF_ENABLED = False
 
