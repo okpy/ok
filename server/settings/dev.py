@@ -20,6 +20,13 @@ else:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
 # SQLALCHEMY_ECHO = True
 
+# If using sqlite use absolute path (otherwise we break migrations)
+sqlite_prefix = 'sqlite:///'
+if SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
+    SQLALCHEMY_DATABASE_URI = (sqlite_prefix + 
+            os.path.abspath(SQLALCHEMY_DATABASE_URI[len(sqlite_prefix) + 1:]))
+
+
 RQ_DEFAULT_HOST = REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
