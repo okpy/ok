@@ -207,7 +207,7 @@ See example response.
 
 ## List Assignments
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/assignments"
 {
     "code": 200,
@@ -244,7 +244,7 @@ See example output.
 
 ## Assignment Info
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01"
 {
     "code": 200,
@@ -275,7 +275,7 @@ Get detailed assignment info.
 Requires an access token. The assignment is presented to all staff members of the course or admins but is only shown to other users if the staff marked the assignment as visible .
 
 #### HTTP Request
-`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>``
+`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -293,7 +293,7 @@ See example output for other fields.
 
 ## Group Info
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@example.com"
 {
     "code": 200,
@@ -320,7 +320,8 @@ curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@exampl
         ]
     },
     "message": "success"
-}```
+}
+```
 
 Get detailed assignment info.
 
@@ -345,7 +346,7 @@ See example output for fields.
 
 ## Export Backups
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/export/email@berkeley.edu?access_token=test&limit=2&offset=17"
 {
     "code": 200,
@@ -405,7 +406,7 @@ offset | Integer | The value of the limit parameter
 
 ## Export Final Submissions
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?access_token=test"
 {
 "message": "success",
@@ -470,7 +471,7 @@ has_more | Boolean | Indicates whether this response includes the last backup.
 
 ## Submit a backup
 >><h4> Example Request </h4>
-> ```python
+```python
 import requests
 data = {
     'assignment': 'cal/cs61a/su16/sample',
@@ -550,7 +551,7 @@ If a user does not have a composition score to revise, the server responds with 
 
 ## View a backup
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
 {
     "data": {
@@ -607,7 +608,7 @@ See example
 
 ## Comments
 >><h4> Example Request </h4>
-> ```python
+```python
 import requests
 data = {
     'filename': 'lab00.py',
@@ -652,9 +653,9 @@ message | String | (Required) Comment contents as raw Markdown text. New lines r
 #### Response
 No `data` is returned.
 
-##View a Backup's Comments
+## View a Backup's Comments
 >><h4> Example Response </h4>
-> ```
+```
 python
 import requests
 url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
@@ -703,7 +704,7 @@ See example response
 ## View a specific user
 
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/user/?access_token=test"
 {
     "data": {
@@ -753,7 +754,7 @@ See example
 
 ## Create a score
 >><h4> Example Request </h4>
->```python
+```python
 import requests
 data = {
     'bid': 'aF249e',
@@ -806,10 +807,11 @@ message | String | More details about the success state
 
 ## Files
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/files/a1b2cd"
 Redirect to https://storage.cloud.google.com/...
-}```
+}
+```
 
 Download a file.
 
@@ -831,7 +833,7 @@ Returns a redirect or a file response as an attachment.
 
 The Ok API uses the following error codes:
 >><h4> Example Response </h4>
-> ```
+```
 curl "https://okpy.org/api/v3/404"
 {
 "message": "The requested URL was not found on the server.
