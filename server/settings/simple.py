@@ -26,6 +26,13 @@ else:
     db_url = os.getenv('SQLALCHEMY_URL', 'sqlite:///../oksqlite.db')
 
 SQLALCHEMY_DATABASE_URI = db_url
+
+# If using sqlite use absolute path (otherwise we break migrations)
+sqlite_prefix = 'sqlite:///'
+if SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
+    SQLALCHEMY_DATABASE_URI = (sqlite_prefix +
+            os.path.abspath(SQLALCHEMY_DATABASE_URI[len(sqlite_prefix) + 1:]))
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SENTRY_USER_ATTRS = ['email', 'name']
 PREFERRED_URL_SCHEME = 'https'
