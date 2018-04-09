@@ -1601,7 +1601,7 @@ class Client(Model):
     redirect_uris = db.Column(StringList, nullable=False)
     default_scopes = db.Column(StringList, nullable=False)
 
-    status = db.Column(db.Integer, default=0)
+    active = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def default_redirect_uri(self):
