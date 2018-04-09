@@ -438,26 +438,32 @@ def section_console(cid):
     staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
                                    .filter(Enrollment.role.in_(STAFF_ROLES))
                                    .one_or_none())
-    section = staff_record.section
 
-    students = (Enrollment.query
-                          .filter(Enrollment.role.in_([STUDENT_ROLE]),
-                                  Enrollment.section == section,
-                                  Enrollment.course == current_course)
-                          .all())
-    student_users = (User.query            
-                         .filter(User.id.in_([student.user_id for student in students])))
-
-    emails = "\n".join(["{name} <{email}>".format(name=stud_usr.name,email=stud_usr.email) for stud_usr in student_users])
+    if not staff_record and not user.is_admin:
+        flash('Unable to authorize section console access', 'error')
+        return abort(404)
 
     staff = (Enrollment.query
                           .filter(Enrollment.role.in_(STAFF_ROLES),
                                   Enrollment.course == current_course)
                           .all())
-    return render_template('staff/course/section/section.html',
-                           courses=courses, form=form, current_course=current_course,
-                           enrollments=students, staff=staff, emails=emails)
 
+    students, emails = list(), list()
+
+    if staff_record:
+        section = staff_record.section
+        students = (Enrollment.query
+                              .filter(Enrollment.role.in_([STUDENT_ROLE]),
+                                      Enrollment.section == section,
+                                      Enrollment.course == current_course)
+                              .all())
+        student_users = (User.query            
+                             .filter(User.id.in_([student.user_id for student in students])))
+        emails = "\n".join(["{name} <{email}>".format(name=stud_usr.name,email=stud_usr.email) for stud_usr in student_users])
+
+    return render_template('staff/course/section/section.html',
+                       courses=courses, form=form, current_course=current_course,
+                       enrollments=students, staff=staff, emails=emails)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
