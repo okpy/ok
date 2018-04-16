@@ -10,9 +10,25 @@
 {% endset %}
 
 {% set api_dropdown %}
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            API <span class="caret"></span>
+            {% if current_user.is_admin and num_pending_oauth_clients > 0 %}
+            <span class="label label-warning pull-right">
+              {{ num_pending_oauth_clients }}
+            </span>
+            {% endif %}
+          </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
+            <li>
+              <a href="{{ url_for('.clients') }}">
+                OAuth Clients
+                {% if current_user.is_admin and num_pending_oauth_clients > 0 %}
+                <span class="label label-warning pull-right">
+                  {{ num_pending_oauth_clients }}
+                </span>
+                {% endif %}
+              </a>
+            </li>
             {% if current_user.is_admin %}
               <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
             {% endif %}
