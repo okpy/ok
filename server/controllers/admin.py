@@ -1321,7 +1321,9 @@ def clients():
     my_clients = [client for client in clients if client.user_id == current_user.id]
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
-        client = Client(user=current_user)
+        client = Client(
+                user=current_user,
+                active=True if current_user.is_admin else False)
         form.populate_obj(client)
         db.session.add(client)
         db.session.commit()
