@@ -1,7 +1,7 @@
 from server import jobs
 from server.jobs import example
 from server.models import db, Job
-from tests import OkTestCase
+from tests import OkTestCase, skipIfWindows
 
 class TestJob(OkTestCase):
     def setUp(self):
@@ -38,6 +38,7 @@ class TestJob(OkTestCase):
 
         return job.id
 
+    @skipIfWindows
     def test_job(self):
         job_id = self.start_test_job(should_fail=False)
         self.run_jobs()
@@ -46,6 +47,7 @@ class TestJob(OkTestCase):
         self.assertFalse(job.failed)
         self.assertEqual(job.log, 'Starting...\nFinished!\n')
 
+    @skipIfWindows
     def test_failing_job(self):
         job_id = self.start_test_job(should_fail=True)
         self.run_jobs()

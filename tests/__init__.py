@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+import unittest
 
 from flask_rq import get_worker
 from flask_testing import TestCase
@@ -125,3 +126,9 @@ class OkTestCase(TestCase):
     def run_jobs(self):
         get_worker().work(burst=True)
         db.session.expire_all()
+
+
+def skipIfWindows(test_func):
+    is_windows = os.name == 'nt'
+    reason = 'This test uses OS features not supported by Windows'
+    return unittest.skipIf(is_windows, reason)(test_func)
