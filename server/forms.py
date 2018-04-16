@@ -559,6 +559,11 @@ class ClientForm(BaseForm):
 
 
 class EditClientForm(ClientForm):
+    active = BooleanField(
+            'Active',
+            description='Whether this client is active and available to be used.',
+            default=False
+            )
     roll_secret = BooleanField(
         'Change the secret?',
         description='Should the secret be changed? If checked, the new value will appear after submission',

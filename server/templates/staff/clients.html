@@ -67,7 +67,6 @@
                     <th>Confidentiality</th>
                     <th>Redirect URIs</th>
                     <th>Default Scopes</th>
-                    <th>Action</th>
                   </tr>
 
                   {% for client in clients %}
@@ -79,12 +78,6 @@
                     <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
                     <td>{{ client.redirect_uris | join(', ') }}</td>
                     <td>{{ client.default_scopes | join(', ') }}</td>
-                    <td>
-                      {% if client.active %}
-                      <button class="btn btn-primary"><i class="fa fa-trash fa-fw"></i> Remove</button></td>
-                      {% else %}
-                      <button class="btn btn-primary"><i class="fa fa-check fa-fw"></i> Approve</button></td>
-                      {% endif %}
                   </tr>
                   {% endfor %}
                 </tbody>
