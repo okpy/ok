@@ -77,7 +77,7 @@ class TestHighlight(OkTestCase):
                 assert a_lines[line.line_before - 1] == source
                 assert b_lines[line.line_after - 1] == source
             else:
-                raise AssertionError('Unknown tag {0}'.format(tag))
+                raise AssertionError('Unknown tag {0}'.format(line.tag))
 
         # Check that removing tags gives a patch that can be applied
         patch = ''.join(striptags(line.contents) for line in highlighted)
