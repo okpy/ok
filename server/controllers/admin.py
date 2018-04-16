@@ -101,6 +101,14 @@ def is_oauth_client_owner(oauth_client_id_arg):
         return login_required(wrapper)
     return decorator
 
+@admin.context_processor
+@cache.memoize(1800)
+def inject_pending_oauth_clients():
+    """ Injects an additional template variable used to display the notification
+        indicator of pending OAuth clients to admins."""
+    num_pending_oauth_clients = Client.query.filter_by(active=False).count()
+    return dict(num_pending_oauth_clients=num_pending_oauth_clients)
+
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
         courses = (Course.query.order_by(Course.created.desc())
@@ -1317,7 +1325,7 @@ def enrollment_csv(cid):
 @is_staff()
 def clients():
     courses, current_course = get_courses()
-    clients = Client.query.all()
+    clients = Client.query.order_by(Client.active).all()
     my_clients = [client for client in clients if client.user_id == current_user.id]
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
