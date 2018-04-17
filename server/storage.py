@@ -9,7 +9,7 @@ import string
 from urllib.parse import urlencode, urljoin
 
 from werkzeug.utils import secure_filename
-from libcloud.storage.types import Provider
+from libcloud.storage.types import Provider, ContainerDoesNotExistError
 from libcloud.storage.providers import get_driver
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,10 @@ class Storage:
 
         self.driver = driver_cls(key, secret)
         # Also test credentials by getting the container
-        self.container = self.driver.get_container(container_name=self.container_name)
+        try:
+            self.container = self.driver.get_container(self.container_name)
+        except ContainerDoesNotExistError:
+            self.container = self.driver.create_container(self.container_name)
 
     def upload(self, iterable, name=None, container=None, prefix=""):
         """ Upload (and overwrite) files on storage provider.
