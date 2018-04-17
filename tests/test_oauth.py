@@ -28,14 +28,14 @@ class TestOAuth(OkTestCase):
         db.session.commit()
 
         self.temp_grant = Grant(
-            user_id=self.user1.id, client_id='normal',
+            user_id=self.user1.id, client_id='normal-inactive',
             code='12345', scopes=['email'],
             expires=dt.datetime.utcnow() + dt.timedelta(seconds=100)
         )
         db.session.add(self.temp_grant)
 
         self.valid_token = Token(
-            user_id=self.user1.id, client_id='normal',
+            user_id=self.user1.id, client_id='normal-inactive',
             scopes=[scope],
             access_token='soo_valid', expires=dt.datetime.utcnow() + dt.timedelta(seconds=3600)
         )
@@ -248,7 +248,7 @@ class TestOAuth(OkTestCase):
         self.assertRedirects(response, '/')
 
         response = self.client.post('/admin/clients/', data={})
-        self.assertRedirects(response, '/admin/')
+        self.assertRedirects(response, '/')
 
         self.logout()
         response = self.client.get('/admin/clients/')
