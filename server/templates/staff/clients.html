@@ -35,7 +35,7 @@
                   {% for client in my_clients %}
                   <tr>
                     <td>{{ client.name }}</td>
-                    <td>{{ client.user.name if client.user else 'None' }}</td>
+                    <td>{{ client.user.identifier if client.user else 'None' }}</td>
                     <td><span class="label label-{{ 'primary' if client.active else 'warning' }}">{{ 'Active' if client.active else 'Pending Approval' }}</span></td>
                     <td> <a href="{{ url_for('admin.client',client_id=client.client_id) }}">{{ client.client_id }}</a></td>
                     <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
@@ -74,7 +74,7 @@
                   {% for client in clients %}
                   <tr>
                     <td>{{ client.name }}</td>
-                    <td>{{ client.user.name if client.user else 'None' }}</td>
+                    <td>{{ client.user.identifier if client.user else 'None' }}</td>
                     <td><span class="label label-{{ 'primary' if client.active else 'warning' }}">{{ 'Active' if client.active else 'Pending Approval' }}</span></td>
                     <td> <a href="{{ url_for('admin.client',client_id=client.client_id) }}">{{ client.client_id }}</a></td>
                     <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
