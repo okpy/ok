@@ -84,7 +84,7 @@ class Storage:
             obj_name = sanitize_filename(prefixed_name)
         elif prefix:
             obj_name = prefix.lstrip("/") + obj_name
-            obj_name = '/'.join(part if part not in (".", "..") else '_'
+            obj_name = "/".join(part if part not in (".", "..") else "_"
                                 for part in obj_name.split("/"))
         logger.info("Beginning upload of {}".format(name))
         obj = self.driver.upload_object_via_stream(iterator=iter(iterable),
