@@ -3,7 +3,6 @@ import os
 import hashlib
 
 from libcloud.storage.types import ObjectDoesNotExistError
-import pytest
 
 from tests import OkTestCase
 
@@ -106,13 +105,13 @@ class TestFile(OkTestCase):
     test_malicious_directory_traversal_expected_obj_name = "test_.._.._fizz.txt"
 
     def test_malicious_local_get_blob(self):
-        with pytest.raises(ObjectDoesNotExistError):
+        with self.assertRaises(ObjectDoesNotExistError):
             blob = storage.get_blob(obj_name='../README.md')
 
-        with pytest.raises(ObjectDoesNotExistError):
+        with self.assertRaises(ObjectDoesNotExistError):
             blob = storage.get_blob(obj_name='/bin/bash')
 
-        with pytest.raises(ObjectDoesNotExistError):
+        with self.assertRaises(ObjectDoesNotExistError):
             blob = storage.get_blob(obj_name='foobar.txt')
 
     def test_permission(self):
