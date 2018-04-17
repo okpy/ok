@@ -94,7 +94,7 @@ def is_oauth_client_owner(oauth_client_id_arg):
                 oauth_client_id = kwargs[oauth_client_id_arg]
                 clients = Client.query.filter_by(user_id=current_user.id)
                 if clients.count() > 0:
-                    if oauth_client_id in [c.id for c in clients]:
+                    if oauth_client_id in [c.client_id for c in clients]:
                         return func(*args, **kwargs)
             flash("You do not have access to this OAuth client", "warning")
             return redirect(url_for("admin.clients"))
@@ -1352,6 +1352,10 @@ def client(client_id):
 
     client = Client.query.get(client_id)
     form = forms.EditClientForm(obj=client)
+    # Hide the active field and scopes if not an admin
+    if not current_user.is_admin:
+        del form.active
+        del form.default_scopes
     if form.validate_on_submit():
         form.populate_obj(client)
         if form.roll_secret.data:

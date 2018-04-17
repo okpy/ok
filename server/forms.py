@@ -562,7 +562,7 @@ class EditClientForm(ClientForm):
     active = BooleanField(
             'Active',
             description='Whether this client is active and available to be used.',
-            default=False
+            default=False,
             )
     roll_secret = BooleanField(
         'Change the secret?',
