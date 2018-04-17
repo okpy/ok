@@ -101,7 +101,66 @@ class TestOAuth(OkTestCase):
                                     .format(self.assignment.name, self.valid_token_bad_scope.access_token)))
         self.assert_200(response)
 
-    def test_client_form(self):
+    def test_client_form_staff(self):
+        self._setup_clients()
+        self.login(self.staff1.email)
+
+        redirect_uris = [
+            'http://myapp.com/authorize',
+            'https://myapp.com/authorize',
+        ]
+        default_scopes = ['email', 'all']
+        data = {
+            'name': 'My App',
+            'description': 'A web app that does stuff',
+            'client_id': 'my-app',
+            'client_secret': 'my-secret-key',
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': default_scopes[0], # email
+        }
+
+        self.assert_200(self.client.post('/admin/clients/',
+            data=data, follow_redirects=True))
+
+        client = Client.query.filter_by(client_id="my-app").one()
+        self.assertEqual(client.name, data['name'])
+        self.assertFalse(client.active) # Staff created clients required approval
+        self.assertEqual(client.user_id, self.staff1.id)
+        self.assertEqual(client.description, data['description'])
+        self.assertEqual(client.client_id, data['client_id'])
+        self.assertEqual(client.client_secret, data['client_secret'])
+        self.assertTrue(client.is_confidential)
+        self.assertEqual(client.redirect_uris, redirect_uris)
+        self.assertEqual(client.default_scopes, [default_scopes[0]]) # ['email']
+
+        # Ensure we can't activate our own client or change scopes by editing it.
+
+        response = self.client.get('admin/clients/{}'.format(client.client_id))
+        self.assertFalse(b'Active' in response.data) # Shouldn't see active checkbox
+        self.assertFalse(b'Default Scope' in response.data) # Shouldn't see scopes text input
+
+        # Make sure we can hack the POST data and approve our client
+        data = {
+            'name': 'My App',
+            'description': 'A web app that does stuff',
+            'client_id': 'my-app',
+            'client_secret': 'my-secret-key',
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': ', '.join(default_scopes), # Try changing the scopes
+            'active': 'true',
+        }
+        response = self.client.post('/admin/clients/{}'.format(client.client_id),
+            data=data, follow_redirects=True)
+        self.assert_200(response)
+        # Client should still be inactive
+        client = Client.query.filter_by(client_id="my-app").one()
+        self.assertFalse(client.active)
+        # Scope should still just be email only
+        self.assertTrue(client.default_scopes, [default_scopes[0]]) # ['email']
+
+    def test_client_form_admin(self):
         self._setup_clients()
         self.login(self.admin.email)
 
@@ -125,6 +184,8 @@ class TestOAuth(OkTestCase):
 
         client = Client.query.filter_by(client_id="my-app").one()
         self.assertEqual(client.name, data['name'])
+        self.assertTrue(client.active) # Admin created OAuth clients start active
+        self.assertEqual(client.user_id, self.admin.id)
         self.assertEqual(client.description, data['description'])
         self.assertEqual(client.client_id, data['client_id'])
         self.assertEqual(client.client_secret, data['client_secret'])
@@ -132,12 +193,16 @@ class TestOAuth(OkTestCase):
         self.assertEqual(client.redirect_uris, redirect_uris)
         self.assertEqual(client.default_scopes, default_scopes)
 
+        # Ensure admins can see additional form element
+        response = self.client.get('admin/clients/{}'.format(client.client_id))
+        self.assertTrue(b'Active' in response.data) # Should see active checkbox
+        self.assertTrue(b'Default Scope' in response.data) # Should see scopes text input
+
     def test_permissions(self):
         self.setup_course()
         # Test permissions
         self.login(self.staff1.email)
-        response = self.client.get('/admin/clients/')
-        self.assertRedirects(response, '/admin/')
+        self.assert_200(self.client.get('/admin/clients/'))
 
         response = self.client.post('/admin/clients/', data={})
         self.assertRedirects(response, '/admin/')
