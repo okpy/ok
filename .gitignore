@@ -44,3 +44,4 @@ _cache/*
 # local development
 database.db
 *.db
+*.db-journal
