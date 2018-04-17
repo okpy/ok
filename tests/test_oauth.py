@@ -96,6 +96,7 @@ class TestOAuth(OkTestCase):
         self._setup_clients_inactive()
         response = self.client.get("/api/v3/user/?access_token={}".format(self.valid_token.access_token))
         self.assert_200(response)
+        print(response.data)
         self.assertTrue(b'Error' in response.data)
 
     def test_api_active_client(self):
@@ -244,7 +245,7 @@ class TestOAuth(OkTestCase):
 
         self.login(self.user1.email)
         response = self.client.get('/admin/clients/')
-        self.assertRedirects(response, '/admin/')
+        self.assertRedirects(response, '/')
 
         response = self.client.post('/admin/clients/', data={})
         self.assertRedirects(response, '/admin/')
