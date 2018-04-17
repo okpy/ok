@@ -71,6 +71,7 @@ if driver:
                 client_secret='secret',
                 redirect_uris=['http://example.com/'],
                 is_confidential=False,
+                active=True
                 description='Sample App for testing OAuth',
                 default_scopes=['email'],
             )

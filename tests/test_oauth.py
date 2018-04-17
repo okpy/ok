@@ -12,6 +12,36 @@ from server.utils import encode_id
 from tests import OkTestCase
 
 class TestOAuth(OkTestCase):
+    def _setup_clients_inactive(self, scope='email'):
+        self.setup_course()
+
+        self.oauth_client = Client(
+            name='Testing Inactive Client', client_id='normal-inactive',
+            client_secret='normal-inactive',
+            redirect_uris=['http://127.0.0.1:8000/authorized'],
+            is_confidential=False,
+            active=False,
+            description='Sample App for testing OAuth',
+            default_scopes=scope
+        )
+        db.session.add(self.oauth_client)
+        db.session.commit()
+
+        self.temp_grant = Grant(
+            user_id=self.user1.id, client_id='normal',
+            code='12345', scopes=['email'],
+            expires=dt.datetime.utcnow() + dt.timedelta(seconds=100)
+        )
+        db.session.add(self.temp_grant)
+
+        self.valid_token = Token(
+            user_id=self.user1.id, client_id='normal',
+            scopes=[scope],
+            access_token='soo_valid', expires=dt.datetime.utcnow() + dt.timedelta(seconds=3600)
+        )
+        db.session.add(self.valid_token)
+        db.session.commit()
+
     def _setup_clients(self, scope='email'):
         self.setup_course()
 
@@ -19,6 +49,7 @@ class TestOAuth(OkTestCase):
             name='Testing Client', client_id='normal', client_secret='normal',
             redirect_uris=['http://127.0.0.1:8000/authorized'],
             is_confidential=False,
+            active=True,
             description='Sample App for testing OAuth',
             default_scopes=scope
         )
@@ -61,10 +92,17 @@ class TestOAuth(OkTestCase):
         db.session.add(self.valid_token_all_scope)
         db.session.commit()
 
-    def test_api(self):
+    def test_api_inactive_client(self):
+        self._setup_clients_inactive()
+        response = self.client.get("/api/v3/user/?access_token={}".format(self.valid_token.access_token))
+        self.assert_200(response)
+        self.assertTrue(b'Error' in response.data)
+
+    def test_api_active_client(self):
         self._setup_clients()
         response = self.client.get("/api/v3/user/?access_token={}".format(self.valid_token.access_token))
         self.assert_200(response)
+        self.assertFalse(b'Error' in response.data)
 
         response = self.client.get("/api/v3/user/?access_token={}".format(self.valid_token_bad_scope.access_token))
         self.assert_403(response)
@@ -204,11 +242,11 @@ class TestOAuth(OkTestCase):
         self.login(self.staff1.email)
         self.assert_200(self.client.get('/admin/clients/'))
 
-        response = self.client.post('/admin/clients/', data={})
-        self.assertRedirects(response, '/admin/')
-
         self.login(self.user1.email)
         response = self.client.get('/admin/clients/')
+        self.assertRedirects(response, '/admin/')
+
+        response = self.client.post('/admin/clients/', data={})
         self.assertRedirects(response, '/admin/')
 
         self.logout()

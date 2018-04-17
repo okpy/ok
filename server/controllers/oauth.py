@@ -26,11 +26,11 @@ def record_params(setup_state):
 
 @oauth_provider.clientgetter
 def load_client(client_id):
-    return Client.query.filter_by(client_id=client_id).first()
+    return Client.query.filter_by(client_id=client_id, active=True).first()
 
 @oauth_provider.grantgetter
 def load_grant(client_id, code):
-    return Grant.query.filter_by(client_id=client_id, code=code).first()
+    return Grant.query.filter_by(client_id=client_id, active=True, code=code).first()
 
 @oauth_provider.grantsetter
 def save_grant(client_id, code, request, *args, **kwargs):
