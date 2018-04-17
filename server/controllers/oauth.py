@@ -30,7 +30,7 @@ def load_client(client_id):
 
 @oauth_provider.grantgetter
 def load_grant(client_id, code):
-    return Grant.query.filter_by(client_id=client_id, active=True, code=code).first()
+    return Grant.query.filter_by(client_id=client_id, code=code).first()
 
 @oauth_provider.grantsetter
 def save_grant(client_id, code, request, *args, **kwargs):
