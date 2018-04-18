@@ -37,7 +37,9 @@ class CloudTestFile(TestFile):
             raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))
 
     def create_app(self):
+        self.original_storage_provider = os.environ.get("STORAGE_PROVIDER")
         os.environ["STORAGE_PROVIDER"] = self.storage_provider
+
         os.environ["STORAGE_KEY"] = self.storage_key
         os.environ["STORAGE_SECRET"] = self.storage_secret
         os.environ.setdefault("STORAGE_CONTAINER", "okpycloudfilestest{}".format(random.randint(0, 100000)))
@@ -47,7 +49,11 @@ class CloudTestFile(TestFile):
     def tearDown(self):
         super().tearDown()
 
-        del os.environ["STORAGE_PROVIDER"]
+        if self.original_storage_provider is not None:
+            os.environ["STORAGE_PROVIDER"] = self.original_storage_provider
+        else:
+            del os.environ["STORAGE_PROVIDER"]
+
         del os.environ["STORAGE_KEY"]
         del os.environ["STORAGE_SECRET"]
         del os.environ["STORAGE_CONTAINER"]
