@@ -27,36 +27,32 @@ class CloudTestFile(TestFile):
     key_env_name = ""
     secret_env_name = ""
 
+    __env_backup = {}
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.storage_key = os.environ.get(cls.key_env_name)
-        cls.storage_secret = os.environ.get(cls.secret_env_name)
-        if not cls.storage_key or not cls.storage_secret:
+        storage_key = os.environ.get(cls.key_env_name)
+        storage_secret = os.environ.get(cls.secret_env_name)
+        storage_container = "okpycloudfilestest{}".format(random.randint(0, 100000))
+
+        if not storage_key or not storage_secret:
             raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))
 
-    def create_app(self):
-        self.original_storage_provider = os.environ.get("STORAGE_PROVIDER")
-        os.environ["STORAGE_PROVIDER"] = self.storage_provider
+        cls.set_environment_variable("STORAGE_PROVIDER", cls.storage_provider)
+        cls.set_environment_variable("STORAGE_KEY", storage_key)
+        cls.set_environment_variable("STORAGE_SECRET", storage_secret)
+        cls.set_environment_variable("STORAGE_CONTAINER", storage_container)
 
-        os.environ["STORAGE_KEY"] = self.storage_key
-        os.environ["STORAGE_SECRET"] = self.storage_secret
-        os.environ.setdefault("STORAGE_CONTAINER", "okpycloudfilestest{}".format(random.randint(0, 100000)))
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
 
-        return super().create_app()
-
-    def tearDown(self):
-        super().tearDown()
-
-        if self.original_storage_provider is not None:
-            os.environ["STORAGE_PROVIDER"] = self.original_storage_provider
-        else:
-            del os.environ["STORAGE_PROVIDER"]
-
-        del os.environ["STORAGE_KEY"]
-        del os.environ["STORAGE_SECRET"]
-        del os.environ["STORAGE_CONTAINER"]
+        cls.restore_environment_variable("STORAGE_PROVIDER")
+        cls.restore_environment_variable("STORAGE_KEY")
+        cls.restore_environment_variable("STORAGE_SECRET")
+        cls.restore_environment_variable("STORAGE_CONTAINER")
 
         for obj in storage.container.list_objects():
             obj.delete()
@@ -72,6 +68,20 @@ class CloudTestFile(TestFile):
 
     def verify_download_headers(self, headers, filename, content_type):
         pass
+
+    @classmethod
+    def set_environment_variable(cls, key, value):
+        cls.__env_backup[key] = os.environ.get(key)
+        os.environ[key] = value
+
+    @classmethod
+    def restore_environment_variable(cls, key):
+        original_value = cls.__env_backup.get(key)
+
+        if original_value is None:
+            del os.environ[key]
+        else:
+            os.environ[key] = original_value
 
 
 class GoogleCloudTestFile(CloudTestFile):
