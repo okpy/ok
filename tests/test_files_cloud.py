@@ -27,7 +27,7 @@ class EnvironmentMutationMixin(object):
 
     @classmethod
     def set_environment_variable(cls, key, value):
-        cls.__env_backup[key] = os.environ.get(key)
+        cls.__env_backup.setdefault(key, os.environ.get(key))
         os.environ[key] = value
 
     @classmethod
