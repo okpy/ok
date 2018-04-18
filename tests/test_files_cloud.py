@@ -27,6 +27,8 @@ class CloudTestFile(TestFile):
     key_env_name = ""
     secret_env_name = ""
 
+    _storage_container = "okpycloudfilestest{}".format(random.randint(0, 100000))
+
     __env_backup = {}
 
     @classmethod
@@ -35,7 +37,6 @@ class CloudTestFile(TestFile):
 
         storage_key = os.environ.get(cls.key_env_name)
         storage_secret = os.environ.get(cls.secret_env_name)
-        storage_container = "okpycloudfilestest{}".format(random.randint(0, 100000))
 
         if not storage_key or not storage_secret:
             raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))
@@ -43,7 +44,7 @@ class CloudTestFile(TestFile):
         cls.set_environment_variable("STORAGE_PROVIDER", cls.storage_provider)
         cls.set_environment_variable("STORAGE_KEY", storage_key)
         cls.set_environment_variable("STORAGE_SECRET", storage_secret)
-        cls.set_environment_variable("STORAGE_CONTAINER", storage_container)
+        cls.set_environment_variable("STORAGE_CONTAINER", cls._storage_container)
 
     @classmethod
     def tearDownClass(cls):
@@ -54,10 +55,8 @@ class CloudTestFile(TestFile):
         cls.restore_environment_variable("STORAGE_SECRET")
         cls.restore_environment_variable("STORAGE_CONTAINER")
 
-        for obj in storage.container.list_objects():
-            obj.delete()
-
-        storage.container.delete()
+        container = storage.driver.get_container(cls._storage_container)
+        storage.driver.delete_container(container)
 
     def fetch_file(self, url):
         client_response = self.client.get(url)

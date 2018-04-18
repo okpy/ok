@@ -32,7 +32,7 @@ class TestFile(OkTestCase):
                                                course_id=self.course.id,
                                                staff_file=False,
                                                assignment_id=self.assignment.id)
-            self.blob2 = self.file1.object()
+            self.blob2 = self.file2.object()
 
         db.session.add_all([self.file1, self.file2])
         db.session.commit()
