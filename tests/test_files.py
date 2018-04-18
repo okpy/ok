@@ -40,14 +40,8 @@ class TestFile(OkTestCase):
     def tearDown(self):
         super().tearDown()
 
-        try:
-            self.blob1.delete()
-        except ObjectDoesNotExistError:
-            pass
-        try:
-            self.blob2.delete()
-        except ObjectDoesNotExistError:
-            pass
+        delete_silently(self.blob1)
+        delete_silently(self.blob2)
 
     def test_simple(self):
         self.assertEquals(self.blob1.driver.key, storage.driver.key)
@@ -225,3 +219,10 @@ class TestFile(OkTestCase):
     def verify_binary_download(self, file_path, downloaded_data):
         with open(file_path, "rb") as fobj:
             self.assertEqual(fobj.read(), downloaded_data)
+
+
+def delete_silently(blob):
+    try:
+        blob.delete()
+    except (ObjectDoesNotExistError, PermissionError):
+        pass
