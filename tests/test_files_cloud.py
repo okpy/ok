@@ -32,14 +32,13 @@ class CloudTestFile(TestFile):
         cls.storage_key = os.environ.get(cls.key_env_name)
         cls.storage_secret = os.environ.get(cls.secret_env_name)
         if not cls.storage_key or not cls.storage_secret:
-            raise unittest.SkipTest("Cloud storage credentials for "
-                                    "%s not configured" % cls.storage_provider)
+            raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))
 
     def create_app(self):
         os.environ["STORAGE_PROVIDER"] = self.storage_provider
         os.environ["STORAGE_KEY"] = self.storage_key
         os.environ["STORAGE_SECRET"] = self.storage_secret
-        os.environ.setdefault("STORAGE_CONTAINER", "okpycloudfilestest%d" % random.randint(0, 100000))
+        os.environ.setdefault("STORAGE_CONTAINER", "okpycloudfilestest{}".format(random.randint(0, 100000)))
 
         return super().create_app()
 
