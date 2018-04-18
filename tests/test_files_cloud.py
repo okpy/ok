@@ -10,6 +10,8 @@ To run tests for Google Cloud Platform, set the following environment variables:
 - GCP_STORAGE_SECRET
 
 """
+# TODO(@colinschoen) Configure CI to run the full integration test suite only on protected branches like master.
+
 import os
 import random
 import unittest

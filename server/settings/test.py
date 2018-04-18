@@ -33,6 +33,7 @@ STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
 STORAGE_SERVER = False
 STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER', os.path.abspath('./local-storage'))
 STORAGE_KEY = os.getenv('STORAGE_KEY')
+# TODO(@colinschoen) Ensure that secrets with newlines are correctly parsed
 STORAGE_SECRET = os.getenv('STORAGE_SECRET')
 
 CACHE_TYPE = 'simple'

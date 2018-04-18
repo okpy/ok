@@ -59,6 +59,7 @@ class Storage:
             # Filed Issue: https://issues.apache.org/jira/browse/LIBCLOUD-895
             driver_cls.supports_chunked_encoding = True
 
+        # TODO(@clewolff) Refactor to support passing project_id.
         self.driver = driver_cls(key, secret)
         # Also test credentials by getting the container
         try:
