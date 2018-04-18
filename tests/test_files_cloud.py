@@ -22,14 +22,30 @@ from server.extensions import storage
 from tests.test_files import TestFile
 
 
-class CloudTestFile(TestFile):
+class EnvironmentMutationMixin(object):
+    __env_backup = {}
+
+    @classmethod
+    def set_environment_variable(cls, key, value):
+        cls.__env_backup[key] = os.environ.get(key)
+        os.environ[key] = value
+
+    @classmethod
+    def restore_environment_variable(cls, key):
+        original_value = cls.__env_backup.get(key)
+
+        if original_value is None:
+            del os.environ[key]
+        else:
+            os.environ[key] = original_value
+
+
+class CloudTestFile(TestFile, EnvironmentMutationMixin):
     storage_provider = ""
     key_env_name = ""
     secret_env_name = ""
 
     _storage_container = "okpycloudfilestest{}".format(random.randint(0, 100000))
-
-    __env_backup = {}
 
     @classmethod
     def setUpClass(cls):
@@ -67,20 +83,6 @@ class CloudTestFile(TestFile):
 
     def verify_download_headers(self, headers, filename, content_type):
         pass
-
-    @classmethod
-    def set_environment_variable(cls, key, value):
-        cls.__env_backup[key] = os.environ.get(key)
-        os.environ[key] = value
-
-    @classmethod
-    def restore_environment_variable(cls, key):
-        original_value = cls.__env_backup.get(key)
-
-        if original_value is None:
-            del os.environ[key]
-        else:
-            os.environ[key] = original_value
 
 
 class GoogleCloudTestFile(CloudTestFile):
