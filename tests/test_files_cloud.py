@@ -80,15 +80,15 @@ class CloudTestFile(TestFile, EnvironmentMutationMixin):
     def verify_download_headers(self, headers, filename, content_type):
         pass
 
+    test_prefix_expected_obj_name = 'test/fizz.txt'
+    test_malicious_directory_traversal_expected_obj_name = 'test/_/_/fizz.txt'
+
 
 class GoogleCloudTestFile(CloudTestFile):
     storage_provider = "GOOGLE_STORAGE"
     key_env_name = "GCP_STORAGE_KEY"
     secret_env_name = "GCP_STORAGE_SECRET"
     container_env_name = "GCP_STORAGE_CONTAINER"
-
-    test_prefix_expected_obj_name = 'test/fizz.txt'
-    test_malicious_directory_traversal_expected_obj_name = 'test/_/_/fizz.txt'
 
 
 del CloudTestFile, TestFile
