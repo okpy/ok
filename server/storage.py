@@ -9,7 +9,7 @@ import string
 from urllib.parse import urlencode, urljoin
 
 from werkzeug.utils import secure_filename
-from libcloud.storage.types import Provider, ContainerDoesNotExistError
+from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 
 logger = logging.getLogger(__name__)
