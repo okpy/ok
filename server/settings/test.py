@@ -36,6 +36,9 @@ STORAGE_KEY = os.getenv('STORAGE_KEY')
 # TODO(@colinschoen) Ensure that secrets with newlines are correctly parsed
 STORAGE_SECRET = os.getenv('STORAGE_SECRET')
 
+if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
+
 CACHE_TYPE = 'simple'
 
 RQ_DEFAULT_HOST = REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')

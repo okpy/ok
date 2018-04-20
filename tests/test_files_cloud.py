@@ -13,12 +13,10 @@ To run tests for Google Cloud Platform, set the following environment variables:
 # TODO(@colinschoen) Configure CI to run the full integration test suite only on protected branches like master.
 
 import os
-import random
 import unittest
 
 import requests
 
-from server.extensions import storage
 from tests.test_files import TestFile
 
 
@@ -26,11 +24,9 @@ class EnvironmentMutationMixin(object):
     __env_backup = {}
 
     @classmethod
-    def set_environment_variable(cls, key, value, keep_existing=False):
-        old_value = os.environ.get(key)
-        cls.__env_backup.setdefault(key, old_value)
-        if not old_value or not keep_existing:
-            os.environ[key] = value
+    def set_environment_variable(cls, key, value):
+        cls.__env_backup.setdefault(key, os.environ.get(key))
+        os.environ[key] = value
 
     @classmethod
     def restore_environment_variable(cls, key):
@@ -46,8 +42,7 @@ class CloudTestFile(TestFile, EnvironmentMutationMixin):
     storage_provider = ""
     key_env_name = ""
     secret_env_name = ""
-
-    _storage_container = "okpycloudfilestest{}".format(random.randint(0, 100000))
+    container_env_name = ""
 
     @classmethod
     def setUpClass(cls):
@@ -55,14 +50,15 @@ class CloudTestFile(TestFile, EnvironmentMutationMixin):
 
         storage_key = os.environ.get(cls.key_env_name)
         storage_secret = os.environ.get(cls.secret_env_name)
+        storage_container = os.environ.get(cls.container_env_name)
 
-        if not storage_key or not storage_secret:
+        if not storage_key or not storage_secret or not storage_container:
             raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))
 
         cls.set_environment_variable("STORAGE_PROVIDER", cls.storage_provider)
         cls.set_environment_variable("STORAGE_KEY", storage_key)
         cls.set_environment_variable("STORAGE_SECRET", storage_secret)
-        cls.set_environment_variable("STORAGE_CONTAINER", cls._storage_container, keep_existing=True)
+        cls.set_environment_variable("STORAGE_CONTAINER", storage_container)
 
     @classmethod
     def tearDownClass(cls):
@@ -72,9 +68,6 @@ class CloudTestFile(TestFile, EnvironmentMutationMixin):
         cls.restore_environment_variable("STORAGE_KEY")
         cls.restore_environment_variable("STORAGE_SECRET")
         cls.restore_environment_variable("STORAGE_CONTAINER")
-
-        container = storage.driver.get_container(cls._storage_container)
-        storage.driver.delete_container(container)
 
     def fetch_file(self, url):
         client_response = self.client.get(url)
@@ -91,6 +84,7 @@ class GoogleCloudTestFile(CloudTestFile):
     storage_provider = "GOOGLE_STORAGE"
     key_env_name = "GCP_STORAGE_KEY"
     secret_env_name = "GCP_STORAGE_SECRET"
+    container_env_name = "GCP_STORAGE_CONTAINER"
 
     test_prefix_expected_obj_name = 'test/fizz.txt'
     test_malicious_directory_traversal_expected_obj_name = 'test/_/_/fizz.txt'
