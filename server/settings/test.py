@@ -32,9 +32,8 @@ WTF_CSRF_ENABLED = False
 STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
 STORAGE_SERVER = False
 STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER', os.path.abspath('./local-storage'))
-STORAGE_KEY = os.getenv('STORAGE_KEY')
-# TODO(@colinschoen) Ensure that secrets with newlines are correctly parsed
-STORAGE_SECRET = os.getenv('STORAGE_SECRET')
+STORAGE_KEY = os.getenv('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
 if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)

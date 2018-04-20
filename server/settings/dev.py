@@ -39,7 +39,7 @@ STORAGE_SERVER = False
 STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',
                                    os.path.abspath("./local-storage"))
 STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
-STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
 if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)
