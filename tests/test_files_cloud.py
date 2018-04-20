@@ -26,9 +26,11 @@ class EnvironmentMutationMixin(object):
     __env_backup = {}
 
     @classmethod
-    def set_environment_variable(cls, key, value):
-        cls.__env_backup.setdefault(key, os.environ.get(key))
-        os.environ[key] = value
+    def set_environment_variable(cls, key, value, keep_existing=False):
+        old_value = os.environ.get(key)
+        cls.__env_backup.setdefault(key, old_value)
+        if not old_value or not keep_existing:
+            os.environ[key] = value
 
     @classmethod
     def restore_environment_variable(cls, key):
@@ -60,7 +62,7 @@ class CloudTestFile(TestFile, EnvironmentMutationMixin):
         cls.set_environment_variable("STORAGE_PROVIDER", cls.storage_provider)
         cls.set_environment_variable("STORAGE_KEY", storage_key)
         cls.set_environment_variable("STORAGE_SECRET", storage_secret)
-        cls.set_environment_variable("STORAGE_CONTAINER", cls._storage_container)
+        cls.set_environment_variable("STORAGE_CONTAINER", cls._storage_container, keep_existing=True)
 
     @classmethod
     def tearDownClass(cls):
