@@ -61,7 +61,7 @@ class Storage:
 
         self.driver = driver_cls(key, secret)
         # Also test credentials by getting the container
-        self.container = self.driver.get_container(self.container_name)
+        self.container = self.driver.get_container(container_name=self.container_name)
 
     def upload(self, iterable, name=None, container=None, prefix=""):
         """ Upload (and overwrite) files on storage provider.
