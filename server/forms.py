@@ -618,8 +618,7 @@ class EditClientForm(ClientForm):
             # User isn't changing set to None to avoid overwriting in model
             self.user.data = None
             self.user_id.data = None
-            return True
-        return False
+        return not is_error
 
 class NewCourseForm(BaseForm):
     offering = StringField('Offering (example: cal/cs61a/sp16)',
