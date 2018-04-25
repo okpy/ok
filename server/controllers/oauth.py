@@ -26,7 +26,7 @@ def record_params(setup_state):
 
 @oauth_provider.clientgetter
 def load_client(client_id):
-    return Client.query.filter_by(client_id=client_id).first()
+    return Client.query.filter_by(client_id=client_id, active=True).first()
 
 @oauth_provider.grantgetter
 def load_grant(client_id, code):
