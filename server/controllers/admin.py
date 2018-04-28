@@ -1351,12 +1351,17 @@ def client(client_id):
     courses, current_course = get_courses()
 
     client = Client.query.get(client_id)
+    # Show the client owner's email in edit form when owner exists
+    client.owner = client.user.email if client.user else ""
     form = forms.EditClientForm(obj=client)
     # Hide the active field and scopes if not an admin
     if not current_user.is_admin:
         del form.active
         del form.default_scopes
     if form.validate_on_submit():
+        # Be careful not to overwrite user data
+        if not form.user_id.data or not form.user.data:
+            del form.user_id, form.user
         form.populate_obj(client)
         if form.roll_secret.data:
             client.client_secret = utils.generate_secret_key()
