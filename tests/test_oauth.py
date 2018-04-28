@@ -163,6 +163,90 @@ class TestOAuth(OkTestCase):
         # Scope should still just be email only
         self.assertTrue(client.default_scopes, [default_scopes[0]]) # ['email']
 
+    def test_client_form_valid_owner_change(self):
+        self._setup_clients()
+        self.login(self.admin.email)
+
+        redirect_uris = [
+            'http://myapp.com/authorize',
+            'https://myapp.com/authorize',
+        ]
+        default_scopes = ['email', 'all']
+        data = {
+            'name': self.oauth_client.name,
+            'owner': self.staff1.email,
+            'active': 'true',
+            'description': self.oauth_client.description,
+            'client_id': self.oauth_client.client_id,
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': ', '.join(default_scopes),
+        }
+
+        self.assert_200(
+            self.client.post(
+                '/admin/clients/{}'.format(self.oauth_client.client_id),
+                data=data, follow_redirects=True))
+        client = Client.query.filter_by(client_id=self.oauth_client.client_id).one()
+        # Should not have changed since requested owner is not staff
+        self.assertEqual(client.user_id, self.staff1.id)
+
+    def test_client_form_nonstaff_owner_change(self):
+        self._setup_clients()
+        self.login(self.admin.email)
+
+        redirect_uris = [
+            'http://myapp.com/authorize',
+            'https://myapp.com/authorize',
+        ]
+        default_scopes = ['email', 'all']
+        data = {
+            'name': self.oauth_client.name,
+            'owner': self.user1.email,
+            'description': self.oauth_client.description,
+            'client_id': self.oauth_client.client_id,
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': ', '.join(default_scopes),
+        }
+
+        self.assert_200(
+            self.client.post(
+                '/admin/clients/{}'.format(self.oauth_client.client_id),
+                data=data, follow_redirects=True))
+
+        client = Client.query.filter_by(client_id=self.oauth_client.client_id).one()
+        # Should not have changed since requested owner is not staff
+        self.assertEqual(client.user_id, self.oauth_client.user_id)
+
+    def test_client_form_nonexistant_owner_change(self):
+        self._setup_clients()
+        self.login(self.admin.email)
+
+        redirect_uris = [
+            'http://myapp.com/authorize',
+            'https://myapp.com/authorize',
+        ]
+        default_scopes = ['email', 'all']
+        data = {
+            'name': self.oauth_client.name,
+            'owner': 'bademail1337@dne.com',
+            'description': self.oauth_client.description,
+            'client_id': self.oauth_client.client_id,
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': ', '.join(default_scopes),
+        }
+
+        self.assert_200(
+            self.client.post(
+                '/admin/clients/{}'.format(self.oauth_client.client_id),
+                data=data, follow_redirects=True))
+
+        client = Client.query.filter_by(client_id=self.oauth_client.client_id).one()
+        # User ID should not have changed since owners email didn't exist
+        self.assertEqual(client.user_id, self.oauth_client.user_id)
+
     def test_client_form_admin(self):
         self._setup_clients()
         self.login(self.admin.email)
