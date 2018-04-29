@@ -1,5 +1,8 @@
 import datetime as dt
+import functools
 import os
+import socket
+import unittest
 
 from flask_rq import get_worker
 from flask_testing import TestCase
@@ -125,3 +128,28 @@ class OkTestCase(TestCase):
     def run_jobs(self):
         get_worker().work(burst=True)
         db.session.expire_all()
+
+
+def skipIfWindows(test_func):
+    is_windows = os.name == 'nt'
+    reason = 'This test uses OS features not supported by Windows'
+    return unittest.skipIf(is_windows, reason)(test_func)
+
+
+def skipUnlessRedisIsAvailable(test_func):
+    @functools.wraps(test_func)
+    def redis_availability_check_decorator(self, *args, **kwargs):
+        redis_host = self.app.config['REDIS_HOST']
+        redis_port = self.app.config['REDIS_PORT']
+
+        redis_socket = socket.socket()
+        redis_socket.settimeout(1)
+        try:
+            redis_socket.connect((redis_host, redis_port))
+        except (socket.error, socket.timeout):
+            reason = 'Redis is not available. Did you start redis-server?'
+            raise unittest.SkipTest(reason)
+
+        return test_func(self, *args, **kwargs)
+
+    return redis_availability_check_decorator

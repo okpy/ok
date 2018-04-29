@@ -24,13 +24,19 @@
                     <div class="box-body">
                     {% call forms.render_form(form, action_url="", action_text='Update OAuth Client', class_='form') %}
                       {{ forms.render_field(form.name, label_visible=true, placeholder='Ok Client', type='text') }}
+                      {{ forms.render_field(form.owner, label_visible=true, placeholder='Owner Email', type='text') }}
                       {{ forms.render_field(form.description, label_visible=true, placeholder='A client for OK', type='text') }}
                       {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
                       {{ forms.render_checkbox_field(form.roll_secret, label_visible=true) }}
                       <!-- Client Secret is not rendered -->
                       {{ forms.render_checkbox_field(form.is_confidential, label_visible=true) }}
+                      {% if current_user.is_admin %}
+                      {{ forms.render_checkbox_field(form.active, label_visible=true) }}
+                      {% endif %}
                       {{ forms.render_field(form.redirect_uris, placeholder='http://localhost:8000/authorized,https://cs61a.org/oauth/authorized', label_visible=true) }}
+                      {% if current_user.is_admin %}
                       {{ forms.render_field(form.default_scopes, placeholder='email,all', label_visible=true) }}
+                      {% endif %}
 
                     {% endcall %}
                  </div>

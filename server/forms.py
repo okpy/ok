@@ -570,9 +570,29 @@ class ClientForm(BaseForm):
 
 
 class EditClientForm(ClientForm):
+    active = BooleanField(
+            'Active',
+            description='Whether this client is active and available to be used.',
+            default=False,
+            )
+    owner = EmailField(
+        'Owner Email',
+        description='''Must be a valid email of OK account with 
+            staff access in some course. (Current owner will lose access if changed.)''',
+        validators=[validators.optional(), validators.email()]
+    )
+    user = HiddenField(
+        description="Do not fill out or render.",
+        validators=[validators.optional()]
+    )
+    user_id = HiddenField(
+        description="Do not fill out or render.",
+        validators=[validators.optional()]
+    )
     roll_secret = BooleanField(
         'Change the secret?',
-        description='Should the secret be changed? If checked, the new value will appear after submission',
+        description='''Should the secret be changed? If checked,
+            the new value will appear after submission''',
         default=False)
     client_secret = HiddenField(
         'Placeholder for secret',
@@ -584,16 +604,32 @@ class EditClientForm(ClientForm):
         super(ClientForm, self).__init__(obj=obj, **kwargs)
 
     def validate(self):
+        is_error = False
         # if our validators do not pass
         if not super(ClientForm, self).validate():
-            return False
+            is_error = True
         if self.client_id.data != self.obj.client_id:
             existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
             if existing_client:
                 self.client_id.errors.append('That client ID already exists')
-                return False
-        return True
-
+                is_error = True
+        if self.owner.data != self.obj.owner:
+            user = User.query.filter_by(email=self.owner.data).one_or_none()
+            if not user:
+                self.owner.errors.append("Email does not exist.")
+                is_error = True
+            elif not user.is_staff():
+                self.owner.errors.append('New owner must be a some course staff member.')
+                is_error = True
+            elif not is_error:
+                # New user is valid so populate necessary attributes to update model
+                self.user.data = user
+                self.user_id.data = user.id
+        elif not is_error:
+            # User isn't changing set to None to avoid overwriting in model
+            self.user.data = None
+            self.user_id.data = None
+        return not is_error
 
 class NewCourseForm(BaseForm):
     offering = StringField('Offering (example: cal/cs61a/sp16)',

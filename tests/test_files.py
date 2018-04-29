@@ -1,3 +1,4 @@
+import io
 import os
 import hashlib
 
@@ -148,7 +149,7 @@ class TestFile(OkTestCase):
                           response.headers.get('Content-Disposition'))
         self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=utf-8')
         self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
-        with open(CWD + "/files/fizzbuzz_after.py", 'r') as f:
+        with io.open(CWD + "/files/fizzbuzz_after.py", 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), response.data.decode('UTF-8'))
 
     def test_api_download(self):
@@ -161,7 +162,7 @@ class TestFile(OkTestCase):
                           response.headers.get('Content-Disposition'))
         self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=utf-8')
         self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
-        with open(CWD + "/files/fizzbuzz_after.py", 'r') as f:
+        with io.open(CWD + "/files/fizzbuzz_after.py", 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), response.data.decode('UTF-8'))
 
     def test_binary_download(self):

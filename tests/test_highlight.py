@@ -7,7 +7,7 @@ import subprocess
 
 from server import highlight
 
-from tests import OkTestCase
+from tests import OkTestCase, skipIfWindows
 
 _striptags_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
 
@@ -77,7 +77,7 @@ class TestHighlight(OkTestCase):
                 assert a_lines[line.line_before - 1] == source
                 assert b_lines[line.line_after - 1] == source
             else:
-                raise AssertionError('Unknown tag {0}'.format(tag))
+                raise AssertionError('Unknown tag {0}'.format(line.tag))
 
         # Check that removing tags gives a patch that can be applied
         patch = ''.join(striptags(line.contents) for line in highlighted)
@@ -87,6 +87,7 @@ class TestHighlight(OkTestCase):
         for filename, source in self.files.items():
             self._test_highlight_file(filename, source)
 
+    @skipIfWindows
     def test_highlight_diff(self):
         for diff_type in ('short', 'full'):
             for a, b in itertools.combinations(self.files.values(), 2):
