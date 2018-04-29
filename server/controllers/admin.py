@@ -412,11 +412,12 @@ def course_settings(cid):
     return render_template('staff/course/course.edit.html', form=form,
                            courses=courses, current_course=current_course)
 
-@admin.route("/course/<int:cid>/section", methods=['GET', 'POST'])
+@admin.route("/course/<int:cid>/section/", methods=['GET', 'POST'])
+@admin.route("/course/<int:cid>/section/<int:sctn_id>", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def section_console(cid):
+def section_console(cid, sctn_id=None):
     courses, current_course = get_courses(cid)
-    form = forms.EnrollmentForm()
+    form = forms.SectionAssignmentForm()
     if form.validate_on_submit():
         email, role , section = form.email.data, form.role.data, form.section.data
         user = User.lookup(email)
@@ -424,6 +425,7 @@ def section_console(cid):
             record = Enrollment.query.filter_by(user_id=user.id,
                                                 course_id=cid).one_or_none()
             if record:
+                form.name.data = user.name
                 form.sid.data = record.sid
                 form.secondary.data = record.class_account
                 form.role.data = record.role
@@ -435,13 +437,18 @@ def section_console(cid):
                 email=email, role=role), "error")
 
     user = User.lookup(current_user.email)
-    staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
-                                   .filter(Enrollment.role.in_(STAFF_ROLES))
-                                   .one_or_none())
 
-    if not staff_record and not user.is_admin:
-        flash('Unable to authorize section console access', 'error')
-        return abort(404)
+    if sctn_id is None:
+        staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
+                                       .filter(Enrollment.role.in_(STAFF_ROLES))
+                                       .one_or_none())
+
+        if not staff_record:
+            if not user.is_admin:
+                flash('Unable to authorize section console access', 'error')
+                return abort(404)
+        else:
+            sctn_id = staff_record.section    
 
     staff = (Enrollment.query
                           .filter(Enrollment.role.in_(STAFF_ROLES),
@@ -450,11 +457,10 @@ def section_console(cid):
 
     students, emails = list(), list()
 
-    if staff_record:
-        section = staff_record.section
+    if sctn_id is not None:
         students = (Enrollment.query
                               .filter(Enrollment.role.in_([STUDENT_ROLE]),
-                                      Enrollment.section == section,
+                                      Enrollment.section == sctn_id,
                                       Enrollment.course == current_course)
                               .all())
         student_users = (User.query            

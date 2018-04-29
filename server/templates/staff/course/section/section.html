@@ -45,7 +45,6 @@
                 <!-- form goes here -->
                 {% call forms.render_form(form, action_url=url_for('.section_console', cid=current_course.id), action_text='Submit',
                 class_='form') %}
-                    {{ forms.render_field(form.name, label_visible=true, placeholder='Name', required="required", type='text') }}
                     {{ forms.render_field(form.email, label_visible=true, required="required", placeholder='test@test.com') }}
                     {{ forms.render_field(form.section, label_visible=true, required="required", placeholder='0', type='text') }}
                 {% endcall %}
