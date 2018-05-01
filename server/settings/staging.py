@@ -52,7 +52,7 @@ STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'LOCAL')
 STORAGE_SERVER = False
 STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
 STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
-STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
 if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)

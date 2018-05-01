@@ -29,11 +29,13 @@ if SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
 WTF_CSRF_CHECK_DEFAULT = False
 WTF_CSRF_ENABLED = False
 
-STORAGE_PROVIDER = 'LOCAL'
+STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
 STORAGE_SERVER = False
-STORAGE_CONTAINER = os.path.abspath("./local-storage")
+STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER', os.path.abspath('./local-storage'))
+STORAGE_KEY = os.getenv('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
-if not os.path.exists(STORAGE_CONTAINER):
+if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)
 
 CACHE_TYPE = 'simple'
