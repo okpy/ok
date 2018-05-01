@@ -35,3 +35,17 @@
       </section>
     </main>
 {% endblock %}
+
+{% block js %}
+    <script>
+      var scores = {
+        {% for assign, subm_time, group, fs, scores in inactive %}
+          "{{ assign.name.split('/')[-1] }}": {
+          {% for score in scores %}
+            "{{ score.kind }}": {{ score.score }},
+          {% endfor %}
+          },
+        {% endfor %}
+      };
+    </script>
+{% endblock %}
