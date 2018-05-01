@@ -1,4 +1,4 @@
-Flask>=0.12.0,<0.12.3
+Flask>=0.12,<0.13,!=0.12.3 # 0.12.3 is a broken release. Ref: https://github.com/pallets/flask/issues/2728
 jinja2==2.9.6
 
 # WSGI Containers
