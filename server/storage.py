@@ -81,6 +81,8 @@ class Storage:
             obj_name = sanitize_filename(prefixed_name)
         elif prefix:
             obj_name = prefix.lstrip("/") + obj_name
+            obj_name = "/".join(part if part not in (".", "..") else "_"
+                                for part in obj_name.split("/"))
         logger.info("Beginning upload of {}".format(name))
         obj = self.driver.upload_object_via_stream(iterator=iter(iterable),
                                                    container=container,
@@ -124,7 +126,8 @@ class Storage:
         if container_name is None:
             container_name = self.container_name
         driver_name = self.driver.name.lower()
-        expires = (dt.datetime.now() + dt.timedelta(seconds=timeout)).strftime("%s")
+        expires = (dt.datetime.now() + dt.timedelta(seconds=timeout))
+        expires = int(expires.timestamp())
 
         if 's3' in driver_name or 'google' in driver_name:
             keyIdName = "AWSAccessKeyId" if "s3" in driver_name else "GoogleAccessId"
