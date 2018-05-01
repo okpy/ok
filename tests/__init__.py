@@ -37,15 +37,15 @@ class OkTestCase(TestCase):
         self.assert_200(response)
         self.assert_template_used('index.html')
 
-    def make_student(self, n):
+    def make_student(self, n, section=None):
         user = User(email='student{0}@aol.com'.format(n))
-        participant = Enrollment(user=user, course=self.course)
+        participant = Enrollment(user=user, course=self.course, section=section)
         db.session.add(participant)
         return user
 
-    def make_staff(self, n, role=constants.STAFF_ROLE):
+    def make_staff(self, n, role=constants.STAFF_ROLE, section=None):
         user = User(email='staff{0}@bitdiddle.net'.format(n))
-        participant = Enrollment(user=user, course=self.course, role=role)
+        participant = Enrollment(user=user, course=self.course, role=role, section=section)
         db.session.add(participant)
         return user
 
@@ -94,15 +94,15 @@ class OkTestCase(TestCase):
             max_group_size=3)
         db.session.add(self.assignment2)
 
-        def make_student(n):
+        def make_student(n, section=None):
             user = User(email='student{0}@aol.com'.format(n))
-            participant = Enrollment(user=user, course=self.course)
+            participant = Enrollment(user=user, course=self.course, section=section)
             db.session.add(participant)
             return user
 
-        def make_staff(n, role=constants.STAFF_ROLE):
+        def make_staff(n, role=constants.STAFF_ROLE, section=None):
             user = User(email='staff{0}@bitdiddle.net'.format(n))
-            participant = Enrollment(user=user, course=self.course, role=role)
+            participant = Enrollment(user=user, course=self.course, role=role, section=section)
             db.session.add(participant)
             return user
 
@@ -117,9 +117,14 @@ class OkTestCase(TestCase):
         self.user3 = make_student(3)
         self.user4 = make_student(4)
         self.user5 = make_student(5)
+        self.user6 = make_student(6, section=1)
+        self.user7 = make_student(7, section=2)
+        self.user8 = make_student(8, section=2)
 
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
+        self.staff3 = make_staff(3, section=1)
+        self.staff4 = make_staff(4, section=2)
 
         self.lab_assistant1 = make_lab_assistant(1)
 

@@ -10,6 +10,7 @@ import time
 import urllib.parse
 
 import requests
+import sys
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
@@ -156,7 +157,7 @@ if driver:
             # Youtube throws a console warning, because PhantomJS doesn't support HTML5 video.
             # This isn't actually an error.
             self.page_load(self.get_server_url(), 1)
-            self.assertEquals("OK", self.driver.title)
+            self.assertEqual("OK", self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
 
@@ -166,7 +167,7 @@ if driver:
             self.assertIn('Courses | Ok', self.driver.title)
 
             self.driver.find_element_by_id('logout').click()
-            self.assertEquals("OK", self.driver.title)
+            self.assertEqual("OK", self.driver.title)
 
         def test_student_view(self):
             self._seed_course()
@@ -455,7 +456,7 @@ if driver:
             self.driver.find_element_by_css_selector('form button.btn-default').click()
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
-            self.assertTrue("for 2 staff" in self.driver.page_source)
+            self.assertTrue("for 4 staff" in self.driver.page_source)
 
         def test_login_redirect(self):
             self._seed_course()
@@ -467,11 +468,11 @@ if driver:
 
             # Access page while not logged in - should redirect to login
             self.page_load(target_url)
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             self.driver.find_element_by_id('admin').click()
-            self.assertEquals(self.driver.current_url, target_url)
+            self.assertEqual(self.driver.current_url, target_url)
 
         def _confirm_oauth(self):
             self.driver.find_element_by_id('confirm-button').click()
@@ -479,7 +480,7 @@ if driver:
             # Get code from redirect URI
             redirect_uri, query_string = self.driver.current_url.split('?')
             query = dict(urllib.parse.parse_qsl(query_string))
-            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertEqual(redirect_uri, self.oauth_client.redirect_uris[0])
             self.assertIn('code', query)
 
             # Try exchanging code for token
@@ -491,7 +492,7 @@ if driver:
                 'redirect_uri': self.oauth_client.redirect_uris[0],
                 'grant_type': 'authorization_code',
             })
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
             data = response.json()
             self.assertIn('access_token', data)
             self.assertIn('refresh_token', data)
@@ -529,7 +530,7 @@ if driver:
                 }),
             ))
             login_url = '{}/testing-login/'.format(self.get_server_url())
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             input_element = self.driver.find_element_by_id("email-login")
@@ -560,7 +561,7 @@ if driver:
             self.driver.find_element_by_id('reauthenticate-button').click()
 
             login_url = '{}/testing-login/'.format(self.get_server_url())
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             input_element = self.driver.find_element_by_id("email-login")
@@ -570,6 +571,28 @@ if driver:
             # Now confirm OAuth
             self.assertIn(self.user2.email, self.driver.page_source)
             self._confirm_oauth()
+
+
+        def test_section_console(self):
+            self._login_as(email=self.staff4.email)
+            self.page_load(self.get_server_url() + "/admin/")
+            # if needed for debug: self.driver.get_screenshot_as_file('staff.png')
+
+            self.page_load(self.get_server_url() + "/admin/course/1/section/")
+
+            # user7 and user8 should be in staff4's section
+            self.assertTrue(self.user7.email in self.driver.page_source)
+            self.assertTrue(self.user8.email in self.driver.page_source)
+            self.assertTrue('Total: 2' in self.driver.page_source)
+
+            # There should be four staff members listed under section assignments
+            self.assertTrue(self.staff1.email in self.driver.page_source)
+            self.assertTrue(self.staff2.email in self.driver.page_source)
+            self.assertTrue(self.staff3.email in self.driver.page_source)
+            self.assertTrue(self.staff4.email in self.driver.page_source)
+            self.assertTrue('Total: 4' in self.driver.page_source)
+
+
 
         # Commented out because this job occasionally times out on CI.
         # https://github.com/Cal-CS-61A-Staff/ok/issues/1113

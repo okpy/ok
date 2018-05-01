@@ -53,3 +53,32 @@
         </div>
 </section>
 {% endblock %}
+
+{% block page_js %}
+<script>
+    {% if enrollments %}
+    var studentOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 10
+    };
+    var studentList = new List('Your Students-list', studentOptions);
+    studentList.sort("timestamp", {order: "desc"})
+    document.getElementById('Your Students-list').style.display = 'block';
+    {% endif %}
+
+    {% if staff %}
+    var staffOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 10
+    };
+    var staffList = new List('Staff Section Assignments-list', staffOptions);
+    staffList.sort("timestamp", {order: "desc"})
+    document.getElementById('Staff Section Assignments-list').style.display = 'block';
+    {% endif %}
+</script>
+{% endblock %}
+
