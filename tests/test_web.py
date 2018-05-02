@@ -79,7 +79,7 @@ if driver:
             models.db.session.commit()
 
         def create_app(self):
-            app = create_app('settings/test.py')
+            app = create_app('test')
             # Default port is 5000
             app.config['LIVESERVER_PORT'] = 8943
             return app
