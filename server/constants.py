@@ -32,6 +32,8 @@ ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
+ISO_DATETIME_FMT_WITH_T = '%Y-%m-%dT%H:%M:%S'
+ISO_DATETIME_FMT_WITH_T_WITH_SECONDS_FRAC = "{}.%f".format(ISO_DATETIME_FMT_WITH_T)
 
 AUTOGRADER_URL = 'https://autograder.cs61a.org'
 
