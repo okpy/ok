@@ -145,7 +145,7 @@ class TestApi(OkTestCase):
         del response_json['created']
         del response_json['submission_time']
         del response_json['messages'][0]['created']
-        assert response.json['data'] == {
+        assert response_json == {
             "submitter": user_json,
             "submit": backup.submit,
             "group": [user_json],
