@@ -22,6 +22,7 @@ import contextlib
 import csv
 import datetime as dt
 import json
+import os
 import logging
 import shlex
 import urllib.parse
@@ -958,7 +959,7 @@ class Enrollment(Model):
 
 class Message(Model):
     __tablename__ = 'message'
-    __table_args__ = {'mysql_row_format': 'COMPRESSED'}
+    __table_args__ = {'mysql_row_format': os.getenv('DB_ROW_FORMAT', 'COMPRESSED')}
 
     id = db.Column(db.Integer, primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False,

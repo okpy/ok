@@ -36,12 +36,13 @@ class Config(object):
         if db_url:
             if 'mysql' in db_url:
                 db_url = db_url.replace('mysql://', 'mysql+pymysql://')
-                db_url += "&sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
 
-                #This defends against people copy/pasting a connection URL that doesn't include any query parameters 
+                # This defends against people copy/pasting a connection URL that doesn't include any query parameters
                 # (in which case the following code creates a bad URI)
                 if '?' not in db_url:
                     db_url += '?'
+
+                db_url += "&sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
         else:
             db_url = cls.get_default_db_url()
 
@@ -52,6 +53,11 @@ class Config(object):
         if cls.SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
             cls.SQLALCHEMY_DATABASE_URI = (sqlite_prefix +
                     os.path.abspath(cls.SQLALCHEMY_DATABASE_URI[len(sqlite_prefix) + 1:]))
+
+        sql_ca_cert = os.getenv('SQL_CA_CERT', os.path.abspath('./BaltimoreCyberTrustRoot.crt.pem'))
+        if sql_ca_cert and 'azure' in cls.SQLALCHEMY_DATABASE_URI:
+            cls.SQLALCHEMY_ENGINE_OPTS = {'connect_args': {'ssl': {'ca': sql_ca_cert}}}
+            cls.SQLALCHEMY_POOL_RECYCLE = 25 * 60  # Restart connections before 25 minutes Azure timeout
 
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)
