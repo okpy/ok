@@ -11,7 +11,7 @@ from server import create_app
 if __name__ == '__main__':
     # default to dev config
     env = os.environ.get('OK_ENV', 'dev')
-    app = create_app('settings/{0!s}.py'.format(env))
+    app = create_app(env)
     with app.app_context():
         worker = get_worker()
         sentry_dsn = os.getenv('SENTRY_DSN')

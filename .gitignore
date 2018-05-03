@@ -45,3 +45,6 @@ _cache/*
 database.db
 *.db
 *.db-journal
+
+# Visual Studio Code
+.vscode

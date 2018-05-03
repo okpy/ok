@@ -13,7 +13,7 @@ from server import constants
 
 class OkTestCase(TestCase):
     def create_app(self):
-        return create_app('settings/test.py')
+        return create_app('test')
 
     def setUp(self):
         db.drop_all()

@@ -28,21 +28,25 @@ from server.extensions import (
     storage
 )
 
-def create_app(default_config_path=None):
+def create_app(environment_name=None):
     """Create and return a Flask application. Reads a config file path from the
-    OK_SERVER_CONFIG environment variable. If it is not set, reads from
-    default_config_path instead. This is so we can default to a development
+    OK_SERVER_CONFIG environment variable. If it is not set, it imports and reads 
+    from the config module (using environment_name). This is so we can default to a development
     environment locally, but the app will fail in production if there is no
     config file rather than dangerously defaulting to a development environment.
     """
 
     app = Flask(__name__)
 
-    config_path = os.getenv('OK_SERVER_CONFIG', default_config_path)
-    if config_path is None:
-        raise ValueError('No configuration file found'
-            'Check that the OK_SERVER_CONFIG environment variable is set.')
-    app.config.from_pyfile(config_path)
+    env_module_path = os.getenv(
+        'OK_SERVER_CONFIG',
+        'server.settings.{}'.format(environment_name))
+
+    if '/' in env_module_path:
+        env_module_path = env_module_path.replace('/', '.')
+        env_module_path = env_module_path.replace('.py', '')
+
+    app.config.from_object(env_module_path  + '.Config')
 
     # Set REMOTE_ADDR for proxies
     num_proxies = app.config.get('NUM_PROXIES', 0)
