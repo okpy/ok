@@ -224,5 +224,5 @@ class TestFile(OkTestCase):
 def delete_silently(blob):
     try:
         blob.delete()
-    except (ObjectDoesNotExistError, PermissionError):
+    except (ObjectDoesNotExistError, OSError):
         pass
