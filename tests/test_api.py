@@ -132,10 +132,10 @@ class TestApi(OkTestCase):
         }
         response_json = response.json['data']
         time_threshold = dt.timedelta(seconds=5)
-        self.assertAlmostEqual(dt.atetime.strptime(response_json['created'], constants.ISO_DATETIME_FMT_WITH_T),
+        self.assertAlmostEqual(dt.datetime.strptime(response_json['created'], constants.ISO_DATETIME_FMT_WITH_T),
                                backup.created,
                                delta=time_threshold)
-        self.assertAlmostEqual(dt.daetime.strptime(response_json['submission_time'], constants.ISO_DATETIME_FMT_WITH_T_WITH_SECONDS_FRAC),
+        self.assertAlmostEqual(dt.datetime.strptime(response_json['submission_time'], constants.ISO_DATETIME_FMT_WITH_T_WITH_SECONDS_FRAC),
                                submission_time,
                                delta=time_threshold)
         self.assertAlmostEqual(dt.datetime.strptime(response_json['messages'][0]['created'], constants.ISO_DATETIME_FMT_WITH_T),
