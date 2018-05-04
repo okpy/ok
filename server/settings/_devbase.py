@@ -3,7 +3,6 @@
 class Config(object):
     ASSETS_DEBUG = True
     TESTING_LOGIN = True
-    INSTANTCLICK = True
 
     CACHE_TYPE = 'simple'
 
