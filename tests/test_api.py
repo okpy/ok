@@ -1,4 +1,5 @@
 import datetime as dt
+import dateutil.parser
 import json
 import random
 
@@ -132,13 +133,13 @@ class TestApi(OkTestCase):
         }
         response_json = response.json['data']
         time_threshold = dt.timedelta(seconds=5)
-        self.assertAlmostEqual(dt.datetime.strptime(response_json['created'], constants.ISO_DATETIME_FMT_WITH_T),
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['created']),
                                backup.created,
                                delta=time_threshold)
-        self.assertAlmostEqual(dt.datetime.strptime(response_json['submission_time'], constants.ISO_DATETIME_FMT_WITH_T_WITH_SECONDS_FRAC),
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['submission_time']),
                                submission_time,
                                delta=time_threshold)
-        self.assertAlmostEqual(dt.datetime.strptime(response_json['messages'][0]['created'], constants.ISO_DATETIME_FMT_WITH_T),
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['messages'][0]['created']),
                                backup.created,
                                delta=time_threshold)
         # Unset timestamps already tested.
