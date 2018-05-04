@@ -6,8 +6,10 @@ from server.settings._devbase import Config as DevBaseConfig
 @initialize_config
 class Config(DevBaseConfig, BaseConfig):
     ENV = 'dev'
-    
+
     SECRET_KEY = os.getenv('OK_SESSION_KEY', 'changeinproductionkey')
+
+    INSTANTCLICK = True
 
     DEBUG = True
 

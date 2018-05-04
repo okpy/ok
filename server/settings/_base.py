@@ -3,8 +3,6 @@
 """
 import os
 
-from server.settings import RAVEN_IGNORE_EXCEPTIONS as raven_exceptions
-
 # Shared settings across all environments
 
 def initialize_config(cls):
@@ -23,23 +21,14 @@ class Config(object):
 
     REDIS_PORT = 6379
     RQ_POLL_INTERVAL = 2000
-    RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
+    RQ_DEFAULT_HOST = REDIS_HOST = \
         os.getenv('REDIS_HOST', 'localhost')
 
     STORAGE_SERVER = False
-
-    RAVEN_IGNORE_EXCEPTIONS = raven_exceptions
-
-    # Service Keys
-    GOOGLE = {
-        'consumer_key': os.environ.get('GOOGLE_ID'),
-        'consumer_secret':  os.environ.get('GOOGLE_SECRET')
-    }
-
-    SENDGRID_AUTH = {
-        'user': os.environ.get("SENDGRID_USER"),
-        'key': os.environ.get("SENDGRID_KEY")
-    }
+    STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
+    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER', os.path.abspath("./local-storage"))
+    STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+    STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
     @classmethod
     def initialize_config(cls):
@@ -63,12 +52,6 @@ class Config(object):
         if cls.SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):
             cls.SQLALCHEMY_DATABASE_URI = (sqlite_prefix +
                     os.path.abspath(cls.SQLALCHEMY_DATABASE_URI[len(sqlite_prefix) + 1:]))
-
-
-        cls.STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
-        cls.STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER', os.path.abspath("./local-storage"))
-        cls.STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
-        cls.STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)
