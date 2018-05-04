@@ -12,6 +12,8 @@ class Config(ProdBaseConfig, BaseConfig):
 
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # Max Upload Size is 10MB
 
+    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER', os.path.abspath("./local-storage"))
+
     @classmethod
     def get_default_db_url(cls):
         return os.getenv('SQLALCHEMY_URL', 'sqlite:///../oksqlite.db')
