@@ -3,6 +3,8 @@ There are two ways to authenticate a request:
 * Present the session cookie returned after logging in
 * Send a Google access token as the access_token query parameter
 """
+import jwt
+
 from flask import (abort, Blueprint, current_app, flash, redirect,
                    render_template, request, session, url_for, jsonify)
 from flask_oauthlib.client import OAuth, OAuthException
@@ -25,31 +27,32 @@ auth = Blueprint('auth', __name__)
 
 auth.config = {}
 
+provider_auth = None
+provider_name = None
+
+oauth = None
+
 @auth.record
 def record_params(setup_state):
     """ Load used app configs into local config on registration from
     server/__init__.py """
+    global provider_name
+    global provider_auth
+    global oauth
+    oauth = OAuth()
     app = setup_state.app
+    provider_name = app.config.get('OAUTH_PROVIDER', 'GOOGLE')
+    provider_auth = oauth.remote_app(
+        provider_name, 
+        app_key=provider_name
+    )
+    
     oauth.init_app(app)
-
-oauth = OAuth()
-google_auth = oauth.remote_app(
-    'google',
-    app_key='GOOGLE',
-    request_token_params={
-        'scope': 'email',
-        'prompt': 'select_account'
-    },
-    base_url='https://www.googleapis.com/oauth2/v3/',
-    request_token_url=None,
-    access_token_method='POST',
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-)
-
-@google_auth.tokengetter
-def google_oauth_token(token=None):
-    return session.get('google_token')
+    #instead of decorator set the fn pointer to the func here:
+    provider_auth._tokengetter = provider_token
+   
+def provider_token(token=None):
+    return session.get('provider_token')
 
 ###########
 # Helpers #
@@ -87,7 +90,8 @@ def google_user_data(token, timeout=5):
     if not token:
         logger.info("Google Token is None")
         return None
-    google_plus_endpoint = "https://www.googleapis.com/plus/v1/people/me?access_token={}"
+
+    google_plus_endpoint = current_app.config.get(provider_name)['profile_url']
 
     try:
         r = requests.get(google_plus_endpoint.format(token), timeout=timeout)
@@ -100,7 +104,7 @@ def google_user_data(token, timeout=5):
         return None
 
     # If Google+ didn't work - fall back to OAuth2
-    oauth2_endpoint = "https://www.googleapis.com/oauth2/v3/userinfo?access_token={}"
+    oauth2_endpoint = current_app.config.get(provider_name)['userinfo_url'] 
 
     try:
         r = requests.get(oauth2_endpoint.format(token), timeout=timeout)
@@ -115,7 +119,26 @@ def google_user_data(token, timeout=5):
     logger.warning("None of the endpoints returned an access token.")
     return None
 
-def user_from_google_token(token):
+def microsoft_user_data(token):
+    if not token:
+        logger.info("Microsoft Token is None")
+        return None
+
+    try:
+        decoded_token = jwt.decode(token, verify=False)
+        if 'unique_name' in decoded_token: # Azure V1 endpoints
+            return {'email': decoded_token['unique_name']} 
+        if 'preferred_username' in decoded_token:  # Azure V2 endpoints
+            return {'email': decoded_token['preferred_username']}
+
+        logger.error("Unable to retrieve unique_name from token - which is email")
+        return None
+    except jwt.DecodeError as e:
+        logger.error("jwt Decode error from token")
+        logger.error('Decode error was %s', e)
+        return None
+
+def user_from_provider_token(token):
     """
     Get a User with the given Google access token, or create one if no User with
     this email is found. If the token is invalid, return None.
@@ -124,7 +147,11 @@ def user_from_google_token(token):
         return None
     if use_testing_login() and token == "test":
         return user_from_email("okstaff@okpy.org")
-    user_data = google_user_data(token)
+
+    if provider_name == 'GOOGLE':
+        user_data = google_user_data(token)
+    elif provider_name == 'MICROSOFT':
+        user_data = microsoft_user_data(token)
 
     if not user_data or 'email' not in user_data:
         cache.delete_memoized(google_user_data, token)
@@ -198,13 +225,13 @@ def login():
     """
     if use_testing_login():
         return redirect(url_for('.testing_login'))
-    return google_auth.authorize(
+    return provider_auth.authorize(
         callback=url_for('.authorized', _external=True),
         login_hint=request.args.get('login_hint'))
 
 @auth.route('/login/authorized/')
 def authorized():
-    resp = google_auth.authorized_response()
+    resp = provider_auth.authorized_response()
     if resp is None:
         error = "Access denied: reason={0} error={1}".format(
             request.args['error_reason'],
@@ -221,17 +248,24 @@ def authorized():
         return redirect("/")
 
     access_token = resp['access_token']
-    user = user_from_google_token(access_token)
+    user = user_from_provider_token(access_token)
     if not user:
         logger.warning("Attempt to get user info failed")
         flash("We could not log you in. Maybe try another email?", 'warning')
         return redirect("/")
 
     logger.info("Login from {}".format(user.email))
-    expires_in = resp.get('expires_in', 0)
+    expires_in = safe_cast(resp.get('expires_in'), int, 0)
     session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)
-    session['google_token'] = (access_token, '')  # (access_token, secret)
+    session['provider_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
+
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except (ValueError, TypeError):
+        return default
 
 ################
 # Other Routes #
