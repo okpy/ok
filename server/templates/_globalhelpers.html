@@ -1,3 +1,19 @@
 {% macro backup_style(backup_id) %}
     <tt>{{ backup_id }}</tt>
 {% endmacro %}
+
+{% macro js_scores(var_name, assigns, show_hidden=False) %}
+  <script>
+    var {{ var_name }} = {
+      {% for assign, subm_time, group, fs, scores in assigns %}
+        "{{ assign.name.split('/')[-1] }}": {
+        {% for score in scores %}
+          {% if score.public or show_hidden %}
+          "{{ score.kind }}": {{ score.score }},
+          {% endif %}
+        {% endfor %}
+        },
+      {% endfor %}
+    };
+  </script>
+{% endmacro %}

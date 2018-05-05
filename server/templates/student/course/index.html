@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'student/course/_assigntable.html' as table %}
+{% import '_globalhelpers.html' as helpers %}
 
 {% block title %} {{ course.display_name_with_semester }} | Ok {% endblock %}
 
@@ -37,15 +38,5 @@
 {% endblock %}
 
 {% block js %}
-    <script>
-      var scores = {
-        {% for assign, subm_time, group, fs, scores in inactive %}
-          "{{ assign.name.split('/')[-1] }}": {
-          {% for score in scores %}
-            "{{ score.kind }}": {{ score.score }},
-          {% endfor %}
-          },
-        {% endfor %}
-      };
-    </script>
+{{ helpers.js_scores('scores', inactive) }}
 {% endblock %}
