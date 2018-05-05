@@ -1,6 +1,9 @@
 import datetime as dt
+import dateutil.parser
 import json
 import random
+
+from server import constants
 
 from server.models import (db, Assignment, Backup, Course, User,
                            Version, Group)
@@ -128,11 +131,24 @@ class TestApi(OkTestCase):
             "email": backup.submitter.email,
             "id": encode_id(backup.submitter_id),
         }
-        assert response.json['data'] == {
+        response_json = response.json['data']
+        time_threshold = dt.timedelta(seconds=5)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['created']),
+                               backup.created,
+                               delta=time_threshold)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['submission_time']),
+                               submission_time,
+                               delta=time_threshold)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['messages'][0]['created']),
+                               backup.created,
+                               delta=time_threshold)
+        # Unset timestamps already tested.
+        del response_json['created']
+        del response_json['submission_time']
+        del response_json['messages'][0]['created']
+        assert response_json == {
             "submitter": user_json,
             "submit": backup.submit,
-            "created": backup.created.isoformat(),
-            "submission_time": submission_time.isoformat(),
             "group": [user_json],
             "is_late": backup.is_late,
             "external_files": [],
@@ -151,7 +167,6 @@ class TestApi(OkTestCase):
                 {
                     "kind": "file_contents",
                     "contents": backup.files(),
-                    "created": backup.created.isoformat(),
                 },
             ],
         }
