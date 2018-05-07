@@ -75,8 +75,12 @@ markdown>=2.6,<2.7
 pygal>=2.3,<2.4
 bleach==2.0.0
 
-# Logging
+# Google logging
 gcloud==0.18.3
+
+# Azure logging
+# until https://github.com/Microsoft/ApplicationInsights-Python/pull/79 is merged and released
+https://github.com/c-w/ApplicationInsights-Python/archive/flask-integration.zip
 
 # Development
 Flask-DebugToolbar==0.10.1

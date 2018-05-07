@@ -30,6 +30,8 @@ class Config(object):
     STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
     STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
+    APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY')
+
     @classmethod
     def initialize_config(cls):
         db_url = os.getenv('DATABASE_URL')

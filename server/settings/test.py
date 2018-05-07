@@ -13,6 +13,8 @@ class Config(DevBaseConfig, BaseConfig):
     WTF_CSRF_ENABLED = False
     RQ_DEFAULT_DB = 2  # to prevent conflicts with development
 
+    APPINSIGHTS_INSTRUMENTATIONKEY = ''
+
     @classmethod
     def get_default_db_url(cls):
         return os.getenv('SQLALCHEMY_URL', 'sqlite:///../oktest.db')
