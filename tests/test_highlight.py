@@ -33,9 +33,16 @@ def apply_patch(patch, source):
 class TestHighlight(OkTestCase):
     def setUp(self):
         super(TestHighlight, self).setUp()
+
+        with open('tests/files/difflib_before.py', encoding='utf-8') as fobj:
+            before = fobj.read()
+
+        with open('tests/files/difflib_after.py', encoding='utf-8') as fobj:
+            after = fobj.read()
+
         self.files = {
-            'before.py': open('tests/files/difflib_before.py').read(),
-            'after.py': open('tests/files/difflib_after.py').read(),
+            'before.py': before,
+            'after.py': after,
             'empty.py': '',
             'empty': '',
         }
