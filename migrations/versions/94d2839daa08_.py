@@ -151,7 +151,7 @@ def upgrade():
     sa.Column('kind', sa.String(length=255), nullable=False),
     sa.ForeignKeyConstraint(['backup_id'], ['backup.id'], name=op.f('fk_message_backup_id_backup')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_message')),
-    mysql_row_format='COMPRESSED'
+    mysql_row_format=os.getenv('DB_ROW_FORMAT', 'COMPRESSED')
     )
     op.create_index(op.f('ix_message_backup_id'), 'message', ['backup_id'], unique=False)
     op.create_index(op.f('ix_message_kind'), 'message', ['kind'], unique=False)
