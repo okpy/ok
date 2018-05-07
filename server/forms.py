@@ -500,6 +500,10 @@ class ExtensionForm(SubmissionTimeForm):
                          description="Why are you granting this extension?",
                          validators=[validators.optional()])
 
+    def __init__(self, obj=None, **kwargs):
+        self.obj = obj
+        super(ExtensionForm, self).__init__(obj=obj, **kwargs)
+
     def validate(self):
         check_validate = super(ExtensionForm, self).validate()
         # if our validators do not pass

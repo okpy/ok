@@ -1668,6 +1668,58 @@ def create_extension(cid):
                            form=form, courses=courses,
                            current_course=current_course)
 
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def edit_extension(cid, ext_id):
+    courses, current_course = get_courses(cid)
+    extension = Extension.query.get_or_404(ext_id)
+    if not Extension.can(extension, current_user, 'edit'):
+        abort(401)
+
+    # Add our expected form element values
+    extension.email = extension.user.email
+    extension.reason = extension.message
+    extension.expires = utils.local_time_obj(extension.expires, current_course)
+    extension.submission_time = 'other'
+    # Don't show submission helper
+    form = forms.ExtensionForm(obj=extension)
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda a: a[1],
+    )
+
+    if form.validate_on_submit():
+        assign = Assignment.query.filter_by(id=form.assignment_id.data).one_or_none()
+        student = User.lookup(form.email.data)
+        # If changing user ensure that they don't already have an extension
+        if form.email.data != extension.user.email and Extension.get_extension(student, assign):
+            flash("{} already has an extension".format(form.email.data), 'danger')
+        else:
+            group_members = assign.active_user_ids(student.id)
+            ext = Extension.query.filter(Extension.assignment == assign, Extension.user_id.in_(group_members - {student.id})).first()
+            if ext:
+                Extension.delete(ext)
+            expires = utils.server_time_obj(form.expires.data, current_course)
+            custom_time = form.get_submission_time(assign)
+            extension.staff = current_user
+            extension.assignment = assign
+            extension.user = student
+            extension.message = form.reason.data
+            extension.expires = expires
+            extension.custom_submission_time = custom_time
+            db.session.add(extension)
+            db.session.commit()
+            emails = ', '.join([u.email for u in extension.members()])
+            flash("Updated an extension on {} for {} ".format(assign.display_name,
+                                                             emails), 'success')
+            return redirect(url_for('.list_extensions', cid=cid))
+
+    return render_template('staff/course/extension/extension.edit.html',
+                           form=form, courses=courses,
+                           current_course=current_course,
+                           extension=extension)
+
+
 @admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
 @is_staff(course_arg='cid')
 def delete_extension(cid, ext_id):
