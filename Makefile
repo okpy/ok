@@ -17,7 +17,7 @@ env:
 	make deps
 
 deps:
-	pip install -r requirements.txt
+	pip --timeout=60 install -r requirements.txt
 
 clean:
 	./manage.py clean
