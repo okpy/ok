@@ -1,5 +1,4 @@
 import datetime as dt
-import hashids
 import json
 
 from server.models import db, Backup, Group, Extension
