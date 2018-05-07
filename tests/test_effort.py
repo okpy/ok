@@ -71,7 +71,7 @@ class TestEffortGrading(OkTestCase):
         except AssertionError:
             effort = 0
         print(effort)
-        self.assertEquals(effort, score)
+        self.assertEqual(effort, score)
 
     def test_effort_grading(self):
         """
