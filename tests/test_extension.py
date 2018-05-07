@@ -1,4 +1,5 @@
 import datetime as dt
+import hashids
 import json
 
 from server.models import db, Backup, Group, Extension
@@ -69,6 +70,31 @@ class TestExtension(OkTestCase):
         }
 
         self.assert200(self.client.post('/admin/course/{}/extensions/new'.format(self.course.id),
+                        data=data, follow_redirects=True))
+        extension = Extension.get_extension(self.user1, self.assignment)
+        self.assertEqual(extension.staff_id, self.staff1.id)
+        self.assertEqual(extension.assignment_id, self.assignment.id)
+        self.assertEqual(extension.message, message)
+        self.assertEqual(utils.local_time_obj(extension.expires, self.course).replace(tzinfo=None), dt.datetime.strptime(expires, '%Y-%m-%d %H:%M:%S'))
+        self.assertEqual(utils.local_time_obj(extension.custom_submission_time, self.course).replace(tzinfo=None), dt.datetime.strptime(custom_submission_time, '%Y-%m-%d %H:%M:%S'))
+
+    def test_edit_extension(self):
+        ext = self._make_ext(self.assignment, self.user1)
+        self.login(self.staff1.email)
+        custom_time = dt.datetime.utcnow()
+        message = 'Sickness'
+        expires = '2018-05-14 23:59:59'
+        custom_submission_time = '2018-09-14 23:59:59'
+        data = {
+            'assignment_id': self.assignment.id,
+            'email': self.user1.email,
+            'expires': expires,
+            'reason': message,
+            'submission_time': 'deadline',
+            'custom_submission_time': custom_submission_time,
+            'submission_time': 'other'
+        }
+        self.assert200(self.client.post('/admin/course/{}/extensions/{}'.format(self.course.id, utils.encode_id(ext.id)),
                         data=data, follow_redirects=True))
         extension = Extension.get_extension(self.user1, self.assignment)
         self.assertEqual(extension.staff_id, self.staff1.id)
