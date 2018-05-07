@@ -105,7 +105,7 @@ class TestExtension(OkTestCase):
 
     def test_extension_basic(self):
         ext = self._make_ext(self.assignment, self.user1)
-        self.assertEquals(ext, Extension.get_extension(self.user1, self.assignment))
+        self.assertEqual(ext, Extension.get_extension(self.user1, self.assignment))
         self.assertFalse(Extension.get_extension(self.user2, self.assignment))
 
     def test_extension_permissions(self):
@@ -115,7 +115,7 @@ class TestExtension(OkTestCase):
 
     def test_extension_expiry(self):
         ext = self._make_ext(self.assignment, self.user1)
-        self.assertEquals(ext, Extension.get_extension(self.user1, self.assignment))
+        self.assertEqual(ext, Extension.get_extension(self.user1, self.assignment))
         ext.expires = dt.datetime.utcnow() - dt.timedelta(days=1)
         self.assertFalse(Extension.get_extension(self.user1, self.assignment))
 
@@ -128,8 +128,8 @@ class TestExtension(OkTestCase):
         self.set_offset(-1) # Lock assignment
 
         ext = self._make_ext(self.assignment, self.user1)
-        self.assertEquals(ext, Extension.get_extension(self.user1, self.assignment))
-        self.assertEquals(ext, Extension.get_extension(self.user2, self.assignment))
+        self.assertEqual(ext, Extension.get_extension(self.user1, self.assignment))
+        self.assertEqual(ext, Extension.get_extension(self.user2, self.assignment))
         # User 3 has not accepted yet so does not get an extension
         self.assertFalse(Extension.get_extension(self.user3, self.assignment))
 
@@ -142,7 +142,7 @@ class TestExtension(OkTestCase):
         # Should fail because it's late.
         self._submit_to_api(self.user1, False)
         num_backups = Backup.query.filter(Backup.submitter_id == self.user1.id).count()
-        self.assertEquals(num_backups, 1) # Failed submissions are still collected.
+        self.assertEqual(num_backups, 1) # Failed submissions are still collected.
 
         ext = self._make_ext(self.assignment, self.user1)
         # Should allow submission after the submission
@@ -152,7 +152,7 @@ class TestExtension(OkTestCase):
         backup = Backup.query.filter(Backup.submitter_id == self.user1.id,
                                      Backup.submit == True).first()
         self.assertIsNotNone(backup)
-        self.assertEquals(backup.custom_submission_time, ext.custom_submission_time)
+        self.assertEqual(backup.custom_submission_time, ext.custom_submission_time)
 
         # Others should still not be able to submit
         self._submit_to_api(self.user2, False)
@@ -170,7 +170,7 @@ class TestExtension(OkTestCase):
         backup = Backup.query.filter(Backup.submitter_id == self.user1.id,
                                      Backup.submit == True).first()
         self.assertIsNotNone(backup)
-        self.assertEquals(backup.custom_submission_time,
+        self.assertEqual(backup.custom_submission_time,
                              ext.custom_submission_time)
 
     def test_group_submit_with_extension(self):
@@ -221,7 +221,7 @@ class TestExtension(OkTestCase):
         second_back = Backup.query.filter(Backup.submitter_id == self.user2.id,
                                           Backup.submit == True).first()
         # The submission from User 2 should have a custom submission time
-        self.assertEquals(second_back.custom_submission_time, ext.custom_submission_time)
+        self.assertEqual(second_back.custom_submission_time, ext.custom_submission_time)
 
     def test_extension_after_backups(self):
         """ Backups from before the extension was made should use the extension
