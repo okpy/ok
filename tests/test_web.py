@@ -156,7 +156,7 @@ if driver:
             # Youtube throws a console warning, because PhantomJS doesn't support HTML5 video.
             # This isn't actually an error.
             self.page_load(self.get_server_url(), 1)
-            self.assertEquals("OK", self.driver.title)
+            self.assertEqual("OK", self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
 
@@ -166,7 +166,7 @@ if driver:
             self.assertIn('Courses | Ok', self.driver.title)
 
             self.driver.find_element_by_id('logout').click()
-            self.assertEquals("OK", self.driver.title)
+            self.assertEqual("OK", self.driver.title)
 
         def test_student_view(self):
             self._seed_course()
@@ -467,11 +467,11 @@ if driver:
 
             # Access page while not logged in - should redirect to login
             self.page_load(target_url)
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             self.driver.find_element_by_id('admin').click()
-            self.assertEquals(self.driver.current_url, target_url)
+            self.assertEqual(self.driver.current_url, target_url)
 
         def _confirm_oauth(self):
             self.driver.find_element_by_id('confirm-button').click()
@@ -479,7 +479,7 @@ if driver:
             # Get code from redirect URI
             redirect_uri, query_string = self.driver.current_url.split('?')
             query = dict(urllib.parse.parse_qsl(query_string))
-            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertEqual(redirect_uri, self.oauth_client.redirect_uris[0])
             self.assertIn('code', query)
 
             # Try exchanging code for token
@@ -491,7 +491,7 @@ if driver:
                 'redirect_uri': self.oauth_client.redirect_uris[0],
                 'grant_type': 'authorization_code',
             })
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
             data = response.json()
             self.assertIn('access_token', data)
             self.assertIn('refresh_token', data)
@@ -529,7 +529,7 @@ if driver:
                 }),
             ))
             login_url = '{}/testing-login/'.format(self.get_server_url())
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             input_element = self.driver.find_element_by_id("email-login")
@@ -560,7 +560,7 @@ if driver:
             self.driver.find_element_by_id('reauthenticate-button').click()
 
             login_url = '{}/testing-login/'.format(self.get_server_url())
-            self.assertEquals(self.driver.current_url, login_url)
+            self.assertEqual(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
             input_element = self.driver.find_element_by_id("email-login")
