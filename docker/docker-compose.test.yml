@@ -1,7 +1,11 @@
 web:
   image: cs61a/ok-server
   restart: 'no'
-  command: py.test --cov-report term-missing --cov=server tests/
+  command: >
+    sh -c '
+      /wait-for db:3306 redis:6379 &&
+      py.test --cov-report term-missing --cov=server tests/
+    '
   environment:
     OK_ENV: 'test'
     DATABASE_URL: 'mysql://okdev:okdev@db:3306/okdev?charset=utf8mb4'
