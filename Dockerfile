@@ -6,7 +6,7 @@ RUN mkdir /code/
 WORKDIR /code/
 
 ADD requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 --timeout=60 install --no-cache-dir -r requirements.txt
 
 ADD . .
 
