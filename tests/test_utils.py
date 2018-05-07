@@ -21,39 +21,39 @@ class TestUtils(OkTestCase):
         five_chunks = utils.chunks(range(55), 5)
         five_chunks = utils.chunks(list(range(55)), 5)
 
-        self.assertEquals(list(three_chunks),
+        self.assertEqual(list(three_chunks),
                           [range(0, 19), range(19, 38), range(38, 56)])
-        self.assertEquals([len(i) for i in five_chunks],
+        self.assertEqual([len(i) for i in five_chunks],
                           [11, 11, 11, 11, 11])
-        self.assertEquals([], list(utils.chunks(list(range(21)), 0)))
+        self.assertEqual([], list(utils.chunks(list(range(21)), 0)))
 
-        self.assertEquals([len(x) for x in utils.chunks(range(45), 13)],
+        self.assertEqual([len(x) for x in utils.chunks(range(45), 13)],
                           [4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3])
-        self.assertEquals([len(x) for x in utils.chunks(range(253), 13)],
+        self.assertEqual([len(x) for x in utils.chunks(range(253), 13)],
                           [20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 19])
-        self.assertEquals([len(x) for x in utils.chunks(range(960), 48)], [20] * 48)
+        self.assertEqual([len(x) for x in utils.chunks(range(960), 48)], [20] * 48)
 
     def test_time(self):
         self.setup_course()
         # UTC Time
         time = dt.datetime(month=1, day=20, year=2016, hour=12, minute=1)
-        self.assertEquals(utils.local_time(time, self.course), 'Wed 01/20 04:01 AM')
+        self.assertEqual(utils.local_time(time, self.course), 'Wed 01/20 04:01 AM')
 
         # DT Aware
         pacific = pytz.timezone('US/Pacific')
         localized = pacific.localize(time)
-        self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 12:01 PM')
+        self.assertEqual(utils.local_time(localized, self.course), 'Wed 01/20 12:01 PM')
 
         eastern = pytz.timezone('US/Eastern')
         localized = eastern.localize(time)
-        self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 09:01 AM')
+        self.assertEqual(utils.local_time(localized, self.course), 'Wed 01/20 09:01 AM')
 
     def test_generate_number_table(self):
         results = {i: utils.generate_number_table(i) for i in range(1, 4)}
 
-        self.assertEquals(results[1], "SELECT 1 as pos")
-        self.assertEquals(results[2], "SELECT 1 as pos UNION SELECT 2 as pos")
-        self.assertEquals(results[3], "SELECT 1 as pos UNION SELECT 2 as pos UNION SELECT 3 as pos")
+        self.assertEqual(results[1], "SELECT 1 as pos")
+        self.assertEqual(results[2], "SELECT 1 as pos UNION SELECT 2 as pos")
+        self.assertEqual(results[3], "SELECT 1 as pos UNION SELECT 2 as pos UNION SELECT 3 as pos")
 
     def test_humanize_name(self):
         test_corpus = (
@@ -73,15 +73,15 @@ class TestUtils(OkTestCase):
                 ("Park-Guo, Byung-Woo", "Byung-Woo Park-Guo"),
                 ("Russell Diane Benjamin Lawrence, James", "James Russell Diane Benjamin Lawrence"),
                 )
-        self.assertEquals(utils.humanize_name(None), None)
+        self.assertEqual(utils.humanize_name(None), None)
         for name, expected in test_corpus:
-            self.assertEquals(utils.humanize_name(expected), expected)
-            self.assertEquals(utils.humanize_name(expected.upper()), expected)
-            self.assertEquals(utils.humanize_name(name), expected)
-            self.assertEquals(utils.humanize_name(name.upper()), expected)
-        self.assertEquals(utils.humanize_name("ronald mcdonald"), "ronald mcdonald")
-        self.assertEquals(utils.humanize_name("mcdonald, ronald"), "ronald mcdonald")
-        self.assertEquals(utils.humanize_name("ronald mcDonald"), "ronald mcDonald")
-        self.assertEquals(utils.humanize_name("mcDonald, ronald"), "ronald mcDonald")
-        self.assertEquals(utils.humanize_name("Ronald McDonald"), "Ronald McDonald")
-        self.assertEquals(utils.humanize_name("McDonald, Ronald"), "Ronald McDonald")
+            self.assertEqual(utils.humanize_name(expected), expected)
+            self.assertEqual(utils.humanize_name(expected.upper()), expected)
+            self.assertEqual(utils.humanize_name(name), expected)
+            self.assertEqual(utils.humanize_name(name.upper()), expected)
+        self.assertEqual(utils.humanize_name("ronald mcdonald"), "ronald mcdonald")
+        self.assertEqual(utils.humanize_name("mcdonald, ronald"), "ronald mcdonald")
+        self.assertEqual(utils.humanize_name("ronald mcDonald"), "ronald mcDonald")
+        self.assertEqual(utils.humanize_name("mcDonald, ronald"), "ronald mcDonald")
+        self.assertEqual(utils.humanize_name("Ronald McDonald"), "Ronald McDonald")
+        self.assertEqual(utils.humanize_name("McDonald, Ronald"), "Ronald McDonald")

@@ -38,8 +38,8 @@ class TestDownload(OkTestCase):
         response = self.client.get(url)
         self.assert_200(response)
         self.assertTrue('attachment' in response.headers['Content-Disposition'])
-        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
+        self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(contents, response.data.decode('UTF-8'))
 
     def test_raw(self):
@@ -52,8 +52,8 @@ class TestDownload(OkTestCase):
         response = self.client.get(url)
         self.assert_200(response)
         self.assertTrue('inline' in response.headers['Content-Disposition'])
-        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
+        self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(contents, response.data.decode('UTF-8'))
 
     def test_incorrect_hash(self):
