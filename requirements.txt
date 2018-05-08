@@ -8,7 +8,7 @@ gunicorn==19.7.1
 raven[flask]==6.0.0
 
 # Database
-pymysql==0.7.11
+pymysql==0.8.0
 sqlalchemy==1.1.9
 
 # Caching
@@ -47,7 +47,9 @@ Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
 
 # Flask DB Extensions
-Flask-SQLAlchemy==2.2
+# Flask-SQLAlchemy==2.2
+# Fork of Flask-SQLAlchemy==2.2 that supports custom create_engine paramters - use until https://github.com/mitsuhiko/flask-sqlalchemy/issues/166 is resolved
+https://github.com/c-w/flask-sqlalchemy/archive/2.2-with-engine-params-fix.zip
 Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.3
 
@@ -73,8 +75,12 @@ markdown>=2.6,<2.7
 pygal>=2.3,<2.4
 bleach==2.0.0
 
-# Logging
+# Google logging
 gcloud==0.18.3
+
+# Azure logging
+# until https://github.com/Microsoft/ApplicationInsights-Python/pull/79 is merged and released
+https://github.com/c-w/ApplicationInsights-Python/archive/flask-integration.zip
 
 # Development
 Flask-DebugToolbar==0.10.1

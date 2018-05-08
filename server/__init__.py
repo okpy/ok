@@ -20,6 +20,7 @@ from server.controllers.files import files
 from server.constants import API_PREFIX
 
 from server.extensions import (
+    appinsights,
     assets_env,
     cache,
     csrf,
@@ -65,6 +66,9 @@ def create_app(environment_name=None):
                 public_dsn=sentry.client.get_public_dsn('https')
             ), 500
 
+    # Azure Application Insights request and error tracking
+    appinsights.init_app(app)
+
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
@@ -74,6 +78,11 @@ def create_app(environment_name=None):
     @app.route("/healthz")
     def health_check():
         return 'OK'
+
+    @app.after_request
+    def flush_appinsights_telemetry(response):
+        appinsights.flush()
+        return response
 
     # initialize the cache
     cache.init_app(app)

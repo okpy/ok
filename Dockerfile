@@ -15,6 +15,8 @@ RUN mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 RUN ./manage.py assets build
 
+ENV SQL_CA_CERT=/code/BaltimoreCyberTrustRoot.crt.pem
+
 CMD nginx && \
     env PYTHONPATH=$PYTHONPATH:$PWD gunicorn \
         --logger-class server.logging.gunicorn.Logger \
