@@ -37,9 +37,7 @@ apache-libcloud==2.3.0
 # OAuth
 
 oauthlib==2.0.2
-# Flask-OAuthlib==0.9.3
-# OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
-https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
+Flask-OAuthlib==0.9.4
 
 Flask-WTF==0.14.2
 Flask-RESTful==0.3.5
@@ -79,8 +77,7 @@ bleach==2.0.0
 gcloud==0.18.3
 
 # Azure logging
-# until https://github.com/Microsoft/ApplicationInsights-Python/pull/79 is merged and released
-https://github.com/c-w/ApplicationInsights-Python/archive/flask-integration.zip
+applicationinsights==0.11.3
 
 # Development
 Flask-DebugToolbar==0.10.1
