@@ -250,7 +250,7 @@ class SectionAssignmentForm(BaseForm):
     sid = StringField('SID', validators=[validators.optional()])
     secondary = StringField('Secondary Auth (e.g Username)',
                             validators=[validators.optional()])
-    section = StringField('Section',
+    section = IntegerField('Section',
                           validators=[validators.optional()])
     role = SelectField('Role', default=STUDENT_ROLE,
                        choices=ROLE_DISPLAY_NAMES.items())
