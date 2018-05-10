@@ -1,4 +1,4 @@
-Flask>=0.12.0,<0.12.3
+Flask>=0.12,<0.13,!=0.12.3 # 0.12.3 is a broken release. Ref: https://github.com/pallets/flask/issues/2728
 jinja2==2.9.6
 
 # WSGI Containers
@@ -8,7 +8,7 @@ gunicorn==19.7.1
 raven[flask]==6.0.0
 
 # Database
-pymysql==0.7.11
+pymysql==0.8.0
 sqlalchemy==1.1.9
 
 # Caching
@@ -37,9 +37,7 @@ apache-libcloud==2.3.0
 # OAuth
 
 oauthlib==2.0.2
-# Flask-OAuthlib==0.9.3
-# OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
-https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
+Flask-OAuthlib==0.9.4
 
 Flask-WTF==0.14.2
 Flask-RESTful==0.3.5
@@ -47,7 +45,9 @@ Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
 
 # Flask DB Extensions
-Flask-SQLAlchemy==2.2
+# Flask-SQLAlchemy==2.2
+# Fork of Flask-SQLAlchemy==2.2 that supports custom create_engine paramters - use until https://github.com/mitsuhiko/flask-sqlalchemy/issues/166 is resolved
+https://github.com/c-w/flask-sqlalchemy/archive/2.2-with-engine-params-fix.zip
 Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.3
 
@@ -73,8 +73,11 @@ markdown>=2.6,<2.7
 pygal>=2.3,<2.4
 bleach==2.0.0
 
-# Logging
+# Google logging
 gcloud==0.18.3
+
+# Azure logging
+applicationinsights==0.11.3
 
 # Development
 Flask-DebugToolbar==0.10.1

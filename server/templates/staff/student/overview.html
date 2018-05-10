@@ -1,4 +1,5 @@
 {% extends "staff/base.html" %}
+{% import "_globalhelpers.html" as helpers %}
 
 {% block title %} {{ student.identifier }} - {{ current_course.display_name_with_semester }}{% endblock %}
 
@@ -101,4 +102,7 @@
 {% endblock %}
 
 {% block page_js %}
+
+{{ helpers.js_scores('scores', assignments['inactive']) }}
+{{ helpers.js_scores('allScores', assignments['active'] + assignments['inactive'], True)}}
 {% endblock %}

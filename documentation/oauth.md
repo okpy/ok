@@ -17,7 +17,7 @@ For more information about OAuth2, refer to these documents: [OAuth2 Simplified]
 >> http://localhost:8000/authorized, http://127.0.0.1:8000/authorized, https://ok-oauth.app.cs61a.org/authorized, http://ok-oauth.app.cs61a.org/authorized
 
 
-You can register an Ok OAuth Client from the Staff Dasbhoard. You will specify a client-id and be provided with a client secret.
+You can register an Ok OAuth Client from the [Staff Dashboard](https://okpy.org/admin/clients). You will specify a client-id and be provided with a client secret.
 
 This secret must be kept confidential. It may not be revealed publically (for example, listed in a public GitHub repository).
 

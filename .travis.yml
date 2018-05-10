@@ -14,11 +14,11 @@ env:
     - USE_DOCKER=1
     - USE_NATIVE=1
 install:
-  - if [ -n "$USE_DOCKER" ]; then make docker-build; fi
-  - if [ -n "$USE_NATIVE" ]; then pip install -r requirements.txt; fi
-  - if [ -n "$USE_NATIVE" ]; then pip install pytest-timeout python-coveralls; fi
+  - if [ -n "$USE_DOCKER" ]; then travis_retry make docker-build; fi
+  - if [ -n "$USE_NATIVE" ]; then travis_retry pip --timeout=60 install -r requirements.txt; fi
+  - if [ -n "$USE_NATIVE" ]; then travis_retry pip --timeout=60 install pytest-timeout python-coveralls; fi
 script:
-  - if [ -n "$USE_DOCKER" ]; then docker run -it cs61a/ok-server py.test tests/; fi
+  - if [ -n "$USE_DOCKER" ]; then make docker-test; fi
   - if [ -n "$USE_NATIVE" ]; then py.test --cov-report term-missing --cov=server tests/  --ignore tests/test_web.py --timeout=30; fi
 after_success:
   - if [ -n "$USE_NATIVE" ]; then echo "eventually should run coveralls here"; fi
