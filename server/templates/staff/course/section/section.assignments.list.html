@@ -1,17 +1,17 @@
-<div class="box collapsed-box">
+<div class="box">
     <div class="box-header">
         <h3 class="box-title"><span> {{ title }} </span></h3>
         <div class="box-tools">
             <div class="box-tools pull-right">
-                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
-                    <i class="fa fa-plus"></i>
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- /.box-header -->
-    <div class="box-body table-responsive no-padding table-loading" style="display: hidden;" id="{{ title }}-list">
+    <div class="box-body table-responsive no-padding table-loading" style="display: block;" id="{{ title }}-list">
         <table class="table table-hover">
             <thead>
                 <th class="sort" data-sort="email">User</th>
@@ -60,7 +60,7 @@
         </table>
     </div>
     <!-- /.box-body -->
-    <div class="box-footer">
+    <div class="box-footer" style="display: block;">
         <div class="pull-left">
         <h5 class="box-title"><span> Total: {{ roster | length }} </span></h5>
         </div>
