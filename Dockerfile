@@ -1,6 +1,6 @@
 FROM python:3.5-alpine
 
-RUN apk add --update patch ca-certificates nginx perl;
+RUN apk add --update patch ca-certificates nginx perl musl-dev openssl-dev libffi-dev python-dev gcc;
 
 RUN mkdir /code/
 WORKDIR /code/
@@ -10,8 +10,9 @@ RUN pip3 --timeout=60 install --no-cache-dir -r requirements.txt
 
 ADD . .
 
-RUN mv docker/nginx/nginx.conf /etc/nginx/nginx.conf
-RUN mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+RUN mv docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
+    mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf && \
+    mv docker/wait-for /wait-for
 
 RUN ./manage.py assets build
 
