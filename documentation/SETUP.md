@@ -112,11 +112,12 @@ The `redis://` scheme connects to redis over a non-SSL connection, where as the 
 
 An example connection URL might look like this:
 
-`rediss://:reallystrongpassword=@myazureredisinstance.redis.cache.example.net:6380/0`
+`rediss://:reallystrongpassword@myazureredisinstance.redis.cache.example.net:6380/0`
 
 Notes on this example:
 
 - This example omits a username. If you omit the username make sure still include the `:` which would normally separate username and password
+- The password for this Redis server is `reallystrongpassword`
 - This fictional Redis instance is at `myazureredisinstance.redis.cache.example.net`
 - Port `6380` is being used. For a non-secure endpoint, port `6379` would be appropriate
 - the `/O` at the end signifies database 0.
