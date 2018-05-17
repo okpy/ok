@@ -48,6 +48,10 @@ FORBIDDEN_ROUTE_NAMES = [
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []
 
+# Service Providers
+GOOGLE = "GOOGLE"
+MICROSOFT = "MICROSOFT"
+
 # Maximum file size to show in browser, in characters
 DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
 SOURCE_SIZE_LIMIT = 10 * 1024 * 1024 # 10MB
