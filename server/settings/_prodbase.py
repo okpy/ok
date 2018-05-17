@@ -1,4 +1,5 @@
 import os
+import sys
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS as raven_exceptions
 
@@ -21,12 +22,6 @@ class Config(object):
 
     RAVEN_IGNORE_EXCEPTIONS = raven_exceptions
 
-    # Service Keys
-    GOOGLE = {
-        'consumer_key': os.environ.get('GOOGLE_ID'),
-        'consumer_secret':  os.environ.get('GOOGLE_SECRET')
-    }
-
     SENDGRID_AUTH = {
         'user': os.environ.get("SENDGRID_USER"),
         'key': os.environ.get("SENDGRID_KEY")
@@ -34,5 +29,10 @@ class Config(object):
 
     @classmethod
     def verify_oauth_credentials(cls):
-        if "GOOGLE_ID" not in os.environ or "GOOGLE_SECRET" not in os.environ:
-            print("Warning: the google login variables are not set.")
+        if "GOOGLE_ID" in os.environ or "GOOGLE_SECRET" in os.environ:
+            OAUTH_PROVIDER = 'GOOGLE'
+        elif "MICROSOFT_APP_ID" in os.environ or "MICROSOFT_APP_SECRET" in os.environ:
+            OAUTH_PROVIDER = 'MICROSOFT'
+        else:
+            print("Please set the Google or Microsoft OAuth ID and Secret variables.")
+            sys.exit(1)
