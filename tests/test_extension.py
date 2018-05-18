@@ -35,6 +35,7 @@ class TestExtension(OkTestCase):
             self.assert_200(response)
             assert 'email' in response.json['data']
         else:
+            print(response, response.json['data'])
             self.assert_403(response)
             assert response.json['data'] == {
                 'data': {
