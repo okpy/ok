@@ -469,13 +469,7 @@ def section_console(cid, sctn_id=None):
         staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
                                        .filter(Enrollment.role.in_(STAFF_ROLES))
                                        .one_or_none())
-
-        if not staff_record:
-            if not user.is_admin:
-                flash('Unable to authorize section console access', 'error')
-                return abort(404)
-        else:
-            sctn_id = staff_record.section    
+        sctn_id = staff_record.section    
 
     staff = (Enrollment.query
                           .filter(Enrollment.role.in_(STAFF_ROLES),
