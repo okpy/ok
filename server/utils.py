@@ -293,3 +293,11 @@ def check_url(url):
         return True
     except Exception:
         return False
+
+# Safe Cast
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except (ValueError, TypeError):
+        return default
