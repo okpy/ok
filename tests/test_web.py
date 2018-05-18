@@ -10,7 +10,6 @@ import time
 import urllib.parse
 
 import requests
-import sys
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
