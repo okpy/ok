@@ -68,17 +68,17 @@ class TestGrading(OkTestCase):
 
     def test_course_submissions_ids(self):
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6, 7, 8, 9])
-        self.assertEquals(sorted(list(submissions)), [14, 15])
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [14, 15])
         owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
         self.assertEqual(sorted(owners_by_backup),  [(14, {2, 3}), (15, {4})])
 
     def test_course_submissions(self):
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6, 7, 8, 9])
-        self.assertEquals(sorted(list(submissions)), [14, 15])
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [14, 15])
 
     def test_course_submissions_optimized(self):
         # Slow query should be indentical to general query (which might be fast)
