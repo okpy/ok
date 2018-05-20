@@ -127,9 +127,9 @@ class TestGrading(OkTestCase):
         print("Flagged submission {}".format(submission.id))
 
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6, 7, 8, 9])
-        self.assertEquals(sorted(list(submissions)), [submission.id, 15])
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [submission.id, 15])
         owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
         self.assertEqual(sorted(owners_by_backup),  [(submission.id, {2, 3}), (15, {4})])
 
