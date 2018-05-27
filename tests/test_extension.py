@@ -82,6 +82,7 @@ class TestExtension(OkTestCase):
         self.assertFalse(Extension.get_extension(self.user3, self.assignment))
 
         # If user 2 leaves, they no longer have access to the extension
+        self.set_offset(1) # Allow assignment to be active to remove the user.
         group.remove(self.user1, self.user2)
         self.assertFalse(Extension.get_extension(self.user2, self.assignment))
 
