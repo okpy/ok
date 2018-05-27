@@ -11,18 +11,13 @@ def initialize_config(cls):
 
 class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
-    
+
     DEBUG = False
     ASSETS_DEBUG = False
     TESTING_LOGIN = False
     DEBUG_TB_INTERCEPT_REDIRECTS = False
-    
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    REDIS_PORT = 6379
-    RQ_POLL_INTERVAL = 2000
-    RQ_DEFAULT_HOST = REDIS_HOST = \
-        os.getenv('REDIS_HOST', 'localhost')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     STORAGE_SERVER = False
     STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
@@ -70,6 +65,9 @@ class Config(object):
 
     @classmethod
     def initialize_config(cls):
+
+        cls.configure_redis()
+
         db_url = os.getenv('DATABASE_URL')
         if db_url:
             if 'mysql' in db_url:
@@ -100,8 +98,6 @@ class Config(object):
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)
 
-        cls.verify_oauth_credentials()
-
 
     @classmethod
     def get_default_db_url(cls):
@@ -110,3 +106,41 @@ class Config(object):
     @classmethod
     def verify_oauth_credentials(cls):
         raise NotImplementedError
+
+    @classmethod
+    def configure_redis(cls):
+        ''' Configures Redis by inspecting the environment
+        and setting Config properties'''
+
+        # use REDIS_URL in preference to other Redis configuration
+        redis_url = os.getenv('REDIS_URL')
+        if redis_url:
+            cls.REDIS_URL = redis_url
+            cls.RQ_DEFAULT_URL = redis_url
+            if cls.get_flask_caching_enabled():
+                cls.CACHE_REDIS_URL = redis_url
+
+        else:
+            cls.REDIS_PORT = int(os.getenv('REDIS_PORT', "6379"))
+            cls.REDIS_HOST = os.getenv('REDIS_HOST', cls.get_default_redis_host())
+
+            # setup Redis config for RQ
+            cls.RQ_DEFAULT_HOST = cls.REDIS_HOST
+
+            # setup Redis config for Flash-Cache
+            if cls.get_flask_caching_enabled():
+                cls.CACHE_REDIS_HOST = cls.REDIS_HOST
+
+        cls.RQ_POLL_INTERVAL = 2000
+
+    @classmethod
+    def get_default_redis_host(cls):
+        ''' Returns the default Redis host.
+        Overridden in specific environment settings'''
+        return 'localhost'
+
+    @classmethod
+    def get_flask_caching_enabled(cls):
+        ''' Returns True if flask caching should be enabled
+        Overridden in specific environment settings'''
+        return False
