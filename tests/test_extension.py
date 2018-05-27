@@ -16,7 +16,7 @@ class TestExtension(OkTestCase):
         self.assignment.due_date = self.assignment.due_date + dt.timedelta(hours=offset)
         self.assignment.lock_date = self.assignment.lock_date + dt.timedelta(days=offset)
 
-    def _submit_to_api(self, user, success):
+    def _submit_to_api(self, user, success, debug=False):
         self.login(user.email)
         data = {
             'assignment': self.assignment.name,
@@ -27,6 +27,11 @@ class TestExtension(OkTestCase):
             },
             'submit': True,
         }
+        # Debug
+        if debug:
+            print("Assignment lock date:", str(self.assignment.lock_date))
+            print("Assignment due date:", str(self.assignment.due_date))
+            print("Current time:", str(dt.datetime.utcnow()))
 
         response = self.client.post('/api/v3/backups/?client_version=v1.5.0',
             data=json.dumps(data),
@@ -88,7 +93,7 @@ class TestExtension(OkTestCase):
     def test_submit_with_extension(self):
         self.set_offset(-1) # Lock assignment
         # Should fail because it's late.
-        self._submit_to_api(self.user1, False)
+        self._submit_to_api(self.user1, False, debug=True)
         num_backups = Backup.query.filter(Backup.submitter_id == self.user1.id).count()
         self.assertEqual(num_backups, 1) # Failed submissions are still collected.
 
