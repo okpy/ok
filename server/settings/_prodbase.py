@@ -12,11 +12,8 @@ class Config(object):
 
     WTF_CSRF_CHECK_DEFAULT = True
     WTF_CSRF_ENABLED = True
-    
-    CACHE_TYPE = 'simple'
 
-    RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
-        os.getenv('REDIS_HOST', 'redis-master')
+    CACHE_TYPE = 'simple'
 
     STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
 
@@ -27,12 +24,10 @@ class Config(object):
         'key': os.environ.get("SENDGRID_KEY")
     }
 
-    @classmethod
-    def verify_oauth_credentials(cls):
-        if "GOOGLE_ID" in os.environ or "GOOGLE_SECRET" in os.environ:
-            OAUTH_PROVIDER = 'GOOGLE'
-        elif "MICROSOFT_APP_ID" in os.environ or "MICROSOFT_APP_SECRET" in os.environ:
-            OAUTH_PROVIDER = 'MICROSOFT'
-        else:
-            print("Please set the Google or Microsoft OAuth ID and Secret variables.")
-            sys.exit(1)
+    if "GOOGLE_ID" in os.environ or "GOOGLE_SECRET" in os.environ:
+        OAUTH_PROVIDER = 'GOOGLE'
+    elif "MICROSOFT_APP_ID" in os.environ or "MICROSOFT_APP_SECRET" in os.environ:
+        OAUTH_PROVIDER = 'MICROSOFT'
+    else:
+        print("Please set the Google or Microsoft OAuth ID and Secret variables.")
+        sys.exit(1)
