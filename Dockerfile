@@ -14,9 +14,6 @@ RUN mv docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
     mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf && \
     mv docker/wait-for /wait-for
 
-ENV TZ=Etc/UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
 RUN ./manage.py assets build
 
 ENV SQL_CA_CERT=/code/BaltimoreCyberTrustRoot.crt.pem
