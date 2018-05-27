@@ -98,8 +98,6 @@ class Config(object):
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)
 
-        cls.verify_oauth_credentials()
-
 
     @classmethod
     def get_default_db_url(cls):
