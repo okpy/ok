@@ -16,7 +16,7 @@ class TestExtension(OkTestCase):
         self.assignment.due_date = self.assignment.due_date + dt.timedelta(hours=offset)
         self.assignment.lock_date = self.assignment.lock_date + dt.timedelta(days=offset)
 
-    def _submit_to_api(self, user, success, debug=False):
+    def _submit_to_api(self, user, success):
         self.login(user.email)
         data = {
             'assignment': self.assignment.name,
@@ -27,11 +27,6 @@ class TestExtension(OkTestCase):
             },
             'submit': True,
         }
-        # Debug
-        if debug:
-            print("Assignment lock date:", str(self.assignment.lock_date))
-            print("Assignment due date:", str(self.assignment.due_date))
-            print("Current time:", str(dt.datetime.utcnow()))
 
         response = self.client.post('/api/v3/backups/?client_version=v1.5.0',
             data=json.dumps(data),
@@ -78,7 +73,7 @@ class TestExtension(OkTestCase):
         Group.invite(self.user1, self.user3, self.assignment)
         group = Group.lookup(self.user1, self.assignment)
         group.accept(self.user2)
-        self.set_offset(-1) # Lock assignment
+        self.set_offset(-2) # Lock assignment
 
         ext = self._make_ext(self.assignment, self.user1)
         self.assertEqual(ext, Extension.get_extension(self.user1, self.assignment))
@@ -91,9 +86,9 @@ class TestExtension(OkTestCase):
         self.assertFalse(Extension.get_extension(self.user2, self.assignment))
 
     def test_submit_with_extension(self):
-        self.set_offset(-1) # Lock assignment
+        self.set_offset(-2) # Lock assignment
         # Should fail because it's late.
-        self._submit_to_api(self.user1, False, debug=True)
+        self._submit_to_api(self.user1, False)
         num_backups = Backup.query.filter(Backup.submitter_id == self.user1.id).count()
         self.assertEqual(num_backups, 1) # Failed submissions are still collected.
 
@@ -127,7 +122,7 @@ class TestExtension(OkTestCase):
                              ext.custom_submission_time)
 
     def test_group_submit_with_extension(self):
-        self.set_offset(-1) # Lock assignment
+        self.set_offset(-2) # Lock assignment
 
         # Should fail because it's late.
         self._submit_to_api(self.user2, False)
@@ -144,7 +139,7 @@ class TestExtension(OkTestCase):
         self._submit_to_api(self.user3, True)
 
     def test_submit_with_expired_extension(self):
-        self.set_offset(-1) # Lock assignment
+        self.set_offset(-2) # Lock assignment
         self._submit_to_api(self.user1, False)
 
         ext = self._make_ext(self.assignment, self.user1)
