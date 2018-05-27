@@ -6,8 +6,7 @@ services:
     image: cs61a/ok-server
     restart: 'no'
     command: >
-      sh -c 'ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &&
-             /wait-for db:3306 redis:6379 &&
+      sh -c '/wait-for db:3306 redis:6379 &&
              py.test --cov-report term-missing --cov=server tests/'
     environment:
       TZ: 'Etc/UTC'
