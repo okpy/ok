@@ -153,14 +153,14 @@ def gen_enrollment(user, course):
     class_account = '{0}-{1}'.format(
         course.offering.split('/')[1],
         ''.join(random.choice(string.ascii_lowercase) for _ in range(3)))
-    section = random.randrange(30)
+    section = random.randrange(5)
     return Enrollment(
         user_id=user.id,
         course_id=course.id,
         role=role,
         sid=gen_maybe(sid, 0.4),
         class_account=gen_maybe(class_account, 0.4),
-        section=gen_maybe(section, 0.4))
+        section=section)
 
 def gen_messages(assignment, seconds_offset):
     fizzbuzz_lines = modified_file.split("\n")
