@@ -3,6 +3,7 @@ import functools
 import os
 import socket
 import unittest
+import redis
 
 from flask_rq import get_worker
 from flask_testing import TestCase
@@ -78,8 +79,8 @@ class OkTestCase(TestCase):
             creator_id=self.admin.id,
             course=self.course,
             display_name='Hog',
-            due_date=dt.datetime.now(),
-            lock_date=dt.datetime.now() + dt.timedelta(days=1),
+            due_date=dt.datetime.utcnow(),
+            lock_date=dt.datetime.utcnow() + dt.timedelta(days=1),
             max_group_size=4,
             autograding_key='test')  # AG responds with a 200 if ID = 'test'
         db.session.add(self.assignment)
@@ -89,8 +90,8 @@ class OkTestCase(TestCase):
             creator_id=self.admin.id,
             course=self.course,
             display_name='Maps',
-            due_date=dt.datetime.now() + dt.timedelta(days=2),
-            lock_date=dt.datetime.now() + dt.timedelta(days=3),
+            due_date=dt.datetime.utcnow() + dt.timedelta(days=2),
+            lock_date=dt.datetime.utcnow() + dt.timedelta(days=3),
             max_group_size=3)
         db.session.add(self.assignment2)
 
@@ -139,15 +140,22 @@ def skipIfWindows(test_func):
 def skipUnlessRedisIsAvailable(test_func):
     @functools.wraps(test_func)
     def redis_availability_check_decorator(self, *args, **kwargs):
-        redis_host = self.app.config['REDIS_HOST']
-        redis_port = self.app.config['REDIS_PORT']
 
-        redis_socket = socket.socket()
-        redis_socket.settimeout(1)
-        try:
-            redis_socket.connect((redis_host, redis_port))
-        except (socket.error, socket.timeout):
-            reason = 'Redis is not available. Did you start redis-server?'
+        if "REDIS_URL" in self.app.config:
+            client = redis.Redis.from_url(self.app.config["REDIS_URL"])
+        elif "REDIS_HOST" in self.app.config:
+            redis_host = self.app.config['REDIS_HOST']
+            redis_port = self.app.config['REDIS_PORT']
+
+            redis_socket = socket.socket()
+            redis_socket.settimeout(1)
+            try:
+                redis_socket.connect((redis_host, redis_port))
+            except (socket.error, socket.timeout):
+                reason = 'Redis is not available. Did you start redis-server?'
+                raise unittest.SkipTest(reason)
+        else:
+            reason = 'Redis is not configured!'
             raise unittest.SkipTest(reason)
 
         return test_func(self, *args, **kwargs)

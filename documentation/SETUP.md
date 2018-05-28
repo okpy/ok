@@ -26,7 +26,7 @@ Run tests via
 
     $ ./manage.py test
 
-In order to run the tests in `tests/test_web.py`, `phantom.js` needs to be installed. 
+In order to run the tests in `tests/test_web.py`, `phantom.js` needs to be installed.
 On OSX: First make sure [Homebrew](http://brew.sh/) is installed. To install `phantom.js`:
 
     $ brew install phantomjs
@@ -91,3 +91,47 @@ terminal run
 The command that Travis uses is
 
     $ make docker-test
+
+## Setting up Redis
+
+There are two ways to configure Redis:
+
+1. Connect to Redis using a URL
+2. Connect to Redis using socket connection details
+
+### Option 1: Connect to Redis using a URL
+
+By setting the `REDIS_URL` environment variable the server will attempt to connect to a Redis service using a URL in one of the following formats:
+
+```
+redis://[username:password]@[server]:[port]/[db]
+rediss://[username:password]@[server]:[port]/[db]
+```
+
+The `redis://` scheme connects to redis over a non-SSL connection, where as the `rediss://` scheme will use SSL.
+
+An example connection URL might look like this:
+
+`rediss://:reallystrongpassword@myazureredisinstance.redis.cache.example.net:6380/0`
+
+Notes on this example:
+
+- This example omits a username. If you omit the username make sure still include the `:` which would normally separate username and password
+- The password for this Redis server is `reallystrongpassword`
+- This fictional Redis instance is at `myazureredisinstance.redis.cache.example.net`
+- Port `6380` is being used. For a non-secure endpoint, port `6379` would be appropriate
+- the `/O` at the end signifies database 0.
+
+For more information on the format of these URLs see the following:
+
+- `redis://` <http://www.iana.org/assignments/uri-schemes/prov/redis>
+- `rediss://` <http://www.iana.org/assignments/uri-schemes/prov/rediss>
+
+### Option 2: Connect using Host/Port details
+
+If the absense of the `REDIS_URL` environment variable, the server will look for the following environent variables and will use certain defaults if they're not found:
+
+Env Variable | Default Value | Purpose
+---|---|---
+`REDIS_HOST`|`localhost` for all non-prod environments<br> `redis-master` for prod|Redis host name
+`REDIS_PORT`|6379|Redis port
