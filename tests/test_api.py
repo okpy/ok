@@ -81,13 +81,13 @@ class TestApi(OkTestCase):
         self._test_backup(False)
 
     def test_backup_after_deadline(self):
-        self._test_backup(False, delay=-1)
+        self._test_backup(False, delay=-2)
 
     def test_submit(self):
         self._test_backup(True)
 
     def test_submit_after_deadline(self):
-        self._test_backup(True, delay=-1, success=False)
+        self._test_backup(True, delay=-2, success=False)
 
     def test_api(self):
         response = self.client.get('/api/v3/')
