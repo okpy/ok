@@ -128,10 +128,10 @@ def microsoft_user_data(token):
 
     try:
         decoded_token = jwt.decode(token, verify=False)
-        if 'unique_name' in decoded_token: # Azure V1 endpoints
+        if 'unique_name' in decoded_token: # azure ad unique id
             return {'email': decoded_token['unique_name']} 
-        if 'preferred_username' in decoded_token:  # Azure V2 endpoints
-            return {'email': decoded_token['preferred_username']}
+        if 'upn' in decoded_token:  # fallback to upn
+            return {'email': decoded_token['upn']}
 
         logger.error("Unable to retrieve unique_name (the user's email) from token")
         return None
