@@ -129,9 +129,21 @@ def microsoft_user_data(token):
     try:
         decoded_token = jwt.decode(token, verify=False)
         if 'unique_name' in decoded_token: # azure ad unique id
+            logger.info("token found in Azure unique_name value")
             return {'email': decoded_token['unique_name']} 
         if 'upn' in decoded_token:  # fallback to upn
+            logger.info("token found in Azure upn value")
             return {'email': decoded_token['upn']}
+
+        # reading from the Token didn't work - now we try a MS Graph Call.
+        logger.warning("token had no values and MS Graph WILL be called")
+        headers = {'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token}
+        r = requests.get(current_app.config.get(provider_name)['base_url'] + '/me', headers=headers)
+        ms_graph_me = r.json()
+        if 'userPrincipalName' in ms_graph_me:
+            logger.warning("token had no values and MS Graph call made!")
+            return { 'email': ms_graph_me['userPrincipalName']}
 
         logger.error("Unable to retrieve unique_name (the user's email) from token")
         return None
