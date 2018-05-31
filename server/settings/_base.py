@@ -89,8 +89,7 @@ class Config(object):
 
         sql_ca_cert = os.getenv('SQL_CA_CERT', os.path.abspath('./BaltimoreCyberTrustRoot.crt.pem'))
         if sql_ca_cert and 'azure' in cls.SQLALCHEMY_DATABASE_URI:
-            cls.SQLALCHEMY_ENGINE_OPTS = {'connect_args': {'ssl': {'ca': sql_ca_cert}}}
-            cls.SQLALCHEMY_POOL_RECYCLE = 25 * 60  # Restart connections before 25 minutes Azure timeout
+            cls.SQLALCHEMY_ENGINE_OPTS = {'connect_args': {'ssl': {'ca': sql_ca_cert}}, 'pool_pre_ping': True}
 
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)

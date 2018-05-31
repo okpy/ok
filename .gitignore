@@ -8,7 +8,7 @@
 *.pydevproject
 *.kpf
 *.iml
-venv
+venv*
 env
 .env
 *.tags*
