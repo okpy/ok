@@ -1,0 +1,92 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dockerRegistryUrl": {
+      "defaultValue": "quay.io",
+      "type": "string"
+    },
+    "dockerRegistryUsername": {
+      "type": "string"
+    },
+    "dockerRegistryPassword": {
+      "type": "string"
+    },
+    "dockerImageName": {
+      "defaultValue": "cs61a/ok-server",
+      "type": "string"
+    },
+    "dockerImageTag": {
+      "defaultValue": "latest",
+      "type": "string"
+    },
+    "mysqlUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "MySQL Username"
+      }
+    },
+    "mysqlPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "mysqlpassword"
+      }
+    },
+    "mySQLServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Unique SQL Server Name"
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "[concat('create-db', uniquestring(resourceGroup().id))]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "osType": "Linux",
+        "restartPolicy": "Never",
+        "imageRegistryCredentials": [
+          {
+            "server": "[parameters('dockerRegistryUrl')]",
+            "username": "[parameters('dockerRegistryUsername')]",
+            "password": "[parameters('dockerRegistryPassword')]"
+          }
+        ],
+        "containers": [
+          {
+            "name": "[concat('create-db', uniquestring(resourceGroup().id))]",
+            "properties": {
+              "image": "[concat(parameters('dockerRegistryUrl'),'/',parameters('dockerImageName'),':',parameters('dockerImageTag'))]",
+              "command": [
+                "sh",
+                "-c",
+                "./manage.py createdb"
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
+                }
+              },
+              "environmentVariables": [
+                {
+                  "name": "DATABASE_URL",
+                  "value": "[concat('mysql://',parameters('mySqlUsername'),'%40',parameters('mySQLServerName'),':',parameters('mysqlPassword'),'@',parameters('mySQLServerName'),'.mysql.database.azure.com:3306/ok?')]"
+                },
+                {
+                  "name": "DB_ROW_FORMAT",
+                  "value": "default"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
