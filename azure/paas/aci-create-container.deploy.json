@@ -30,7 +30,7 @@
               "command": [
                 "sh",
                 "-c",
-                "az storage container create --account-name=$STORAGE_ACCOUNT_NAME --account-key=$STORAGE_KEY --name=$STORAGE_CONTAINER_NAME"
+                "az storage container create --account-name=\"$STORAGE_ACCOUNT_NAME\" --account-key=\"$STORAGE_KEY\" --name=\"$STORAGE_CONTAINER_NAME\""
               ],
               "environmentVariables": [
                 {
