@@ -54,10 +54,9 @@ class TestExtension(OkTestCase):
 
     def test_create_extension(self):
         self.login(self.staff1.email)
-        custom_time = dt.datetime.utcnow()
         message = 'Sickness'
-        expires = '2018-05-14 23:59:59'
-        custom_submission_time = '2018-09-14 23:59:59'
+        expires = dt.datetime.utcnow() + dt.timedelta(days=1)
+        custom_submission_time = dt.datetime.utcnow()
         data = {
             'assignment_id': self.assignment.id,
             'email': self.user1.email,
@@ -80,10 +79,10 @@ class TestExtension(OkTestCase):
     def test_edit_extension(self):
         ext = self._make_ext(self.assignment, self.user1)
         self.login(self.staff1.email)
-        custom_time = dt.datetime.utcnow()
         message = 'Sickness'
-        expires = '2018-05-14 23:59:59'
-        custom_submission_time = '2018-09-14 23:59:59'
+        expires = dt.datetime.utcnow() + dt.timedelta(days=2)
+        custom_submission_time = dt.datetime.utcnow()
+        message = 'Sickness'
         data = {
             'assignment_id': self.assignment.id,
             'email': self.user1.email,
