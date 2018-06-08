@@ -1,4 +1,5 @@
 """App constants"""
+import os
 
 STUDENT_ROLE = 'student'
 GRADER_ROLE = 'grader'
@@ -33,7 +34,7 @@ GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
-AUTOGRADER_URL = 'https://autograder.cs61a.org'
+AUTOGRADER_URL = os.getenv('AUTOGRADER_URL', 'https://autograder.cs61a.org')
 
 FORBIDDEN_ROUTE_NAMES = [
     'about',
