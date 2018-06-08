@@ -1,0 +1,43 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sendgridAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Account Name"
+      }
+    },
+    "sendgridPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "Account Name"
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('sendgridAccountName')]",
+      "type": "Sendgrid.Email/accounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-01-01",
+      "plan": {
+        "name": "free",
+        "publisher": "sendgrid",
+        "product": "sendgrid_azure",
+        "promotionCode": ""
+      },
+      "properties": {
+        "password": "[parameters('sendgridPassword')]",
+        "acceptMarketingEmails": false,
+        "email": ""
+      }
+    }
+  ],
+  "outputs": {
+    "SendGrid": {
+      "type": "object",
+      "value": "[reference(resourceId('Sendgrid.Email/accounts', parameters('sendgridAccountName')))]"
+    }
+  }
+}

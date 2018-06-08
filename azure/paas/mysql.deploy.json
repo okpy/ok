@@ -1,0 +1,121 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "mySqlUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Database administrator login name"
+      }
+    },
+    "mySqlAdminPassword": {
+      "type": "securestring",
+      "minLength": 8,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Database administrator password"
+      }
+    },
+    "mySqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Unique server name"
+      }
+    },
+    "skuCapacity": {
+      "defaultValue": 2,
+      "type": "int"
+    },
+    "skuFamily": {
+      "defaultValue": "Gen5",
+      "type": "string"
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "GP_Gen5_2"
+    },
+    "skuSizeMB": {
+      "defaultValue": 5120,
+      "type": "int"
+    },
+    "skuTier": {
+      "defaultValue": "GeneralPurpose",
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "defaultValue": "5.7"
+    },
+    "backupRetentionDays": {
+      "defaultValue": 7,
+      "type": "int"
+    },
+    "geoRedundantBackup": {
+      "defaultValue": "Disabled",
+      "type": "string"
+    }
+  },
+  "variables": {
+    "serverName": "[toLower(parameters('mySqlServerName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('serverName')]",
+      "properties": {
+        "version": "[parameters('version')]",
+        "administratorLogin": "[parameters('mySqlUsername')]",
+        "administratorLoginPassword": "[parameters('mySqlAdminPassword')]",
+        "storageProfile": {
+          "storageMB": "[parameters('skuSizeMB')]",
+          "backupRetentionDays": "[parameters('backupRetentionDays')]",
+          "geoRedundantBackup": "[parameters('geoRedundantBackup')]"
+        },
+        "sslEnforcement": "Enabled"
+      },
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "tier": "[parameters('skuTier')]",
+        "capacity": "[parameters('skuCapacity')]",
+        "size": "[parameters('skuSizeMB')]",
+        "family": "[parameters('skuFamily')]"
+      },
+      "type": "Microsoft.DBforMySQL/servers",
+      "resources": [
+        {
+          "type": "firewallrules",
+          "apiVersion": "2017-12-01",
+          "dependsOn": [
+            "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "[concat(variables('serverName'),'firewall')]",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "255.255.255.255"
+          }
+        },
+        {
+          "name": "ok",
+          "type": "databases",
+          "apiVersion": "2017-12-01",
+          "properties": {
+            "charset": "utf8",
+            "collation": "utf8_general_ci"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "mySqlFQDN": {
+      "value": "[reference(resourceId('Microsoft.DBforMySQL/servers',variables('serverName'))).fullyQualifiedDomainName]",
+      "type": "string"
+    }
+  }
+}
