@@ -455,7 +455,7 @@ if driver:
             self.driver.find_element_by_css_selector('form button.btn-default').click()
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
-            self.assertTrue("for 2 staff" in self.driver.page_source)
+            self.assertTrue("for 4 staff" in self.driver.page_source)
 
         def test_login_redirect(self):
             self._seed_course()
@@ -570,6 +570,28 @@ if driver:
             # Now confirm OAuth
             self.assertIn(self.user2.email, self.driver.page_source)
             self._confirm_oauth()
+
+
+        def test_section_console(self):
+            self._login_as(email=self.staff4.email)
+            self.page_load(self.get_server_url() + "/admin/")
+            # if needed for debug: self.driver.get_screenshot_as_file('staff.png')
+
+            self.page_load(self.get_server_url() + "/admin/course/1/section/")
+
+            # user7 and user8 should be in staff4's section
+            self.assertTrue(self.user7.email in self.driver.page_source)
+            self.assertTrue(self.user8.email in self.driver.page_source)
+            self.assertTrue('Total: 2' in self.driver.page_source)
+
+            # There should be four staff members listed under section assignments
+            self.assertTrue(self.staff1.email in self.driver.page_source)
+            self.assertTrue(self.staff2.email in self.driver.page_source)
+            self.assertTrue(self.staff3.email in self.driver.page_source)
+            self.assertTrue(self.staff4.email in self.driver.page_source)
+            self.assertTrue('Total: 4' in self.driver.page_source)
+
+
 
         # Commented out because this job occasionally times out on CI.
         # https://github.com/Cal-CS-61A-Staff/ok/issues/1113

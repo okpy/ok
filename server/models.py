@@ -344,7 +344,6 @@ class Course(Model):
         db.session.add_all([enroll, assign])
         db.session.commit()
 
-
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1

@@ -44,23 +44,20 @@ class Config(object):
         access_token_method='POST'
     )
 
+    # Don't use 'common' as the AAD Endpoint as that will allow MSA, and non guest users to logon
+    # when Tenant is set to the AAD Tenant name, this restricts users and guest users
     MICROSOFT = dict(
         consumer_key=os.environ.get('MICROSOFT_APP_ID'),
         consumer_secret=os.environ.get('MICROSOFT_APP_SECRET'),
-        tenent_id=os.environ.get('MICROSOFT_TENANT_ID', 'common'),
-        base_url='https://management.azure.com',
+        tenent_id=os.environ.get('MICROSOFT_TENANT_ID'),
+        base_url='https://graph.microsoft.com/v1.0/',
         request_token_url=None,
         access_token_method='POST',
-        access_token_url='https://login.microsoftonline.com/{tenant_id}/oauth2/token' \
-            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID', 'common')),
-        authorize_url='https://login.microsoftonline.com/{tenant_id}/oauth2/authorize' \
-            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID', 'common')),
-        request_token_params={
-            'resource' : os.environ.get('MICROSOFT_APP_ID'),
-            'response_mode' : 'query',
-            # 'scope': 'email profile',
-            'prompt': 'login'
-        }
+        access_token_url='https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token' \
+            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID')),
+        authorize_url='https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize' \
+            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID')),
+        request_token_params={'scope': 'offline_access User.Read'}
     )
 
     @classmethod
@@ -92,8 +89,7 @@ class Config(object):
 
         sql_ca_cert = os.getenv('SQL_CA_CERT', os.path.abspath('./BaltimoreCyberTrustRoot.crt.pem'))
         if sql_ca_cert and 'azure' in cls.SQLALCHEMY_DATABASE_URI:
-            cls.SQLALCHEMY_ENGINE_OPTS = {'connect_args': {'ssl': {'ca': sql_ca_cert}}}
-            cls.SQLALCHEMY_POOL_RECYCLE = 25 * 60  # Restart connections before 25 minutes Azure timeout
+            cls.SQLALCHEMY_ENGINE_OPTS = {'connect_args': {'ssl': {'ca': sql_ca_cert}}, 'pool_pre_ping': True}
 
         if cls.STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(cls.STORAGE_CONTAINER):
             os.makedirs(cls.STORAGE_CONTAINER)

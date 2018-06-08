@@ -222,8 +222,9 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentExportForm(BaseForm):
-    roles = MultiCheckboxField('Roles', choices=ROLE_DISPLAY_NAMES.items(),
-            validators=[validators.required()])
+    roles = MultiCheckboxField('Roles',
+                               choices=list(ROLE_DISPLAY_NAMES.items()),
+                               validators=[validators.required()])
 
     def validate(self):
         if not super().validate():
@@ -241,8 +242,19 @@ class EnrollmentForm(BaseForm):
     section = StringField('Section',
                           validators=[validators.optional()])
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=ROLE_DISPLAY_NAMES.items())
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
+class SectionAssignmentForm(BaseForm):
+    name = StringField('Name', validators=[validators.optional()])
+    email = EmailField('Email',
+                       validators=[validators.required(), validators.email()])
+    sid = StringField('SID', validators=[validators.optional()])
+    secondary = StringField('Secondary Auth (e.g Username)',
+                            validators=[validators.optional()])
+    section = IntegerField('Section',
+                          validators=[validators.required(), validators.NumberRange(min=0)])
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
 class VersionForm(BaseForm):
     current_version = StringField('Current Version',
@@ -262,7 +274,7 @@ class VersionForm(BaseForm):
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=ROLE_DISPLAY_NAMES.items())
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()

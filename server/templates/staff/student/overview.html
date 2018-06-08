@@ -60,6 +60,11 @@
                             {{ utils.local_time(enrollment.created, current_course) }}
                       </span></a>
                     </li>
+                    <li>
+                      <a href="#">Section <span class="pull-right badge bg-purple">
+                            {{ enrollment.section}}
+                      </span></a>
+                    </li>
                 {% else %}
                 <li>
                   <a href="{{ url_for('.enrollment', cid=current_course.id) }}">

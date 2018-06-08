@@ -6,3 +6,4 @@ if __name__ == '__main__':
         if num % 5 == 0:
             msg += 'Buzz'
         print(msg or num)
+    
