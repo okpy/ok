@@ -46,7 +46,7 @@
         "restartPolicy": "Never",
         "containers": [
           {
-            "name": "[concat('create-db', uniquestring(resourceGroup().id))]",
+            "name": "createdb",
             "properties": {
               "image": "[concat(parameters('dockerRegistryUrl'),'/',parameters('dockerImageName'),':',parameters('dockerImageTag'))]",
               "command": [

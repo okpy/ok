@@ -24,7 +24,7 @@
         "restartPolicy": "Never",
         "containers": [
           {
-            "name": "[concat('create-storage-container', uniquestring(resourceGroup().id))]",
+            "name": "createcontainer",
             "properties": {
               "image": "microsoft/azure-cli:2.0.31",
               "command": [
