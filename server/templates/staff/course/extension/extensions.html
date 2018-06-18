@@ -41,6 +41,7 @@
                             <th>Custom Submission Time</th>
                             <th>Message</th>
                             <th>Staff</th>
+                            <th>Edit</th>
                             <th>Delete</th>
                         </tr>
 
@@ -65,6 +66,12 @@
                             </td>
                             <td>{{ extension.message | default('—', true)}}</td>
                             <td>{{ extension.staff.email }}</td>
+                            <td>
+                              <a href='{{ url_for('.edit_extension', cid=current_course.id, ext_id=extension.id) }}'>
+                              <button class='btn btn-warning btn-flat'>
+                                <i class='fa fa-edit'></i>
+                              </button>
+                          </td>
                             <td>
                                 {% call forms.render_form_bare(csrf_form, action_url=url_for('.delete_extension', cid=current_course.id, ext_id=extension.id), class_='form') %}
                                     <button class='btn btn-danger btn-flat' data-confirm="Are you sure you want to revoke {{ extension.user.email }}'s extension for {{ extension.assignment.display_name }}?">
