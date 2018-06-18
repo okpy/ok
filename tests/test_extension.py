@@ -3,6 +3,7 @@ import json
 
 from server.models import db, Backup, Group, Extension
 from server.controllers import api
+from server import constants, utils
 
 from tests import OkTestCase
 
@@ -50,7 +51,6 @@ class TestExtension(OkTestCase):
                 custom_submission_time=custom_time,
                 expires=dt.datetime.utcnow() + dt.timedelta(days=1),
                 staff=self.staff1)
-
     def test_extension_basic(self):
         ext = self._make_ext(self.assignment, self.user1)
         self.assertEqual(ext, Extension.get_extension(self.user1, self.assignment))
@@ -187,3 +187,50 @@ class TestExtension(OkTestCase):
         early = now - dt.timedelta(days=1)
         ext = self._make_ext(self.assignment, self.user1, custom_time=early)
         self.assertTrue(backup.submission_time <= self.assignment.due_date)
+
+    def test_create_extension(self):
+        self.login(self.staff1.email)
+        message = 'Sickness'
+        expires = (dt.datetime.utcnow() + dt.timedelta(days=2)).strftime(constants.ISO_DATETIME_FMT)
+        custom_submission_time = dt.datetime.utcnow().strftime(constants.ISO_DATETIME_FMT)
+        data = {
+            'assignment_id': self.assignment.id,
+            'email': self.user1.email,
+            'expires': expires,
+            'reason': message,
+            'submission_time': 'other',
+            'custom_submission_time': custom_submission_time
+        }
+
+        self.assert200(self.client.post('/admin/course/{}/extensions/new'.format(self.course.id),
+                        data=data, follow_redirects=True))
+        extension = Extension.get_extension(self.user1, self.assignment, time=dt.datetime.utcnow())
+        self.assertEqual(extension.staff_id, self.staff1.id)
+        self.assertEqual(extension.assignment_id, self.assignment.id)
+        self.assertEqual(extension.message, message)
+        self.assertEqual(utils.local_time_obj(extension.expires, self.course).replace(tzinfo=None), dt.datetime.strptime(expires, '%Y-%m-%d %H:%M:%S'))
+        self.assertEqual(utils.local_time_obj(extension.custom_submission_time, self.course).replace(tzinfo=None), dt.datetime.strptime(custom_submission_time, '%Y-%m-%d %H:%M:%S'))
+
+    def test_edit_extension(self):
+        ext = self._make_ext(self.assignment, self.user1)
+        self.login(self.staff1.email)
+        expires = (dt.datetime.utcnow() + dt.timedelta(days=3)).strftime(constants.ISO_DATETIME_FMT)
+        custom_submission_time = dt.datetime.utcnow().strftime(constants.ISO_DATETIME_FMT)
+        message = 'Sickness'
+        data = {
+            'assignment_id': self.assignment.id,
+            'email': self.user1.email,
+            'expires': expires,
+            'reason': message,
+            'submission_time': 'other',
+            'custom_submission_time': custom_submission_time
+        }
+        self.assert200(self.client.post('/admin/course/{}/extensions/{}'.format(self.course.id, utils.encode_id(ext.id)),
+                        data=data, follow_redirects=True))
+        extension = Extension.get_extension(self.user1, self.assignment, time=dt.datetime.utcnow())
+        self.assertEqual(extension.staff_id, self.staff1.id)
+        self.assertEqual(extension.assignment_id, self.assignment.id)
+        self.assertEqual(extension.message, message)
+        self.assertEqual(utils.local_time_obj(extension.expires, self.course).replace(tzinfo=None), dt.datetime.strptime(expires, '%Y-%m-%d %H:%M:%S'))
+        self.assertEqual(utils.local_time_obj(extension.custom_submission_time, self.course).replace(tzinfo=None), dt.datetime.strptime(custom_submission_time, '%Y-%m-%d %H:%M:%S'))
+
