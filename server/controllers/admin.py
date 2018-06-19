@@ -24,7 +24,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
                            Extension, db)
 from server.contrib import analyze
 
-from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
+from server.constants import (EMAIL_FORMAT, INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 import server.canvas.api as canvas_api
 import server.canvas.jobs
@@ -463,34 +463,35 @@ def section_console(cid, sctn_id=None):
             flash("{email} is not enrolled as a {role}".format(
                 email=email, role=role), "error")
 
-    user = User.lookup(current_user.email)
-
     if sctn_id is None:
-        staff_record = (Enrollment.query.filter_by(user_id=user.id,course_id=cid)
+        staff_record = (Enrollment.query.filter_by(user_id=current_user.id, course_id=cid)
                                        .filter(Enrollment.role.in_(STAFF_ROLES))
                                        .one_or_none())
-        sctn_id = staff_record.section    
+        # Admins may not have any staff record, but can view enrollment
+        # for all courses.
+        sctn_id = staff_record.section if staff_record else None
 
     staff = (Enrollment.query
                           .filter(Enrollment.role.in_(STAFF_ROLES),
                                   Enrollment.course == current_course)
                           .all())
 
-    students, emails = list(), list()
-
     if sctn_id is not None:
-        students = (Enrollment.query
+        enrollments = (Enrollment.query
                               .filter(Enrollment.role.in_([STUDENT_ROLE]),
                                       Enrollment.section == sctn_id,
                                       Enrollment.course == current_course)
                               .all())
-        student_users = (User.query            
-                             .filter(User.id.in_([student.user_id for student in students])))
-        emails = "\n".join(["{name} <{email}>".format(name=stud_usr.name,email=stud_usr.email) for stud_usr in student_users])
-
+        student_emails = []
+        for enrollment in enrollments:
+            student_emails.append(EMAIL_FORMAT.format(name=enrollment.user.identifier,
+                                email=enrollment.user.email))
+        student_emails_str = "\n".join(student_emails)
+    else:
+        students, emails = [], []
     return render_template('staff/course/section/section.html',
                        courses=courses, form=form, current_course=current_course,
-                       enrollments=students, staff=staff, emails=emails)
+                       enrollments=enrollments, staff=staff, emails=student_emails_str)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
