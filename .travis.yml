@@ -10,10 +10,9 @@ python:
 env:
   global:
      - OK_ENV=test
-    # Google Cloud Storage Integration Test Env Vars
-    secure: "fLVIPcjFTBZ69AmicHMMP1t3oCLpROZo/+cnPXl3vHJCqUYGSxT51t9ZfpjijfjmKWJfF+WJw5C6N/qU2bne30wWTX+69a0MvF6PyLhnePMH/1NTSpR89fG6+mXaQyX4bPinR0PLAOoWFIjF6NQ9w7SgTlz8Z+bHgobV68jmqnE="
-    secure: "FDaXghfVy0m/g/SoHA3MAPWXwXQWN2UwBxOUaY0TYawMreLv46QgVQhauwaCaBSyHkd8PlfshIvPhXHl+i8F1Yn4Wk0PXP/bfYw4jWyWmJ+5aivY0apUvIAa/Q6LEjyekWKH64p2FWCSAEtV6pJq4fKdgjRiPbcS2Y1nn74qffA=" 
-    secure: "moGAgNpj7wrPcaAStJZ7xQfxJsu99kEiPfGmhML/FlYm/muGp0PTrykyG5EjnzIwrdfVTL+uQhmUql0tR2T9g9I+FH2xG/cBelgsXJMAA22/FBAHUfQDRi23TT3eLhqsH+wC3c4K7CJFxXm0kB2iSkziHrgPjLm2S25TLIAklP8="
+     - secure: "fLVIPcjFTBZ69AmicHMMP1t3oCLpROZo/+cnPXl3vHJCqUYGSxT51t9ZfpjijfjmKWJfF+WJw5C6N/qU2bne30wWTX+69a0MvF6PyLhnePMH/1NTSpR89fG6+mXaQyX4bPinR0PLAOoWFIjF6NQ9w7SgTlz8Z+bHgobV68jmqnE="
+     - secure: "FDaXghfVy0m/g/SoHA3MAPWXwXQWN2UwBxOUaY0TYawMreLv46QgVQhauwaCaBSyHkd8PlfshIvPhXHl+i8F1Yn4Wk0PXP/bfYw4jWyWmJ+5aivY0apUvIAa/Q6LEjyekWKH64p2FWCSAEtV6pJq4fKdgjRiPbcS2Y1nn74qffA=" 
+     - secure: "moGAgNpj7wrPcaAStJZ7xQfxJsu99kEiPfGmhML/FlYm/muGp0PTrykyG5EjnzIwrdfVTL+uQhmUql0tR2T9g9I+FH2xG/cBelgsXJMAA22/FBAHUfQDRi23TT3eLhqsH+wC3c4K7CJFxXm0kB2iSkziHrgPjLm2S25TLIAklP8="
   matrix:
     - USE_DOCKER=1
     - USE_NATIVE=1
