@@ -57,3 +57,6 @@ MICROSOFT = "MICROSOFT"
 DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
 SOURCE_SIZE_LIMIT = 10 * 1024 * 1024 # 10MB
 MAX_UPLOAD_FILE_SIZE = 25 * 1024 * 1024 # 25MB
+
+# Email client format for to field
+EMAIL_FORMAT = "{name} <{email}>"
