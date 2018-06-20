@@ -899,12 +899,11 @@ def assign_grading(cid, aid):
         data = assign.course_submissions()
         backups = set(b['backup']['id'] for b in data if b['backup'])
         students = set(b['user']['id'] for b in data if b['backup'])
-        no_submissions = set(b['user']['id'] for b in data if not b['backup'])
-
+        
         tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
                                                form.kind.data)
 
-        num_with_submissions = len(students) - len(no_submissions)
+        num_with_submissions = len(students)
         flash(("Created {0} tasks ({1} students) for {2} staff."
                .format(len(tasks), num_with_submissions, len(selected_users))),
               "success")
