@@ -22,6 +22,6 @@ If you do not have access to PowerShell this can be run in the cloud shell via t
 
 To deploy [Ok.py](www.okpy.org) to Azure use the deploy button below. If you are not familiar with the configuration of Azure resources please check our [integration guide](../).
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ficokpy%2Fok%2Fenhancement%2Ficokpy%2Fazure-templates%2Fazure%2Fpaas%2Fazure.deploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FCal-CS-61A-Staff%2Fok%2Fmaster%2Fazure%2Fpaas%2Fazure.deploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
