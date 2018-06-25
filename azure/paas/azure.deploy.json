@@ -105,7 +105,7 @@
     },
     "templateBaseURL": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/icokpy/ok/enhancement/icokpy/azure-templates/azure/paas/",
+      "defaultValue": "https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/azure/paas/",
       "metadata": {
         "description": "Repo base URL"
       }
