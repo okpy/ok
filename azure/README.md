@@ -61,5 +61,5 @@ The [Azure Application Insights](https://azure.microsoft.com/en-gb/services/appl
 monitoring can be enabled by setting the following environment variables:
 
 ```
-APPLICATION_INSIGHTS_KEY={InstrumentationKey}
+APPINSIGHTS_INSTRUMENTATIONKEY={InstrumentationKey}
 ```
