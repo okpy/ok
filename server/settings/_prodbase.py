@@ -24,9 +24,9 @@ class Config(object):
         'key': os.environ.get("SENDGRID_KEY")
     }
 
-    if "GOOGLE_ID" in os.environ or "GOOGLE_SECRET" in os.environ:
+    if os.environ.get("GOOGLE_ID") and os.environ.get("GOOGLE_SECRET"):
         OAUTH_PROVIDER = 'GOOGLE'
-    elif "MICROSOFT_APP_ID" in os.environ or "MICROSOFT_APP_SECRET" in os.environ:
+    elif os.environ.get("MICROSOFT_APP_ID") and os.environ.get("MICROSOFT_APP_SECRET"):
         OAUTH_PROVIDER = 'MICROSOFT'
     else:
         print("Please set the Google or Microsoft OAuth ID and Secret variables.")
