@@ -457,7 +457,7 @@
             "value": "[variables('mySQLServerName')]"
           },
           "redisURL": {
-            "value": "[concat('rediss://:',reference('redis').outputs.rediskey.value,'@',reference('redis').outputs.redis.value.hostName,'6380','/0')]"
+            "value": "[concat('rediss://:',reference('redis').outputs.rediskey.value,'@',reference('redis').outputs.redis.value.hostName,':6380','/0')]"
           },
           "sendgridAccountName": {
             "value": "[reference('SendGrid').outputs.SendGrid.value.username]"
