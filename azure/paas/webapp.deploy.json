@@ -150,7 +150,10 @@
         "name": "[parameters('appName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms',concat(parameters('appName'),'_plan'))]",
         "httpLoggingEnabled": true,
-        "logsDirectorySizeLimit": 35
+        "logsDirectorySizeLimit": 35,
+        "siteConfig": {
+          "AlwaysOn": true
+        }
       },
       "resources": [
         {
