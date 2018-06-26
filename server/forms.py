@@ -458,7 +458,7 @@ class BatchCSVScoreForm(SubmissionTimeForm):
             else:  # emails only
                 self.input_field = self.emails_area
                 assert self.emails_area.data, 'Emails textarea cannot be empty'
-                assert self.score_amount.data, 'Score field cannot be empty'
+                assert self.score_amount.data is not None, 'Score field cannot be empty'
                 self.labels = {'email': 'Email', 'score': 'Score'}
                 emails = [email for email in re.split('[, \r\n\t]+', self.emails_area.data) if email]
                 scores = [self.score_amount.data] * len(emails)
