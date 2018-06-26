@@ -181,7 +181,7 @@
             "SENDGRID_USER": "[parameters('sendgridAccountName')]",
             "SENDGRID_KEY": "[parameters('sendgridPassword')]",
             "WEBSITE_HTTPLOGGING_RETENTION_DAYS": "7",
-            "APPLICATION_INSIGHTS_KEY": "[parameters('applicationInsightsKey')]",
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[parameters('applicationInsightsKey')]",
             "MICROSOFT_APP_SECRET": "[parameters('azureAdAppSecret')]",
             "MICROSOFT_APP_ID": "[parameters('azureAdAppId')]",
             "MICROSOFT_TENANT_ID": "[parameters('azureAdTenantId')]",

@@ -190,31 +190,31 @@ def autograde_backups(assignment, user_id, backup_ids, logger):
             if task.status == GradingStatus.QUEUED:
                 result = results[task.job_id]
                 if not result:
-                    logger.warning('Autograder job {} disappeared, retrying'.format(task.job_id))
+                    logger.warning('Autograder job {} for backup {} disappeared, retrying'.format(task.job_id, hashid))
                     retry_task(task)
                 elif result['status'] != 'queued':
                     logger.debug('Autograder job {} for backup {} started'.format(
                         task.job_id, hashid))
                     task.set_status(GradingStatus.RUNNING)
                 elif task.expired(QUEUED_TIMEOUT):
-                    logger.warning('Autograder job {} queued longer than {} seconds, retrying'.format(
-                        task.job_id, QUEUED_TIMEOUT))
+                    logger.warning('Autograder job {} for backup {} queued longer than {} seconds, retrying'.format(
+                        task.job_id, hashid, QUEUED_TIMEOUT))
                     retry_task(task)
             elif task.status == GradingStatus.RUNNING:
                 result = results[task.job_id]
                 if not result:
-                    logger.warning('Autograder job {} disappeared, retrying'.format(task.job_id))
+                    logger.warning('Autograder job {} for backup {} disappeared, retrying'.format(task.job_id, hashid))
                     retry_task(task)
                 elif result['status'] == 'finished':
                     logger.debug('Autograder job {} for backup {} finished'.format(
                         task.job_id, hashid))
                     task.set_status(GradingStatus.WAITING)
                 elif result['status'] == 'failed':
-                    logger.warning('Autograder job {} failed, retrying'.format(task.job_id))
+                    logger.warning('Autograder job {} for backup {} failed, retrying'.format(task.job_id, hashid))
                     retry_task(task)
                 elif task.expired(RUNNING_TIMEOUT):
-                    logger.warning('Autograder job {} running longer than {} seconds, retrying'.format(
-                        task.job_id, RUNNING_TIMEOUT))
+                    logger.warning('Autograder job {} for backup {} running longer than {} seconds, retrying'.format(
+                        task.job_id, hashid, RUNNING_TIMEOUT))
                     retry_task(task)
             elif task.status == GradingStatus.WAITING:
                 score = Score.query.filter(
