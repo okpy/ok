@@ -16,7 +16,6 @@ To run tests for Azure, set the following environment variables:
 - AZURE_STORAGE_CONTAINER
 
 """
-# TODO(@colinschoen) Configure CI to run the full integration test suite only on protected branches like master.
 
 import os
 import unittest
