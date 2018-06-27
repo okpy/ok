@@ -76,6 +76,13 @@
         "description": "Ok.py worker Docker image tag"
       }
     },
+    "autograderUrl": {
+      "minLength": 1,
+      "type": "string",
+      "metadata": {
+        "description": "URL to autograder deployment"
+      }
+    },
     "azureAdAppID": {
       "defaultValue": "",
       "type": "string",
@@ -408,6 +415,9 @@
           "azureAdTenantID": {
             "value": "[parameters('azureAdTenantID')]"
           },
+          "autograderUrl": {
+            "value": "[parameters('autograderUrl')]"
+          },
           "SecretKey": {
             "value": "[variables('secretKey')]"
           }
@@ -489,6 +499,9 @@
           },
           "azureAdTenantID": {
             "value": "[parameters('azureAdTenantID')]"
+          },
+          "autograderUrl": {
+            "value": "[parameters('autograderUrl')]"
           },
           "SecretKey": {
             "value": "[variables('secretKey')]"
