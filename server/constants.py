@@ -36,6 +36,10 @@ ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
 AUTOGRADER_URL = os.getenv('AUTOGRADER_URL', 'https://autograder.cs61a.org')
 
+SENDGRID_USERNAME = os.getenv("SENDGRID_USERNAME")
+SENDGRID_PASSWORD = os.getenv("SENDGRID_PASSWORD")
+SENDGRID_KEY = os.getenv("SENDGRID_KEY")
+
 FORBIDDEN_ROUTE_NAMES = [
     'about',
     'admin',

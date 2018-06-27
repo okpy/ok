@@ -2,11 +2,11 @@ import csv
 import datetime as dt
 import logging
 from io import StringIO
-import os
 import random
 import re
 import urllib
 from urllib.parse import urlparse, urljoin
+from functools import lru_cache
 
 import bleach
 from flask import render_template, url_for, Markup
@@ -17,6 +17,7 @@ import markdown
 from pynliner import fromString as emailFormat
 import pytz
 import requests
+from requests.auth import HTTPBasicAuth
 import sendgrid
 import sendgrid.helpers.mail as sg_helpers
 
@@ -29,7 +30,6 @@ logger = logging.getLogger(__name__)
 # link with an ID in it.
 hashids = Hashids(min_length=6)
 
-sg = sendgrid.SendGridAPIClient(apikey=os.getenv('SENDGRID_KEY'))
 
 def encode_id(id_number):
     return hashids.encode(id_number)
@@ -170,6 +170,47 @@ def send_emails(recipients, subject, body, **kwargs):
     for email in recipients:
         send_email(email, subject, body, **kwargs)
 
+
+def _create_sendgrid_api_client(sg_username, sg_password):
+    key_name = 'OKpy'
+    key_scopes = ['mail.send']
+    api_keys_root = 'https://api.sendgrid.com/v3/api_keys'
+    auth = HTTPBasicAuth(sg_username, sg_password)
+
+    response = requests.get(api_keys_root, auth=auth)
+    if not response.ok:
+        raise ValueError('unable to list sendgrid api keys')
+
+    existing_key = next((key['api_key_id']
+                         for key in response.json()['result']
+                         if key['name'] == key_name), None)
+    if existing_key:
+        api_key_delete = '{}/{}'.format(api_keys_root, existing_key)
+        response = requests.delete(api_key_delete, auth=auth)
+        if not response.ok:
+            raise ValueError('unable to delete existing sendgrid api key')
+
+    key_to_create = {'name': key_name, 'scopes': key_scopes}
+    response = requests.post(api_keys_root, auth=auth, json=key_to_create)
+    if not response.ok:
+        raise ValueError('unable to create new sendgrid api key')
+
+    api_key = response.json()['api_key']
+    return sendgrid.SendGridAPIClient(apikey=api_key)
+
+
+@lru_cache(maxsize=1)
+def _get_sendgrid_api_client():
+    if constants.SENDGRID_KEY:
+        return sendgrid.SendGridAPIClient(apikey=constants.SENDGRID_KEY)
+
+    if constants.SENDGRID_USERNAME and constants.SENDGRID_PASSWORD:
+        return _create_sendgrid_api_client(constants.SENDGRID_USERNAME,
+                                           constants.SENDGRID_PASSWORD)
+
+    raise ValueError('no sendgrid credentials available')
+
+
 def send_email(to, subject, body, cc=(), from_name='Ok',
                link=None, link_text="Sign in",
                template='email/notification.html', reply_to=None, **kwargs):
@@ -177,6 +218,12 @@ def send_email(to, subject, body, cc=(), from_name='Ok',
     Usage: send_email('student@okpy.org', 'Hey from OK', 'hi',
                       cc=['test@example.com'], reply_to='ta@cs61a.org')
     """
+    try:
+        sg = _get_sendgrid_api_client()
+    except ValueError as ex:
+        logger.error('Unable to get sendgrid client: %s', ex)
+        return False
+
     if not link:
         link = url_for('student.index', _external=True)
 
