@@ -1,0 +1,3 @@
+FROM cs61a/ok-server
+
+CMD ["./manage.py", "worker"]

@@ -41,10 +41,6 @@
     "dockerImageTag": {
       "type": "string"
     },
-    "dockerStartupCommand": {
-      "defaultValue": "",
-      "type": "string"
-    },
     "storageAccountName": {
       "type": "string"
     },
@@ -171,7 +167,6 @@
             "DOCKER_REGISTRY_SERVER_USERNAME": "[parameters('dockerRegistryUsername')]",
             "DOCKER_REGISTRY_SERVER_PASSWORD": "[parameters('dockerRegistryPassword')]",
             "DOCKER_CUSTOM_IMAGE_NAME": "[concat(parameters('dockerRegistryUrl'),'/',parameters('dockerImageName'),':',parameters('dockerImageTag'))]",
-            "DOCKER_CUSTOM_IMAGE_RUN_COMMAND": "[parameters('dockerStartupCommand')]",
             "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
             "DATABASE_URL": "[concat('mysql://',parameters('mySqlUsername'),'%40',parameters('mySQLServerName'),':',parameters('mysqlPassword'),'@',parameters('mySQLServerName'),'.mysql.database.azure.com:3306/ok?')]",
             "DB_ROW_FORMAT": "default",
