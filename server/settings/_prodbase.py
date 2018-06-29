@@ -19,11 +19,6 @@ class Config(object):
 
     RAVEN_IGNORE_EXCEPTIONS = raven_exceptions
 
-    SENDGRID_AUTH = {
-        'user': os.environ.get("SENDGRID_USER"),
-        'key': os.environ.get("SENDGRID_KEY")
-    }
-
     if os.environ.get("GOOGLE_ID") and os.environ.get("GOOGLE_SECRET"):
         OAUTH_PROVIDER = 'GOOGLE'
     elif os.environ.get("MICROSOFT_APP_ID") and os.environ.get("MICROSOFT_APP_SECRET"):

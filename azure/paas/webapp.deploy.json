@@ -84,16 +84,16 @@
         "description": "redis URL"
       }
     },
-    "sendgridAccountName": {
+    "sendgridUserName": {
       "type": "string",
       "metadata": {
-        "description": "SendGrid Account Name"
+        "description": "SendGrid username"
       }
     },
     "sendgridPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "SendGrid  password"
+        "description": "SendGrid password"
       }
     },
     "applicationInsightsKey": {
@@ -183,8 +183,8 @@
             "STORAGE_SECRET": "[parameters('storageAccountKey')]",
             "STORAGE_CONTAINER": "okpyfiles",
             "OK_ENV": "[parameters('OkPyEnvironment')]",
-            "SENDGRID_USER": "[parameters('sendgridAccountName')]",
-            "SENDGRID_KEY": "[parameters('sendgridPassword')]",
+            "SENDGRID_USERNAME": "[parameters('sendgridUserName')]",
+            "SENDGRID_PASSWORD": "[parameters('sendgridPassword')]",
             "WEBSITE_HTTPLOGGING_RETENTION_DAYS": "7",
             "APPINSIGHTS_INSTRUMENTATIONKEY": "[parameters('applicationInsightsKey')]",
             "MICROSOFT_APP_SECRET": "[parameters('azureAdAppSecret')]",
