@@ -44,20 +44,43 @@
         "description": "Optional Docker registry password"
       }
     },
-    "dockerImageName": {
+    "serverImageName": {
       "minLength": 1,
       "defaultValue": "cs61a/ok-server",
       "type": "string",
       "metadata": {
-        "description": "Ok.py Docker image"
+        "description": "Ok.py server Docker image"
       }
     },
-    "dockerImageTag": {
+    "serverImageTag": {
       "minLength": 1,
       "defaultValue": "latest",
       "type": "string",
       "metadata": {
-        "description": "Ok.py Docker image Tag"
+        "description": "Ok.py server Docker image tag"
+      }
+    },
+    "workerImageName": {
+      "minLength": 1,
+      "defaultValue": "cs61a/ok-worker",
+      "type": "string",
+      "metadata": {
+        "description": "Ok.py worker Docker image"
+      }
+    },
+    "workerImageTag": {
+      "minLength": 1,
+      "defaultValue": "latest",
+      "type": "string",
+      "metadata": {
+        "description": "Ok.py worker Docker image tag"
+      }
+    },
+    "autograderUrl": {
+      "minLength": 1,
+      "type": "string",
+      "metadata": {
+        "description": "URL to autograder deployment"
       }
     },
     "azureAdAppID": {
@@ -221,10 +244,10 @@
             "value": "[parameters('dockerRegistryUrl')]"
           },
           "dockerImageName": {
-            "value": "[parameters('dockerImageName')]"
+            "value": "[parameters('serverImageName')]"
           },
           "dockerImageTag": {
-            "value": "[parameters('dockerImageTag')]"
+            "value": "[parameters('serverImageTag')]"
           },
           "mysqlUsername": {
             "value": "[parameters('mySqlUsername')]"
@@ -263,10 +286,10 @@
             "value": "[parameters('dockerRegistryPassword')]"
           },
           "dockerImageName": {
-            "value": "[parameters('dockerImageName')]"
+            "value": "[parameters('serverImageName')]"
           },
           "dockerImageTag": {
-            "value": "[parameters('dockerImageTag')]"
+            "value": "[parameters('serverImageTag')]"
           },
           "mysqlUsername": {
             "value": "[parameters('mySqlUsername')]"
@@ -357,10 +380,10 @@
             "value": "[parameters('dockerRegistryPassword')]"
           },
           "dockerImageName": {
-            "value": "[parameters('dockerImageName')]"
+            "value": "[parameters('serverImageName')]"
           },
           "dockerImageTag": {
-            "value": "[parameters('dockerImageTag')]"
+            "value": "[parameters('serverImageTag')]"
           },
           "mysqlUsername": {
             "value": "[parameters('mySqlUsername')]"
@@ -391,6 +414,9 @@
           },
           "azureAdTenantID": {
             "value": "[parameters('azureAdTenantID')]"
+          },
+          "autograderUrl": {
+            "value": "[parameters('autograderUrl')]"
           },
           "SecretKey": {
             "value": "[variables('secretKey')]"
@@ -439,13 +465,10 @@
             "value": "[parameters('dockerRegistryPassword')]"
           },
           "dockerImageName": {
-            "value": "[parameters('dockerImageName')]"
+            "value": "[parameters('workerImageName')]"
           },
           "dockerImageTag": {
-            "value": "[parameters('dockerImageTag')]"
-          },
-          "dockerStartupCommand": {
-            "value": "./manage.py worker"
+            "value": "[parameters('workerImageTag')]"
           },
           "mysqlUsername": {
             "value": "[parameters('mySqlUsername')]"
@@ -467,6 +490,18 @@
           },
           "applicationInsightsKey": {
             "value": "[reference('AppInsights').outputs.AppInsights.value.InstrumentationKey]"
+          },
+          "azureAdAppID": {
+            "value": "[parameters('azureAdAppId')]"
+          },
+          "azureAdAppSecret": {
+            "value": "[parameters('azureAdAppSecret')]"
+          },
+          "azureAdTenantID": {
+            "value": "[parameters('azureAdTenantID')]"
+          },
+          "autograderUrl": {
+            "value": "[parameters('autograderUrl')]"
           },
           "SecretKey": {
             "value": "[variables('secretKey')]"

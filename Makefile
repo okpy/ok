@@ -36,3 +36,6 @@ docker-test:
 docker-build:
 	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.db|\.pyo$\)" | xargs rm -rf
 	docker build -t cs61a/ok-server .
+
+docker-build-worker: docker-build
+	docker build -t cs61a/ok-worker -f Dockerfile-worker .
