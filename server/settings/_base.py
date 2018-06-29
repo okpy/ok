@@ -26,7 +26,9 @@ class Config(object):
     STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
 
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY')
-    
+
+    APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '/')
+
     # Service Keys
     GOOGLE = dict(
         consumer_key=os.environ.get('GOOGLE_ID'),
