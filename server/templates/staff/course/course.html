@@ -122,6 +122,12 @@
                     </a>
                   </li>
                   <li>
+                    <a href="{{ url_for('.section_console', cid=current_course.id) }}">
+                      <i class="fa fa-star"></i>
+                      Section Console
+                    </a>
+                  </li>
+                  <li>
                     <a href="{{ url_for('student.course', offering=current_course.offering) }}">
                       <i class="fa fa-eye"></i> Student View
                     </a>

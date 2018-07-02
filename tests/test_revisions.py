@@ -90,7 +90,7 @@ class TestRevision(OkTestCase):
 
         # Ensure that the backup is still accepted
         backups = Backup.query.filter_by(submitter=self.user1).count()
-        self.assertEquals(backups, 2)
+        self.assertEqual(backups, 2)
 
     def test_revison_no_submission(self):
         """ Revisions are not accepted if there is no final submission. """
@@ -100,7 +100,7 @@ class TestRevision(OkTestCase):
 
         # Ensure that the backup is still accepted
         backups = Backup.query.filter_by(submitter=self.user5).count()
-        self.assertEquals(backups, 1)
+        self.assertEqual(backups, 1)
 
     def test_revison_test_group_member(self):
         self.login(self.user4.email)
@@ -109,7 +109,7 @@ class TestRevision(OkTestCase):
 
         group = self.assignment.active_user_ids(self.user4.id)
         revision = self.assignment.revision(group)
-        self.assertEquals(len(revision.owners()), 2)
+        self.assertEqual(len(revision.owners()), 2)
 
     def test_revison_multiple_submit(self):
         group = self.assignment.active_user_ids(self.user3.id)
@@ -127,8 +127,8 @@ class TestRevision(OkTestCase):
 
         second_revision = self.assignment.revision(group)
         self.assertTrue(second_revision.is_revision)
-        self.assertNotEquals(first_revision.id, second_revision.id)
+        self.assertNotEqual(first_revision.id, second_revision.id)
 
         # Check the number of revisions scores is 1
         scores = Score.query.filter_by(kind="revision", archived=False).count()
-        self.assertEquals(scores, 1)
+        self.assertEqual(scores, 1)

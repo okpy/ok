@@ -8,7 +8,7 @@
 *.pydevproject
 *.kpf
 *.iml
-venv
+venv*
 env
 .env
 *.tags*
@@ -44,3 +44,7 @@ _cache/*
 # local development
 database.db
 *.db
+*.db-journal
+
+# Visual Studio Code
+.vscode

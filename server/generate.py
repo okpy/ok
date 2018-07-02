@@ -153,14 +153,14 @@ def gen_enrollment(user, course):
     class_account = '{0}-{1}'.format(
         course.offering.split('/')[1],
         ''.join(random.choice(string.ascii_lowercase) for _ in range(3)))
-    section = random.randrange(30)
+    section = random.randrange(5)
     return Enrollment(
         user_id=user.id,
         course_id=course.id,
         role=role,
         sid=gen_maybe(sid, 0.4),
         class_account=gen_maybe(class_account, 0.4),
-        section=gen_maybe(section, 0.4))
+        section=section)
 
 def gen_messages(assignment, seconds_offset):
     fizzbuzz_lines = modified_file.split("\n")
@@ -393,7 +393,7 @@ def seed_flags():
 
 def seed_oauth():
     print("Seeding OAuth...")
-    client = Client(
+    client1 = Client(
         name='Example Application',
         client_id='example-app',
         client_secret='example-secret',
@@ -403,10 +403,35 @@ def seed_oauth():
             'http://127.0.0.1:8000/login/authorized',
         ],
         is_confidential=False,
+        active=True,
         description='Sample App for building OAuth',
         default_scopes=OAUTH_SCOPES,
     )
-    db.session.add(client)
+    db.session.add(client1)
+    # Find a non admin staff member
+    client_owner = None
+    for user in User.query.filter_by(is_admin=False):
+        if user.is_staff():
+            client_owner = user
+            break
+    if client_owner:
+        client2 = Client(
+            name='Example Pending OAuth Application',
+            user_id = client_owner.id,
+            user = client_owner,
+            client_id='pending-app',
+            client_secret='example-secret2',
+            redirect_uris=[
+                'http://localhost:8000/authorized',
+                'http://127.0.0.1:8000/authorized',
+                'http://127.0.0.1:8000/login/authorized',
+            ],
+            is_confidential=False,
+            active=False,
+            description='Sample App for building OAuth',
+            default_scopes=[OAUTH_SCOPES[1]], # ['email']
+        )
+        db.session.add(client2)
     db.session.commit()
 
 def seed():

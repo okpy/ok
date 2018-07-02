@@ -1,0 +1,84 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context %}
+
+
+{% block title %} Section Console - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        {{ current_course.display_name_with_semester }} Section Console
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li class="active"><a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Section Console</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+    {% include 'alerts.html' %}
+    <div class="row">
+            {% for roster, title in ((enrollments, "Your Students"),) %}
+                {% if roster %}
+                    {% include 'staff/course/section/section.list.html' %}
+                {% endif %}
+            {% endfor %}
+            {% for roster, title in ((staff, "Staff Section Assignments"),) %}
+                {% if roster %}
+                    {% include 'staff/course/section/section.assignments.list.html' %}
+                {% endif %}
+            {% endfor %}
+            <div class="box collapsed-box">
+            <div class="box-header with-border">
+                <h3 class="box-title">Edit Section Assignment</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <!-- form goes here -->
+                {% call forms.render_form(form, action_url=url_for('.section_console', cid=current_course.id), action_text='Submit',
+                class_='form') %}
+                    {{ forms.render_field(form.email, label_visible=true, required="required", placeholder='test@test.com') }}
+                    {{ forms.render_field(form.section, label_visible=true, required="required", placeholder='0', type='text') }}
+                {% endcall %}
+            </div>
+        </div>
+        </div>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    {% if enrollments %}
+    var studentOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 10
+    };
+    var studentList = new List('Your Students-list', studentOptions);
+    studentList.sort("timestamp", {order: "desc"})
+    document.getElementById('Your Students-list').style.display = 'block';
+    {% endif %}
+
+    {% if staff %}
+    var staffOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 10
+    };
+    var staffList = new List('Staff Section Assignments-list', staffOptions);
+    staffList.sort("timestamp", {order: "desc"})
+    document.getElementById('Staff Section Assignments-list').style.display = 'block';
+    {% endif %}
+</script>
+{% endblock %}
+

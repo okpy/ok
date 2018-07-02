@@ -22,6 +22,7 @@ import contextlib
 import csv
 import datetime as dt
 import json
+import os
 import logging
 import shlex
 import urllib.parse
@@ -342,7 +343,6 @@ class Course(Model):
                             lock_date=dt.datetime.now() + dt.timedelta(days=8))
         db.session.add_all([enroll, assign])
         db.session.commit()
-
 
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
@@ -958,7 +958,7 @@ class Enrollment(Model):
 
 class Message(Model):
     __tablename__ = 'message'
-    __table_args__ = {'mysql_row_format': 'COMPRESSED'}
+    __table_args__ = {'mysql_row_format': os.getenv('DB_ROW_FORMAT', 'COMPRESSED')}
 
     id = db.Column(db.Integer, primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False,
@@ -1600,6 +1600,8 @@ class Client(Model):
 
     redirect_uris = db.Column(StringList, nullable=False)
     default_scopes = db.Column(StringList, nullable=False)
+
+    active = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def default_redirect_uri(self):

@@ -222,8 +222,9 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentExportForm(BaseForm):
-    roles = MultiCheckboxField('Roles', choices=ROLE_DISPLAY_NAMES.items(),
-            validators=[validators.required()])
+    roles = MultiCheckboxField('Roles',
+                               choices=list(ROLE_DISPLAY_NAMES.items()),
+                               validators=[validators.required()])
 
     def validate(self):
         if not super().validate():
@@ -241,8 +242,19 @@ class EnrollmentForm(BaseForm):
     section = StringField('Section',
                           validators=[validators.optional()])
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=ROLE_DISPLAY_NAMES.items())
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
+class SectionAssignmentForm(BaseForm):
+    name = StringField('Name', validators=[validators.optional()])
+    email = EmailField('Email',
+                       validators=[validators.required(), validators.email()])
+    sid = StringField('SID', validators=[validators.optional()])
+    secondary = StringField('Secondary Auth (e.g Username)',
+                            validators=[validators.optional()])
+    section = IntegerField('Section',
+                          validators=[validators.required(), validators.NumberRange(min=0)])
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
 class VersionForm(BaseForm):
     current_version = StringField('Current Version',
@@ -262,7 +274,7 @@ class VersionForm(BaseForm):
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=ROLE_DISPLAY_NAMES.items())
+                       choices=list(ROLE_DISPLAY_NAMES.items()))
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
@@ -446,7 +458,7 @@ class BatchCSVScoreForm(SubmissionTimeForm):
             else:  # emails only
                 self.input_field = self.emails_area
                 assert self.emails_area.data, 'Emails textarea cannot be empty'
-                assert self.score_amount.data, 'Score field cannot be empty'
+                assert self.score_amount.data is not None, 'Score field cannot be empty'
                 self.labels = {'email': 'Email', 'score': 'Score'}
                 emails = [email for email in re.split('[, \r\n\t]+', self.emails_area.data) if email]
                 scores = [self.score_amount.data] * len(emails)
@@ -499,6 +511,10 @@ class ExtensionForm(SubmissionTimeForm):
     reason = StringField('Justification',
                          description="Why are you granting this extension?",
                          validators=[validators.optional()])
+
+    def __init__(self, obj=None, **kwargs):
+        self.obj = obj
+        super(ExtensionForm, self).__init__(obj=obj, **kwargs)
 
     def validate(self):
         check_validate = super(ExtensionForm, self).validate()
@@ -559,9 +575,29 @@ class ClientForm(BaseForm):
 
 
 class EditClientForm(ClientForm):
+    active = BooleanField(
+            'Active',
+            description='Whether this client is active and available to be used.',
+            default=False,
+            )
+    owner = EmailField(
+        'Owner Email',
+        description='''Must be a valid email of OK account with 
+            staff access in some course. (Current owner will lose access if changed.)''',
+        validators=[validators.optional(), validators.email()]
+    )
+    user = HiddenField(
+        description="Do not fill out or render.",
+        validators=[validators.optional()]
+    )
+    user_id = HiddenField(
+        description="Do not fill out or render.",
+        validators=[validators.optional()]
+    )
     roll_secret = BooleanField(
         'Change the secret?',
-        description='Should the secret be changed? If checked, the new value will appear after submission',
+        description='''Should the secret be changed? If checked,
+            the new value will appear after submission''',
         default=False)
     client_secret = HiddenField(
         'Placeholder for secret',
@@ -573,16 +609,32 @@ class EditClientForm(ClientForm):
         super(ClientForm, self).__init__(obj=obj, **kwargs)
 
     def validate(self):
+        is_error = False
         # if our validators do not pass
         if not super(ClientForm, self).validate():
-            return False
+            is_error = True
         if self.client_id.data != self.obj.client_id:
             existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
             if existing_client:
                 self.client_id.errors.append('That client ID already exists')
-                return False
-        return True
-
+                is_error = True
+        if self.owner.data != self.obj.owner:
+            user = User.query.filter_by(email=self.owner.data).one_or_none()
+            if not user:
+                self.owner.errors.append("Email does not exist.")
+                is_error = True
+            elif not user.is_staff():
+                self.owner.errors.append('New owner must be a some course staff member.')
+                is_error = True
+            elif not is_error:
+                # New user is valid so populate necessary attributes to update model
+                self.user.data = user
+                self.user_id.data = user.id
+        elif not is_error:
+            # User isn't changing set to None to avoid overwriting in model
+            self.user.data = None
+            self.user_id.data = None
+        return not is_error
 
 class NewCourseForm(BaseForm):
     offering = StringField('Offering (e.g. cal/cs61a/sp16, cal/cs168/fa16, etc)',

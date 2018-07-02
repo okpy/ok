@@ -24,8 +24,8 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
                            Extension, db)
 from server.contrib import analyze
 
-from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
+from server.constants import (EMAIL_FORMAT, INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS, AUTOGRADER_URL)
 import server.canvas.api as canvas_api
 import server.canvas.jobs
 from server.extensions import cache
@@ -81,6 +81,33 @@ def is_admin():
                 return redirect(url_for("admin.index"))
         return login_required(wrapper)
     return decorator
+
+def is_oauth_client_owner(oauth_client_id_arg):
+    """ A decorator for OAuth client management routes to ensure the user owns
+        the OAuth client or is an admin."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if current_user.is_authenticated:
+                if current_user.is_admin:
+                    return func(*args, **kwargs)
+                oauth_client_id = kwargs[oauth_client_id_arg]
+                clients = Client.query.filter_by(user_id=current_user.id)
+                if clients.count() > 0:
+                    if oauth_client_id in [c.client_id for c in clients]:
+                        return func(*args, **kwargs)
+            flash("You do not have access to this OAuth client", "warning")
+            return redirect(url_for("admin.clients"))
+        return login_required(wrapper)
+    return decorator
+
+@admin.context_processor
+@cache.memoize(1800)
+def inject_pending_oauth_clients():
+    """ Injects an additional template variable used to display the notification
+        indicator of pending OAuth clients to admins."""
+    num_pending_oauth_clients = Client.query.filter_by(active=False).count()
+    return dict(num_pending_oauth_clients=num_pending_oauth_clients)
 
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
@@ -412,6 +439,59 @@ def course_settings(cid):
     return render_template('staff/course/course.edit.html', form=form,
                            courses=courses, current_course=current_course)
 
+@admin.route("/course/<int:cid>/section/", methods=['GET', 'POST'])
+@admin.route("/course/<int:cid>/section/<int:sctn_id>", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def section_console(cid, sctn_id=None):
+    courses, current_course = get_courses(cid)
+    form = forms.SectionAssignmentForm()
+    if form.validate_on_submit():
+        email, role , section = form.email.data, form.role.data, form.section.data
+        user = User.lookup(email)
+        if user:
+            record = Enrollment.query.filter_by(user_id=user.id,
+                                                course_id=cid).one_or_none()
+            if record:
+                form.name.data = user.name
+                form.sid.data = record.sid
+                form.secondary.data = record.class_account
+                form.role.data = record.role
+                Enrollment.enroll_from_form(cid, form)
+                flash("Changed {email} to Section {section}".format(
+                email=email, section=section), "success")
+        else:
+            flash("{email} is not enrolled as a {role}".format(
+                email=email, role=role), "error")
+
+    if sctn_id is None:
+        staff_record = (Enrollment.query.filter_by(user_id=current_user.id, course_id=cid)
+                                       .filter(Enrollment.role.in_(STAFF_ROLES))
+                                       .one_or_none())
+        # Admins may not have any staff record, but can view enrollment
+        # for all courses.
+        sctn_id = staff_record.section if staff_record else None
+
+    staff = (Enrollment.query
+                          .filter(Enrollment.role.in_(STAFF_ROLES),
+                                  Enrollment.course == current_course)
+                          .all())
+
+    if sctn_id is not None:
+        enrollments = (Enrollment.query
+                              .filter(Enrollment.role.in_([STUDENT_ROLE]),
+                                      Enrollment.section == sctn_id,
+                                      Enrollment.course == current_course)
+                              .all())
+        student_emails = []
+        for enrollment in enrollments:
+            student_emails.append(EMAIL_FORMAT.format(name=enrollment.user.identifier,
+                                email=enrollment.user.email))
+        student_emails_str = "\n".join(student_emails)
+    else:
+        students, emails = [], []
+    return render_template('staff/course/section/section.html',
+                       courses=courses, form=form, current_course=current_course,
+                       enrollments=enrollments, staff=staff, emails=student_emails_str)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
@@ -472,7 +552,7 @@ def assignment(cid, aid):
         flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
-                           form=form, courses=courses,
+                           form=form, courses=courses, autograder_url=AUTOGRADER_URL,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
@@ -604,8 +684,8 @@ def view_scores(cid, aid):
 
         bar_charts[kind] = bar_chart.render().decode("utf-8")
 
-
     return render_template('staff/course/assignment/assignment.scores.html',
+                           autograder_url=AUTOGRADER_URL,
                            assignment=assign, current_course=current_course,
                            courses=courses, scores=all_scores,
                            score_plots=bar_charts)
@@ -819,12 +899,11 @@ def assign_grading(cid, aid):
         data = assign.course_submissions()
         backups = set(b['backup']['id'] for b in data if b['backup'])
         students = set(b['user']['id'] for b in data if b['backup'])
-        no_submissions = set(b['user']['id'] for b in data if not b['backup'])
-
+        
         tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
                                                form.kind.data)
 
-        num_with_submissions = len(students) - len(no_submissions)
+        num_with_submissions = len(students)
         flash(("Created {0} tasks ({1} students) for {2} staff."
                .format(len(tasks), num_with_submissions, len(selected_users))),
               "success")
@@ -1295,13 +1374,16 @@ def enrollment_csv(cid):
     return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/clients/", methods=['GET', 'POST'])
-@is_admin()
+@is_staff()
 def clients():
     courses, current_course = get_courses()
-    clients = Client.query.all()
+    clients = Client.query.order_by(Client.active).all()
+    my_clients = [client for client in clients if client.user_id == current_user.id]
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
-        client = Client(user=current_user)
+        client = Client(
+                user=current_user,
+                active=True if current_user.is_admin else False)
         form.populate_obj(client)
         db.session.add(client)
         db.session.commit()
@@ -1309,16 +1391,29 @@ def clients():
         flash('OAuth client "{}" added'.format(client.name), "success")
         return redirect(url_for(".clients"))
 
-    return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
+    return render_template('staff/clients.html',
+            clients=clients,
+            my_clients=my_clients,
+            form=form,
+            courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
-@is_admin()
+@is_oauth_client_owner('client_id')
 def client(client_id):
     courses, current_course = get_courses()
 
     client = Client.query.get(client_id)
+    # Show the client owner's email in edit form when owner exists
+    client.owner = client.user.email if client.user else ""
     form = forms.EditClientForm(obj=client)
+    # Hide the active field and scopes if not an admin
+    if not current_user.is_admin:
+        del form.active
+        del form.default_scopes
     if form.validate_on_submit():
+        # Be careful not to overwrite user data
+        if not form.user_id.data or not form.user.data:
+            del form.user_id, form.user
         form.populate_obj(client)
         if form.roll_secret.data:
             client.client_secret = utils.generate_secret_key()
@@ -1624,6 +1719,58 @@ def create_extension(cid):
     return render_template('staff/course/extension/extension.new.html',
                            form=form, courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def edit_extension(cid, ext_id):
+    courses, current_course = get_courses(cid)
+    extension = Extension.query.get_or_404(ext_id)
+    if not Extension.can(extension, current_user, 'edit'):
+        abort(401)
+
+    # Add our expected form element values
+    extension.email = extension.user.email
+    extension.reason = extension.message
+    extension.expires = utils.local_time_obj(extension.expires, current_course)
+    extension.submission_time = 'other'
+    # Don't show submission helper
+    form = forms.ExtensionForm(obj=extension)
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda a: a[1],
+    )
+
+    if form.validate_on_submit():
+        assign = Assignment.query.filter_by(id=form.assignment_id.data).one_or_none()
+        student = User.lookup(form.email.data)
+        # If changing user ensure that they don't already have an extension
+        if form.email.data != extension.user.email and Extension.get_extension(student, assign):
+            flash("{} already has an extension".format(form.email.data), 'danger')
+        else:
+            group_members = assign.active_user_ids(student.id)
+            ext = Extension.query.filter(Extension.assignment == assign, Extension.user_id.in_(group_members - {student.id})).first()
+            if ext:
+                Extension.delete(ext)
+            expires = utils.server_time_obj(form.expires.data, current_course)
+            custom_time = form.get_submission_time(assign)
+            extension.staff = current_user
+            extension.assignment = assign
+            extension.user = student
+            extension.message = form.reason.data
+            extension.expires = expires
+            extension.custom_submission_time = custom_time
+            db.session.add(extension)
+            db.session.commit()
+            emails = ', '.join([u.email for u in extension.members()])
+            flash("Updated an extension on {} for {} ".format(assign.display_name,
+                                                             emails), 'success')
+            return redirect(url_for('.list_extensions', cid=cid))
+
+    return render_template('staff/course/extension/extension.edit.html',
+                           form=form, courses=courses,
+                           current_course=current_course,
+                           extension=extension)
+
 
 @admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
 @is_staff(course_arg='cid')

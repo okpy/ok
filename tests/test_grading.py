@@ -68,18 +68,17 @@ class TestGrading(OkTestCase):
 
     def test_course_submissions_ids(self):
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6])
-        self.assertEquals(sorted(list(submissions)), [14, 15])
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [14, 15])
         owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
-        self.assertEquals(sorted(owners_by_backup),  [(14, {2, 3}), (15, {4})])
+        self.assertEqual(sorted(owners_by_backup),  [(14, {2, 3}), (15, {4})])
 
     def test_course_submissions(self):
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6])
-        self.assertEquals(sorted(list(submissions)), [14, 15])
-
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [14, 15])
 
     def test_course_submissions_optimized(self):
         # Slow query should be indentical to general query (which might be fast)
@@ -91,35 +90,35 @@ class TestGrading(OkTestCase):
 
         submissions = [fs['backup']['id'] for fs in course_submissions if fs['backup']]
         slow_submissions = [fs['backup']['id'] for fs in slow_course_subms if fs['backup']]
-        self.assertEquals(len(submissions), len(course_subms_filtered))
-        self.assertEquals(len(slow_submissions), len(course_subms_filtered))
+        self.assertEqual(len(submissions), len(course_subms_filtered))
+        self.assertEqual(len(slow_submissions), len(course_subms_filtered))
         print("Running with {}".format(db.engine.name))
 
         if db.engine.name == 'mysql':
             query = self.assignment.mysql_course_submissions_query()
             mysql_data = [d for d in query]
-            self.assertEquals(len(course_submissions), len(mysql_data))
+            self.assertEqual(len(course_submissions), len(mysql_data))
 
             has_submission = sorted(list(fs['user']['id'] for fs in course_submissions
                                  if fs['backup']))
             has_submission_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
                                       if fs['backup']))
-            self.assertEquals(has_submission, has_submission_slow)
+            self.assertEqual(has_submission, has_submission_slow)
 
             no_subm = sorted(list(fs['user']['id'] for fs in course_submissions
                                  if not fs['backup']))
             no_subm_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
                                       if not fs['backup']))
-            self.assertEquals(no_subm, no_subm_slow)
+            self.assertEqual(no_subm, no_subm_slow)
 
             backup = sorted(list(fs['backup']['id'] for fs in course_submissions
                                  if fs['backup']))
             backup_slow = sorted(list(fs['backup']['id'] for fs in slow_course_subms
                                       if fs['backup']))
 
-            self.assertEquals(backup, backup_slow)
+            self.assertEqual(backup, backup_slow)
         else:
-            self.assertEquals(slow_course_subms, course_submissions)
+            self.assertEqual(slow_course_subms, course_submissions)
 
 
     def test_flag(self):
@@ -128,11 +127,11 @@ class TestGrading(OkTestCase):
         print("Flagged submission {}".format(submission.id))
 
         students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-        self.assertEquals(sorted(list(students)), [2, 3, 4])
-        self.assertEquals(sorted(list(no_submission)), [5, 6])
-        self.assertEquals(sorted(list(submissions)), [submission.id, 15])
+        self.assertEqual(sorted(list(students)), [2, 3, 4])
+        self.assertEqual(sorted(list(no_submission)), [5, 6, 7, 8, 9])
+        self.assertEqual(sorted(list(submissions)), [submission.id, 15])
         owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
-        self.assertEquals(sorted(owners_by_backup),  [(submission.id, {2, 3}), (15, {4})])
+        self.assertEqual(sorted(owners_by_backup),  [(submission.id, {2, 3}), (15, {4})])
 
     def test_queue_generation(self):
         students, backups, no_submissions = self._course_submissions_ids(self.assignment)
@@ -141,15 +140,15 @@ class TestGrading(OkTestCase):
                                                self.assignment.id,
                                                self.assignment.course.id,
                                                "Composition")
-        self.assertEquals(len(tasks), 2)
-        self.assertEquals([t.grader.id for t in tasks], [self.staff1.id, self.staff2.id])
+        self.assertEqual(len(tasks), 2)
+        self.assertEqual([t.grader.id for t in tasks], [self.staff1.id, self.staff2.id])
 
         # All backups have been assigned, so should not add any new backups
         tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
                                                self.assignment.id,
                                                self.assignment.course.id,
                                                "Composition")
-        self.assertEquals(len(tasks), 0)
+        self.assertEqual(len(tasks), 0)
 
     def test_view_scores(self):
         self.login(self.staff1.email)
@@ -163,7 +162,7 @@ class TestGrading(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         # No Scores
-        self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,role,assignment_id,kind,score,message,backup_id,grader\n')
+        self.assertEqual(response.data, b'time,is_late,email,group,sid,class_account,section,role,assignment_id,kind,score,message,backup_id,grader\n')
 
     def test_scores_with_generate(self, generate=False):
         if generate:
@@ -191,7 +190,7 @@ class TestGrading(OkTestCase):
         for s in scores:
             backup_creators.extend(s.backup.owners())
 
-        self.assertEquals(len(backup_creators), len(csv_rows) - 1)
+        self.assertEqual(len(backup_creators), len(csv_rows) - 1)
 
 
     def test_publish_grades(self):
@@ -331,27 +330,27 @@ class TestGrading(OkTestCase):
             only_published=False,
         )
         scores.sort(key=lambda score: score.kind)
-        self.assertEquals(len(scores), 2)
+        self.assertEqual(len(scores), 2)
 
         a_score = scores[0]
-        self.assertEquals(a_score.kind, 'composition')
-        self.assertEquals(a_score.score, 10)
-        self.assertEquals(a_score.backup_id, backups2[2].id)
+        self.assertEqual(a_score.kind, 'composition')
+        self.assertEqual(a_score.score, 10)
+        self.assertEqual(a_score.backup_id, backups2[2].id)
 
         b_score = scores[1]
-        self.assertEquals(b_score.kind, 'regrade')
-        self.assertEquals(b_score.score, 8)
-        self.assertEquals(b_score.backup_id, backups2[4].id)
+        self.assertEqual(b_score.kind, 'regrade')
+        self.assertEqual(b_score.score, 8)
+        self.assertEqual(b_score.backup_id, backups2[4].id)
 
         scores = self.assignment.scores([self.user1.id, self.user2.id])
-        self.assertEquals(len(scores), 0)  # no scores have been published
+        self.assertEqual(len(scores), 0)  # no scores have been published
 
         self.assignment.publish_score('composition')
         scores = self.assignment.scores([self.user1.id, self.user2.id])
         scores.sort(key=lambda score: score.kind)
-        self.assertEquals(len(scores), 1)
+        self.assertEqual(len(scores), 1)
 
         a_score = scores[0]
-        self.assertEquals(a_score.kind, 'composition')
-        self.assertEquals(a_score.score, 10)
-        self.assertEquals(a_score.backup_id, backups2[2].id)
+        self.assertEqual(a_score.kind, 'composition')
+        self.assertEqual(a_score.score, 10)
+        self.assertEqual(a_score.backup_id, backups2[2].id)

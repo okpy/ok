@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueAppName": {
+      "value": "<UNIQUE_ID>"
+    },
+    "OkPyEnvironment": {
+      "value": "simple"
+    },
+    "dockerRegistryUrl": {
+      "value": "quay.io"
+    },
+    "dockerRegistryUsername": {
+      "value": ""
+    },
+    "dockerRegistryPassword": {
+      "value": ""
+    },
+    "dockerImageName": {
+      "value": "cs61a/ok-server"
+    },
+    "dockerImageTag": {
+      "value": "latest"
+    },
+    "azureAdAppID": {
+      "value": ""
+    },
+    "azureAdAppSecret": {
+      "value": ""
+    },
+    "azureAdTenantID": {
+      "value": ""
+    },
+    "mySqlUsername": {
+      "value": "admin"
+    },
+    "mySqlAdminPassword": {
+      "value": "<PASSWORD>"
+    },
+    "sendgridPassword": {
+      "value": "<PASSWORD>"
+    },
+    "templateBaseURL": {
+      "value": "https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/azure/paas/"
+    }
+  }
+}

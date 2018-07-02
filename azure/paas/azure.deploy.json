@@ -1,0 +1,479 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueAppName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Application name, used in URLs, must be unique across Azure"
+      }
+    },
+    "OkPyEnvironment": {
+      "type": "string",
+      "defaultValue": "dev",
+      "allowedValues": [
+        "dev",
+        "simple",
+        "test",
+        "staging",
+        "prod"
+      ],
+      "metadata": {
+        "description": "The Ok.py settings file to use"
+      }
+    },
+    "dockerRegistryUrl": {
+      "defaultValue": "quay.io",
+      "type": "string",
+      "metadata": {
+        "description": "The Docker registry to pull the Ok.py image from"
+      }
+    },
+    "dockerRegistryUsername": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Optional Docker registry user account"
+      }
+    },
+    "dockerRegistryPassword": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Optional Docker registry password"
+      }
+    },
+    "dockerImageName": {
+      "minLength": 1,
+      "defaultValue": "cs61a/ok-server",
+      "type": "string",
+      "metadata": {
+        "description": "Ok.py Docker image"
+      }
+    },
+    "dockerImageTag": {
+      "minLength": 1,
+      "defaultValue": "latest",
+      "type": "string",
+      "metadata": {
+        "description": "Ok.py Docker image Tag"
+      }
+    },
+    "azureAdAppID": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Requried to integrate with Azure AD for user access"
+      }
+    },
+    "azureAdAppSecret": {
+      "defaultValue": "",
+      "type": "securestring",
+      "metadata": {
+        "description": "Requried to integrate with Azure AD for user access"
+      }
+    },
+    "azureAdTenantID": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Requried to integrate with Azure AD for user access"
+      }
+    },
+    "mySqlUsername": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "mysqladmin",
+      "metadata": {
+        "description": "MySQL Username - will be needed to configure Ok.py admin via MySQL"
+      }
+    },
+    "mySqlAdminPassword": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "mySQL Admin Password - will be needed to configure Ok.py admin via MySQL"
+      }
+    },
+    "sendgridPassword": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Sendgrid password"
+      }
+    },
+    "templateBaseURL": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/azure/paas/",
+      "metadata": {
+        "description": "Repo base URL"
+      }
+    }
+  },
+  "variables": {
+    "mySQLServerName": "[concat('mysql',parameters('uniqueAppName'))]",
+    "secretKey": "[uniqueString('mySqlAdminPassword')]",
+    "sendgridAccountName": "[concat('sendgrid',parameters('uniqueAppName'))]"
+  },
+  "resources": [
+    {
+      "name": "MySQL",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'mysql.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "mySqlUsername": {
+            "value": "[parameters('mySqlUsername')]"
+          },
+          "mySqlAdminPassword": {
+            "value": "[parameters('mySQlAdminPassword')]"
+          },
+          "mysqlServerName": {
+            "value": "[variables('mySQLServerName')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'redis.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {}
+      }
+    },
+    {
+      "name": "sendgrid",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'sendgrid.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "sendgridAccountName": {
+            "value": "[variables('sendgridAccountName')]"
+          },
+          "sendgridPassword": {
+            "value": "[parameters('sendgridPassword')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "aci-create-container",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'storage')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'aci-create-container.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageContainerName": {
+            "value": "okpyfiles"
+          },
+          "storageAccountName": {
+            "value": "[reference('storage').outputs.storageAccountName.value]"
+          },
+          "storageAccountKey": {
+            "value": "[reference('storage').outputs.storageAccountKey.value]"
+          }
+        }
+      }
+    },
+    {
+      "condition": "[equals(parameters('dockerRegistryPassword'),'')]",
+      "name": "aci-create-db",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'mysql')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'aci-create-db.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dockerRegistryUrl": {
+            "value": "[parameters('dockerRegistryUrl')]"
+          },
+          "dockerImageName": {
+            "value": "[parameters('dockerImageName')]"
+          },
+          "dockerImageTag": {
+            "value": "[parameters('dockerImageTag')]"
+          },
+          "mysqlUsername": {
+            "value": "[parameters('mySqlUsername')]"
+          },
+          "mysqlPassword": {
+            "value": "[parameters('mySQlAdminPassword')]"
+          },
+          "mySQLServerName": {
+            "value": "[variables('mySQLServerName')]"
+          }
+        }
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('dockerRegistryPassword'),''))]",
+      "name": "aci-create-db-auth",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'mysql')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'aci-create-db-auth.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dockerRegistryUrl": {
+            "value": "[parameters('dockerRegistryUrl')]"
+          },
+          "dockerRegistryUsername": {
+            "value": "[parameters('dockerRegistryUsername')]"
+          },
+          "dockerRegistryPassword": {
+            "value": "[parameters('dockerRegistryPassword')]"
+          },
+          "dockerImageName": {
+            "value": "[parameters('dockerImageName')]"
+          },
+          "dockerImageTag": {
+            "value": "[parameters('dockerImageTag')]"
+          },
+          "mysqlUsername": {
+            "value": "[parameters('mySqlUsername')]"
+          },
+          "mysqlPassword": {
+            "value": "[parameters('mySQlAdminPassword')]"
+          },
+          "mySQLServerName": {
+            "value": "[variables('mySQLServerName')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "storage",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'storage.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountType": {
+            "value": "Standard_GRS"
+          }
+        }
+      }
+    },
+    {
+      "name": "AppInsights",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'application-insights.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appName": {
+            "value": "[parameters('uniqueAppName')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "webapp",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'MySQL')]",
+        "[concat('Microsoft.Resources/deployments/', 'redis')]",
+        "[concat('Microsoft.Resources/deployments/', 'storage')]",
+        "[concat('Microsoft.Resources/deployments/', 'sendgrid')]",
+        "[concat('Microsoft.Resources/deployments/', 'AppInsights')]",
+        "[concat('Microsoft.Resources/deployments/', 'aci-create-container')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'webapp.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appName": {
+            "value": "[parameters('uniqueAppName')]"
+          },
+          "storageAccountName": {
+            "value": "[reference('storage').outputs.storageAccountName.value]"
+          },
+          "storageAccountKey": {
+            "value": "[reference('storage').outputs.storageAccountKey.value]"
+          },
+          "OkPyEnvironment": {
+            "value": "[parameters('OkPyEnvironment')]"
+          },
+          "dockerRegistryUrl": {
+            "value": "[parameters('dockerRegistryUrl')]"
+          },
+          "dockerRegistryUsername": {
+            "value": "[parameters('dockerRegistryUsername')]"
+          },
+          "dockerRegistryPassword": {
+            "value": "[parameters('dockerRegistryPassword')]"
+          },
+          "dockerImageName": {
+            "value": "[parameters('dockerImageName')]"
+          },
+          "dockerImageTag": {
+            "value": "[parameters('dockerImageTag')]"
+          },
+          "mysqlUsername": {
+            "value": "[parameters('mySqlUsername')]"
+          },
+          "mysqlPassword": {
+            "value": "[parameters('mySQlAdminPassword')]"
+          },
+          "mySQLServerName": {
+            "value": "[variables('mySQLServerName')]"
+          },
+          "redisURL": {
+            "value": "[concat('rediss://:',reference('redis').outputs.rediskey.value,'@',reference('redis').outputs.redis.value.hostName,':6380','/0')]"
+          },
+          "sendgridUserName": {
+            "value": "[reference('SendGrid').outputs.SendGrid.value.username]"
+          },
+          "sendgridPassword": {
+            "value": "[parameters('sendgridPassword')]"
+          },
+          "applicationInsightsKey": {
+            "value": "[reference('AppInsights').outputs.AppInsights.value.InstrumentationKey]"
+          },
+          "azureAdAppID": {
+            "value": "[parameters('azureAdAppId')]"
+          },
+          "azureAdAppSecret": {
+            "value": "[parameters('azureAdAppSecret')]"
+          },
+          "azureAdTenantID": {
+            "value": "[parameters('azureAdTenantID')]"
+          },
+          "SecretKey": {
+            "value": "[variables('secretKey')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "worker",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'MySQL')]",
+        "[concat('Microsoft.Resources/deployments/', 'redis')]",
+        "[concat('Microsoft.Resources/deployments/', 'storage')]",
+        "[concat('Microsoft.Resources/deployments/', 'sendgrid')]",
+        "[concat('Microsoft.Resources/deployments/', 'AppInsights')]",
+        "[concat('Microsoft.Resources/deployments/', 'aci-create-container')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateBaseURL'),'webapp.deploy.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appName": {
+            "value": "[concat(parameters('uniqueAppName'),'-worker')]"
+          },
+          "storageAccountName": {
+            "value": "[reference('storage').outputs.storageAccountName.value]"
+          },
+          "storageAccountKey": {
+            "value": "[reference('storage').outputs.storageAccountKey.value]"
+          },
+          "OkPyEnvironment": {
+            "value": "[parameters('OkPyEnvironment')]"
+          },
+          "dockerRegistryUrl": {
+            "value": "[parameters('dockerRegistryUrl')]"
+          },
+          "dockerRegistryUsername": {
+            "value": "[parameters('dockerRegistryUsername')]"
+          },
+          "dockerRegistryPassword": {
+            "value": "[parameters('dockerRegistryPassword')]"
+          },
+          "dockerImageName": {
+            "value": "[parameters('dockerImageName')]"
+          },
+          "dockerImageTag": {
+            "value": "[parameters('dockerImageTag')]"
+          },
+          "dockerStartupCommand": {
+            "value": "./manage.py worker"
+          },
+          "mysqlUsername": {
+            "value": "[parameters('mySqlUsername')]"
+          },
+          "mysqlPassword": {
+            "value": "[parameters('mySQlAdminPassword')]"
+          },
+          "mySQLServerName": {
+            "value": "[variables('mySQLServerName')]"
+          },
+          "redisURL": {
+            "value": "[concat('rediss://:',reference('redis').outputs.rediskey.value,'@',reference('redis').outputs.redis.value.hostName,':6380','/0')]"
+          },
+          "sendgridUserName": {
+            "value": "[reference('SendGrid').outputs.SendGrid.value.username]"
+          },
+          "sendgridPassword": {
+            "value": "[parameters('sendgridPassword')]"
+          },
+          "applicationInsightsKey": {
+            "value": "[reference('AppInsights').outputs.AppInsights.value.InstrumentationKey]"
+          },
+          "SecretKey": {
+            "value": "[variables('secretKey')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}

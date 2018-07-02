@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'student/course/_assigntable.html' as table %}
+{% import '_globalhelpers.html' as helpers %}
 
 {% block title %} {{ course.display_name_with_semester }} | Ok {% endblock %}
 
@@ -34,4 +35,8 @@
         <!-- end mobile version -->
       </section>
     </main>
+{% endblock %}
+
+{% block js %}
+{{ helpers.js_scores('scores', inactive) }}
 {% endblock %}

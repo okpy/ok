@@ -1,6 +1,9 @@
 import datetime as dt
+import dateutil.parser
 import json
 import random
+
+from server import constants
 
 from server.models import (db, Assignment, Backup, Course, User,
                            Version, Group)
@@ -78,13 +81,13 @@ class TestApi(OkTestCase):
         self._test_backup(False)
 
     def test_backup_after_deadline(self):
-        self._test_backup(False, delay=-1)
+        self._test_backup(False, delay=-2)
 
     def test_submit(self):
         self._test_backup(True)
 
     def test_submit_after_deadline(self):
-        self._test_backup(True, delay=-1, success=False)
+        self._test_backup(True, delay=-2, success=False)
 
     def test_api(self):
         response = self.client.get('/api/v3/')
@@ -128,11 +131,24 @@ class TestApi(OkTestCase):
             "email": backup.submitter.email,
             "id": encode_id(backup.submitter_id),
         }
-        assert response.json['data'] == {
+        response_json = response.json['data']
+        time_threshold = dt.timedelta(seconds=5)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['created']),
+                               backup.created,
+                               delta=time_threshold)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['submission_time']),
+                               submission_time,
+                               delta=time_threshold)
+        self.assertAlmostEqual(dateutil.parser.parse(response_json['messages'][0]['created']),
+                               backup.created,
+                               delta=time_threshold)
+        # Unset timestamps already tested.
+        del response_json['created']
+        del response_json['submission_time']
+        del response_json['messages'][0]['created']
+        assert response_json == {
             "submitter": user_json,
             "submit": backup.submit,
-            "created": backup.created.isoformat(),
-            "submission_time": submission_time.isoformat(),
             "group": [user_json],
             "is_late": backup.is_late,
             "external_files": [],
@@ -151,7 +167,6 @@ class TestApi(OkTestCase):
                 {
                     "kind": "file_contents",
                     "contents": backup.files(),
-                    "created": backup.created.isoformat(),
                 },
             ],
         }
@@ -300,22 +315,22 @@ class TestApi(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         backups = response.json['data']['backups']
-        self.assertEquals(len(backups), 1)
+        self.assertEqual(len(backups), 1)
         self.assertTrue('submission_time' in backups[0])
-        self.assertEquals(backups[0]['submission_time'], backups[0]['created'])
-        self.assertEquals(response.json['data']['count'], 1)
-        self.assertEquals(response.json['data']['limit'], 150)
-        self.assertEquals(response.json['data']['offset'], 0)
-        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEqual(backups[0]['submission_time'], backups[0]['created'])
+        self.assertEqual(response.json['data']['count'], 1)
+        self.assertEqual(response.json['data']['limit'], 150)
+        self.assertEqual(response.json['data']['offset'], 0)
+        self.assertEqual(response.json['data']['has_more'], False)
 
         response = self.client.get(endpoint + "?offset=20&limit=2")
         self.assert_200(response)
         backups = response.json['data']['backups']
-        self.assertEquals(len(backups), 0)
-        self.assertEquals(response.json['data']['count'], 1)
-        self.assertEquals(response.json['data']['limit'], 2)
-        self.assertEquals(response.json['data']['offset'], 20)
-        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEqual(len(backups), 0)
+        self.assertEqual(response.json['data']['count'], 1)
+        self.assertEqual(response.json['data']['limit'], 2)
+        self.assertEqual(response.json['data']['offset'], 20)
+        self.assertEqual(response.json['data']['has_more'], False)
 
     def test_export_final(self):
         self._test_backup(True)
@@ -331,23 +346,23 @@ class TestApi(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         backups = response.json['data']['backups']
-        self.assertEquals(len(backups), 1)
-        self.assertEquals(backups[0]['is_late'], False)
-        self.assertEquals(len(backups[0]['group']), 1)
-        self.assertEquals(backups[0]['group'][0]['email'], self.user1.email)
-        self.assertEquals(len(backups[0]['messages']), 1)
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0]['is_late'], False)
+        self.assertEqual(len(backups[0]['group']), 1)
+        self.assertEqual(backups[0]['group'][0]['email'], self.user1.email)
+        self.assertEqual(len(backups[0]['messages']), 1)
 
-        self.assertEquals(response.json['data']['count'], 1)
-        self.assertEquals(response.json['data']['has_more'], False)
-        self.assertEquals(response.json['data']['offset'], 0)
+        self.assertEqual(response.json['data']['count'], 1)
+        self.assertEqual(response.json['data']['has_more'], False)
+        self.assertEqual(response.json['data']['offset'], 0)
 
         response = self.client.get(endpoint + '?offset=1')
         self.assert_200(response)
         backups = response.json['data']['backups']
-        self.assertEquals(len(backups), 0)
-        self.assertEquals(response.json['data']['count'], 1)
-        self.assertEquals(response.json['data']['has_more'], False)
-        self.assertEquals(response.json['data']['offset'], 1)
+        self.assertEqual(len(backups), 0)
+        self.assertEqual(response.json['data']['count'], 1)
+        self.assertEqual(response.json['data']['has_more'], False)
+        self.assertEqual(response.json['data']['offset'], 1)
 
     def test_assignment_api(self):
         self._test_backup(True)
@@ -368,7 +383,7 @@ class TestApi(OkTestCase):
         self.login(self.staff1.email)
         response = self.client.get(endpoint)
         self.assert_200(response)
-        self.assertEquals(response.json['data']['name'], self.assignment.name)
+        self.assertEqual(response.json['data']['name'], self.assignment.name)
 
         # Hidden assignment, but should be visible to staff
         self.assignment.visible = False
@@ -402,7 +417,7 @@ class TestApi(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         members = response.json['data']['members']
-        self.assertEquals(len(members), 2)
+        self.assertEqual(len(members), 2)
         assert 'email' in members[0]['user']
 
         # Make sure user2 can access user1's endpoint
@@ -410,7 +425,7 @@ class TestApi(OkTestCase):
         response = self.client.get(endpoint)
         self.assert_200(response)
         members = response.json['data']['members']
-        self.assertEquals(len(members), 2)
+        self.assertEqual(len(members), 2)
         assert 'email' in members[1]['user']
 
 
@@ -419,7 +434,7 @@ class TestApi(OkTestCase):
 
         self.assert_200(response)
         members = response.json['data']['members']
-        self.assertEquals(len(members), 2)
+        self.assertEqual(len(members), 2)
         assert 'email' in  members[0]['user']
 
         # Login as some random user
@@ -524,9 +539,9 @@ class TestApi(OkTestCase):
             self.login(self.user1.email)
             response = self.client.get(comment_url)
             self.assert_200(response)
-            self.assertEquals(len(response['data']['comments']), 2)
-            self.assertEquals(response['data']['comments'][0].message, 'hello world')
-            self.assertEquals(response['data']['comments'][1].message, 'wow')
+            self.assertEqual(len(response['data']['comments']), 2)
+            self.assertEqual(response['data']['comments'][0].message, 'hello world')
+            self.assertEqual(response['data']['comments'][1].message, 'wow')
             self.logout()
 
             #check to see if staff can access comments
@@ -571,8 +586,8 @@ class TestApi(OkTestCase):
         self.assert_200(specific)
 
         members = current.json['data']['participations']
-        self.assertEquals(len(members), 1)
-        self.assertEquals(current.json['data'], specific.json['data'])
+        self.assertEqual(len(members), 1)
+        self.assertEqual(current.json['data'], specific.json['data'])
 
         # Staff don't get permission
         self.login(self.staff1.email)
@@ -591,7 +606,7 @@ class TestApi(OkTestCase):
         current, specific = test_both_endpoints(student)
         self.assert_200(current)
         self.assert_200(specific)
-        self.assertEquals(specific.json['data']['email'], student.email)
+        self.assertEqual(specific.json['data']['email'], student.email)
 
         # Lab Assistants don't have access
         self.login(self.lab_assistant1.email)
@@ -609,7 +624,7 @@ class TestApi(OkTestCase):
         response = self.client.get(student_endpoint)
         self.assert_200(response)
         student_emails = [s['email'] for s in response.json['data']['student']]
-        self.assertEquals(self.user1.email in student_emails, True)
+        self.assertEqual(self.user1.email in student_emails, True)
         self.login(self.user1.email)
         response = self.client.get(student_endpoint)
         self.assert_403(response)
@@ -623,8 +638,8 @@ class TestApi(OkTestCase):
         anon_response = self.client.get(student_endpoint)
         self.assert_200(anon_response)
         active_assignments = len([a for a in self.course.assignments if a.active])
-        self.assertEquals(active_assignments, len(anon_response.json['data']['assignments']))
+        self.assertEqual(active_assignments, len(anon_response.json['data']['assignments']))
         self.login(self.staff1.email)
         auth_response = self.client.get(student_endpoint)
         self.assert_200(auth_response)
-        self.assertEquals(anon_response.json['data'], auth_response.json['data'])
+        self.assertEqual(anon_response.json['data'], auth_response.json['data'])
