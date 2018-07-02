@@ -8,8 +8,8 @@ Courses can sign up for our free hosted service on [okpy.org](https://okpy.org)
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
-[![Build Status](https://circleci.com/gh/okpy/ok.svg?style=shield)](https://circleci.com/gh/Cal-CS-61A-Staff/ok)
-[![Coverage Status](https://coveralls.io/repos/github/okpy/ok/badge.svg)](https://coveralls.io/github/Cal-CS-61A-Staff/ok)
+[![Build Status](https://circleci.com/gh/okpy/ok.svg?style=shield)](https://circleci.com/gh/okpy/ok)
+[![Coverage Status](https://coveralls.io/repos/github/okpy/ok/badge.svg)](https://coveralls.io/github/okpy/ok)
 [![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
 
 View Documentation at [OK Documentation](https://okpy.github.io/documentation)
