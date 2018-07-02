@@ -52,9 +52,9 @@ jobs:
           command: 'if [ "$CIRCLE_NODE_INDEX" == "0" ]; then py.test --junitxml $CIRCLE_TEST_REPORTS/django/results.xml --cov-report term-missing --cov=server tests/; fi'
           no_output_timeout: 1200s
       - store_test_results:
-        path: /tmp/circleci-test-results
+          path: /tmp/circleci-test-results
       - store_artifacts:
-        path: /tmp/circleci-artifacts
+          path: /tmp/circleci-artifacts
       - store_artifacts:
-        path: /tmp/circleci_test_results
+          path: /tmp/circleci_test_results
 
