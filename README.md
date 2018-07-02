@@ -1,4 +1,4 @@
-[![Logo](https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/server/static/img/logo-tiny.png)](#)
+[![Logo](https://raw.githubusercontent.com/okpy/ok/master/server/static/img/logo-tiny.png)](#)
 =====
 
 The ok.py server collects submissions and displays analysis of student progress
@@ -8,8 +8,8 @@ Courses can sign up for our free hosted service on [okpy.org](https://okpy.org)
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
-[![Build Status](https://circleci.com/gh/Cal-CS-61A-Staff/ok.svg?style=shield)](https://circleci.com/gh/Cal-CS-61A-Staff/ok)
-[![Coverage Status](https://coveralls.io/repos/github/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/github/Cal-CS-61A-Staff/ok)
+[![Build Status](https://circleci.com/gh/okpy/ok.svg?style=shield)](https://circleci.com/gh/okpy/ok)
+[![Coverage Status](https://coveralls.io/repos/github/okpy/ok/badge.svg)](https://coveralls.io/github/okpy/ok)
 [![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
 
 View Documentation at [OK Documentation](https://okpy.github.io/documentation)
@@ -89,7 +89,7 @@ See `documentation/CONTRIBUTING.md`
 
 Recent activity:
 
-[![Throughput Graph](https://graphs.waffle.io/Cal-CS-61A-Staff/ok/throughput.svg)](https://waffle.io/Cal-CS-61A-Staff/ok/metrics/throughput)
+[![Throughput Graph](https://graphs.waffle.io/okpy/ok/throughput.svg)](https://waffle.io/okpy/ok/metrics/throughput)
 
 Deploying
 ---------
@@ -104,8 +104,8 @@ Refer to [The Elements of Python Style](https://github.com/amontalenti/elements-
 Some useful things for developers to know:
 
 1. Testing with ok-client
-   - To test with ok-client, please follow the instructions for the ok-client repo [here](https://github.com/Cal-CS-61A-Staff/ok-client).
+   - To test with ok-client, please follow the instructions for the ok-client repo [here](https://github.com/okpy/ok-client).
    - Once you are inside the virtual environment for ok-client, you can make a new binary by using the command `ok-publish`.
    - Start the local ok server.
    - When running the ok binary, add the flags `--insecure --server localhost:<port>` to point it to the running ok-server
-   - To find demo assignments that you can use the binary with, look in [ok-client/demo](https://github.com/Cal-CS-61A-Staff/ok-client/tree/master/demo)
+   - To find demo assignments that you can use the binary with, look in [ok-client/demo](https://github.com/okpy/ok-client/tree/master/demo)

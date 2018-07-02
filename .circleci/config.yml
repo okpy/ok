@@ -1,0 +1,60 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/okpy/ok
+    parallelism: 4
+    shell: /bin/bash --login
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      OK_ENV: test
+    docker:
+      - image: circleci/python:3.5.5-jessie-browsers
+        command: /sbin/init
+      - image: redis
+    steps:
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      # Restore the dependency cache
+      - restore_cache:
+          keys:
+          # This branch if available
+          - v1-dep-{{ .Branch }}-
+          # Default branch if not
+          - v1-dep-master-
+          # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+          - v1-dep-
+      - run: virtualenv -p python3 env
+      - run: echo "source ~/okpy/ok/env/bin/activate" >> $BASH_ENV
+      - run: pip install coveralls
+      - run: pip install https://github.com/dustinfarris/pytest-circleci/archive/python-3.zip
+      - run: pip install -r requirements.txt
+      # Save dependency cache
+      - save_cache:
+          key: v1-dep-{{ .Branch }}-{{ epoch }}
+          paths:
+          # This is a broad list of cache paths to include many possible development environments
+          # You can probably delete some of these entries
+          - vendor/bundle
+          - ~/virtualenvs
+          - ~/.m2
+          - ~/.ivy2
+          - ~/.bundle
+          - ~/.go_workspace
+          - ~/.gradle
+          - ~/.cache/bower
+          # These cache paths were specified in the 1.0 config
+          - /home/ubuntu/.cache/pip
+          - .pip-cache
+          - .pyenv
+      - run:
+          name: py.test --junitxml $CIRCLE_TEST_REPORTS/django/results.xml --cov-report term-missing --cov=server tests/
+          command: 'if [ "$CIRCLE_NODE_INDEX" == "0" ]; then py.test --junitxml $CIRCLE_TEST_REPORTS/django/results.xml --cov-report term-missing --cov=server tests/; fi'
+          no_output_timeout: 1200s
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci_test_results
+
