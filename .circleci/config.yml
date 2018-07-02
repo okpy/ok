@@ -15,10 +15,7 @@ jobs:
     steps:
       - checkout
       - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-      - run:
-          working_directory: ~/okpy/ok
-          command: 'sudo redis-cli ping >/dev/null 2>&1 || sudo service redis-server start; '
-          # Restore the dependency cache
+      # Restore the dependency cache
       - restore_cache:
           keys:
           # This branch if available
