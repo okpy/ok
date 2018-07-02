@@ -11,6 +11,7 @@ jobs:
     docker:
       - image: circleci/python:3.5.5-jessie-browsers
         command: /sbin/init
+      - image: library/redis:3.2.12
     steps:
       - checkout
       - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
