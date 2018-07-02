@@ -637,11 +637,11 @@ class EditClientForm(ClientForm):
         return not is_error
 
 class NewCourseForm(BaseForm):
-    offering = StringField('Offering (example: cal/cs61a/sp16)',
+    offering = StringField('Offering (e.g. cal/cs61a/sp16, cal/cs168/fa16, etc)',
                            validators=[validators.required()])
     institution = StringField('School (e.g. UC Berkeley)',
                            validators=[validators.optional()])
-    display_name = StringField('Course Name (e.g CS61A)',
+    display_name = StringField('Course Name (e.g CS61A, CS168, etc)',
                            validators=[validators.required()])
     website = StringField('Course Website',
                            validators=[validators.optional(), validators.url()])
