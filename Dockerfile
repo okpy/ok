@@ -20,6 +20,7 @@ ENV SQL_CA_CERT=/code/BaltimoreCyberTrustRoot.crt.pem
 
 CMD nginx && \
     env PYTHONPATH=$PYTHONPATH:$PWD gunicorn \
+        -e SCRIPT_NAME=$SCRIPT_NAME \
         --logger-class server.logging.gunicorn.Logger \
         --timeout 60 \
         --bind unix:/tmp/server.sock \
