@@ -10,9 +10,9 @@ python:
 env:
   global:
      - OK_ENV=test
-     - secure: "Lt5WB2HNpohoX2bgTytQTdBq3aYjn+GfW8YfjwMreKZ+TJKkprPBE4ODkKKF95wucji+2Vz3mztm5wnyk/WCkq1u1T/nY2YIiDrIWRkDQmEuyYb/mOdj00LZ50ax9us1USbFRTwd26AogDFM4YK32g5gQbO+bsbmzn1vcUVsgQY="
-     - secure: "ELMophdX/+F2i10nRo7d0kiubvT952FxnrxCMvZtBovHRZCOHC/HMgGNcYkspVZMbOKea5jluA4M3bQUP1XjmB3B8SbWHmWsy6q6KfHoicA9FJjUyxfqHpHOCwYPZ4OKNAYjQB1tLFSau2mmydGCpdQoRxq+k3KdyIr9CITQFUQ="
-     - secure: "Lh9Cqa6Gt5IEU+R+e1Z+SswOO7RyYNshxF/1x7nINyO9GGQ4yDd764+Nrd27MuXP7cY3t8/kQ+ox5uq9ODxSjXRlWxw8zQ8nAa0BJkayqOa8Nbvv2HSpyIHMTDAqahmCerTEdH8QT+i3x1hqxsbOBdxAVzOs4mFaZJsbuonF+w4="
+     - secure: "Y2SL/twBTKPRR1ur7+0yZxuzZy16a9iqP0Y/vtrZ8H45r9Mlj/jnxDq/am4Yd6PzZsKax4wSnZBjzl/uC7nqS0c0vuZtHbq1fVSKVjui4G7MJf+23qjOg8X36ZIornvFl3CGGpAYrbZchhV55nHKChhE46VZM8Vo8w9Gm7wBriQ="
+     - secure: "AuOauqN0JtMArDf7Mcjd4IyuKip7hODQaLWssRdb2LvRUTOlA7AQiIH8PYPwesseHdVahbcnnLvCQm7vPnBNmLcOeDzRfJxZeLyBaB1oNnTCqVCEhlUEPAUDbVNE/gIF27Goq3VY5inDwz+v5zLfGqQGAsqMEZm+FPtQA73Vl0Q="
+     - secure: "b3SRwhqbVl/8eKcqZtR07ko7HIjrg9sOhCjhGThWRCSG0OYL8ilsorWJsUxlvlkxuKi/7nVDh7gWZHlEhxmiSH+8dxVX6GSUr/7mUU7cnjynPqRQft97xxdfbeG7tGAv03Z6Mu7QIkUakkKgp/TnOovG7msDXIuiXm3yYbea3lc="
   matrix:
     - USE_DOCKER=1
     - USE_NATIVE=1
