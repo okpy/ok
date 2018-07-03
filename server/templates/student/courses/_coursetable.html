@@ -1,7 +1,7 @@
 {% macro render_no_courses_found(selector, descriptor="courses") %}
     <div class='blank-state blank-state-lg'>
         <div class='blank-state-icon-overlay'>
-          <img src="/static/img/logo.svg" class="blank-state-icon" alt="Ok Logo">
+          <img src="{{ url_for('static', filename='img/logo.svg') }}" class="blank-state-icon" alt="Ok Logo">
         </div>
         <div class='loading-block loading-block-error'>
           <div class='status-bar'></div>

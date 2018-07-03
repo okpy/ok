@@ -1,5 +1,5 @@
         <header role="banner">
-          <div class="header-bg">
+          <div class="header-bg" style="background:url('{{ url_for('static', filename='img/header-bg.png') }}') center repeat;">
             <div class="left hidden-md hidden-lg mobile-header-left">
                 <div class="header-text user-profile">
                   <span class="user-name"> {{ current_user.identifier | default(current_user.email, True) }}</span>
