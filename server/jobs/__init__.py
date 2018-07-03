@@ -7,6 +7,7 @@ from flask_rq import get_connection, get_queue
 import redis.exceptions
 import rq
 
+from server.constants import APPLICATION_ROOT
 from server.models import db, Job
 
 class JobLogHandler(logging.StreamHandler):
@@ -54,17 +55,26 @@ def background_job(f):
 
         try:
             return_value = f(*args, **kwargs)
-        except:
+        except Exception:
             job.failed = True
             logger.exception('Job failed')
 
         job.status = 'finished'
-        job.result = return_value
+        job.result = _format_result(job, return_value)
         job.log = handler.contents
         stream.close()
         db.session.commit()
 
     return job_handler
+
+
+def _format_result(job, result):
+    if job.result_kind == 'link':
+        if result and not result.startswith(APPLICATION_ROOT):
+            result = APPLICATION_ROOT + result
+
+    return result
+
 
 def enqueue_job(func, *args,
                 description=None, course_id=None, user_id=None, timeout=300,

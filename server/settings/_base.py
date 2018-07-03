@@ -3,6 +3,8 @@
 """
 import os
 
+from server import constants
+
 # Shared settings across all environments
 
 def initialize_config(cls):
@@ -27,7 +29,7 @@ class Config(object):
 
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY')
 
-    APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '/')
+    APPLICATION_ROOT = constants.APPLICATION_ROOT
 
     # Service Keys
     GOOGLE = dict(
