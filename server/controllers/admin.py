@@ -446,7 +446,7 @@ def section_console(cid, sctn_id=None):
     courses, current_course = get_courses(cid)
     form = forms.SectionAssignmentForm()
     if form.validate_on_submit():
-        email, role , section = form.email.data, form.role.data, form.section.data
+        email, role, section = form.email.data, form.role.data, form.section.data
         user = User.lookup(email)
         if user:
             record = Enrollment.query.filter_by(user_id=user.id,
@@ -458,40 +458,44 @@ def section_console(cid, sctn_id=None):
                 form.role.data = record.role
                 Enrollment.enroll_from_form(cid, form)
                 flash("Changed {email} to Section {section}".format(
-                email=email, section=section), "success")
+                    email=email, section=section), "success")
         else:
             flash("{email} is not enrolled as a {role}".format(
                 email=email, role=role), "error")
 
     if sctn_id is None:
-        staff_record = (Enrollment.query.filter_by(user_id=current_user.id, course_id=cid)
-                                       .filter(Enrollment.role.in_(STAFF_ROLES))
-                                       .one_or_none())
+        staff_record = (Enrollment.query
+                        .filter_by(user_id=current_user.id, course_id=cid)
+                        .filter(Enrollment.role.in_(STAFF_ROLES))
+                        .one_or_none())
         # Admins may not have any staff record, but can view enrollment
         # for all courses.
         sctn_id = staff_record.section if staff_record else None
 
     staff = (Enrollment.query
-                          .filter(Enrollment.role.in_(STAFF_ROLES),
-                                  Enrollment.course == current_course)
-                          .all())
+             .filter(Enrollment.role.in_(STAFF_ROLES),
+                     Enrollment.course == current_course)
+             .all())
 
     if sctn_id is not None:
         enrollments = (Enrollment.query
-                              .filter(Enrollment.role.in_([STUDENT_ROLE]),
-                                      Enrollment.section == sctn_id,
-                                      Enrollment.course == current_course)
-                              .all())
+                       .filter(Enrollment.role.in_([STUDENT_ROLE]),
+                               Enrollment.section == sctn_id,
+                               Enrollment.course == current_course)
+                       .all())
         student_emails = []
         for enrollment in enrollments:
-            student_emails.append(EMAIL_FORMAT.format(name=enrollment.user.identifier,
-                                email=enrollment.user.email))
+            student_emails.append(EMAIL_FORMAT.format(
+                name=enrollment.user.identifier,
+                email=enrollment.user.email))
         student_emails_str = "\n".join(student_emails)
     else:
         students, emails = [], []
-    return render_template('staff/course/section/section.html',
-                       courses=courses, form=form, current_course=current_course,
-                       enrollments=enrollments, staff=staff, emails=student_emails_str)
+
+    return render_template(
+        'staff/course/section/section.html',
+        courses=courses, form=form, current_course=current_course,
+        enrollments=enrollments, staff=staff, emails=student_emails_str)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
