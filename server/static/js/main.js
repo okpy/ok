@@ -50,3 +50,7 @@ function debounce(func, wait, immediate) {
         if (callNow) func.apply(context, args);
     };
 };
+
+$('.datetime-picker').datetimepicker({
+  format: 'YYYY-MM-DD hh:mm:ss'
+});
