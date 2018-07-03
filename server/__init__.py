@@ -84,6 +84,10 @@ def create_app(environment_name=None):
         appinsights.flush()
         return response
 
+    @app.context_processor
+    def inject_root_url():
+        return {'index_url': app.config['APPLICATION_ROOT']}
+
     # initialize the cache
     cache.init_app(app)
 
