@@ -483,14 +483,16 @@ def section_console(cid, sctn_id=None):
                                Enrollment.section == sctn_id,
                                Enrollment.course == current_course)
                        .all())
-        student_emails = []
-        for enrollment in enrollments:
-            student_emails.append(EMAIL_FORMAT.format(
-                name=enrollment.user.identifier,
-                email=enrollment.user.email))
-        student_emails_str = "\n".join(student_emails)
     else:
-        students, emails = [], []
+        enrollments = []
+
+    student_emails = []
+    for enrollment in enrollments:
+        student_emails.append(EMAIL_FORMAT.format(
+            name=enrollment.user.identifier,
+            email=enrollment.user.email))
+
+    student_emails_str = "\n".join(student_emails)
 
     return render_template(
         'staff/course/section/section.html',
