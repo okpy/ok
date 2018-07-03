@@ -39,8 +39,8 @@
                 </fieldset>
                 <h3>Deadlines</h3>
                 <fieldset>
-                    {{ forms.render_field(form.due_date, label_visible=true, value=utils.new_due_date(current_course), type='text', class='form-control datepicker') }}
-                    {{ forms.render_field(form.lock_date, label_visible=true, value=utils.new_lock_date(current_course), type='text', class='form-control datepicker') }}
+                    {{ forms.render_field(form.due_date, label_visible=true, value=utils.new_due_date(current_course), type='text', class_='form-control datetime-picker') }}
+                    {{ forms.render_field(form.lock_date, label_visible=true, value=utils.new_lock_date(current_course), type='text', class_='form-control datetime-picker') }}
                 </fieldset>
                 <h3>Grading</h3>
                 <fieldset>

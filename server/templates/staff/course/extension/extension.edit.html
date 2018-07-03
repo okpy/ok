@@ -33,7 +33,7 @@
                                     action_text='Edit Extension', class_='form') %}
             {{ forms.render_field(form.assignment_id) }}
             {{ forms.render_field(form.email, placeholder="student@example.com") }}
-            {{ forms.render_field(form.expires, placeholder='YYYY-MM-DD hh:mm:ss',) }}
+            {{ forms.render_field(form.expires, placeholder='YYYY-MM-DD hh:mm:ss', class_='form-control datetime-picker') }}
             {{ forms.render_field(form.reason, placeholder="Because ...") }}
             <label class="control-label">Custom Submission Time: </label>
             <p class="help-block">This overrides the submission time of late submissions</p>
@@ -41,6 +41,7 @@
             {{ forms.render_field(
               form.custom_submission_time,
               placeholder='YYYY-MM-DD hh:mm:ss',
+              class_='form-control datetime-picker',
               label_visible=false) }}
 
           {% endcall %}
