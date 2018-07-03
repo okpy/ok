@@ -20,8 +20,9 @@ common_css = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.css',
     'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css',
     'css/helper.css',
-    'css/main.css',
     'css/swal-theme.css',
+    'lib/datepicker/css/bootstrap-datetimepicker.css',
+    'css/main.css',
     filters='cssmin',
     output='public/css/common.css'
 )
@@ -41,6 +42,10 @@ common_js = Bundle(
     'https://cdn.rawgit.com/okpy/markdown-it-sanitizer/a328e3d/dist/markdown-it-sanitizer.js',
     'https://cdn.rawgit.com/okpy/markdown-it-anchor/722f7a89/dist/markdown-it-anchor.js',
     'https://cdn.ravenjs.com/2.1.0/raven.js',
+    'lib/datepicker/js/moment.js',
+    'lib/datepicker/js/collapse.js',
+    'lib/datepicker/js/transition.js',
+    'lib/datepicker/js/bootstrap-datetimepicker.min.js',
     'js/main.js',
     filters='jsmin',
     output='public/js/common.js'
