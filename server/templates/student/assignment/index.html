@@ -63,7 +63,7 @@
                         {% if not final_submission.flagged %}
                           <input type="hidden" name="flag">
                         {% endif %}
-                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                        <input type="hidden" name="next" value="{{ request.url }}">
                         <button class="final-button" type="submit">
                             <a class="dashed">{{ 'Remove Flag' if final_submission.flagged else 'Flag for Grading' }} </a>
                         </button>

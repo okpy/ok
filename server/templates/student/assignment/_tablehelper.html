@@ -32,7 +32,7 @@
               {% if not subm.flagged %}
                 <input type="hidden" name="flag">
               {% endif %}
-              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <input type="hidden" name="next" value="{{ request.url }}">
               <button class="flag-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                 <div class="tip">
                   {% if not assignment.active %}
@@ -99,7 +99,7 @@
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
               <input type="hidden" name="flag">
-              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <input type="hidden" name="next" value="{{ request.url }}">
               <button class="convert-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                   {% if not assignment.active %}
                   <div class="tip">
@@ -169,7 +169,7 @@
                   {% if not subm.flagged %}
                     <input type="hidden" name="flag">
                   {% endif %}
-                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <input type="hidden" name="next" value="{{ request.url }}">
                   <button class="final-button" type="submit">
                       <a class="dashed">{{ 'Remove Flag for Grading' if subm.flagged else 'Flag for Grading' }} </a>
                   </button>
@@ -208,7 +208,7 @@
             <div class="pull-right">
                 {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
                   <input type="hidden" name="flag">
-                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <input type="hidden" name="next" value="{{ request.url }}">
                   <button class="final-button" type="submit">
                       <i class="fa fa-flag final-no"></i> <a class="dashed">Submit & Flag for Grading</a>
                   </button>
