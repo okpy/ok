@@ -97,6 +97,8 @@ Docker + Kubernetes on Google Container Engine. See `kubernetes/kubernetes.md` f
 
 The ok-server also supports deployments to Heroku or servers on any major hosting service.
 
+There also exists a [one-click setup](./azure/paas/README.md) for ok-server on Azure.
+
 Python Style Guide
 -------------------
 Refer to [The Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)

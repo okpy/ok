@@ -1,0 +1,129 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    service: okpy-server
+  name: okpy-server
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: okpy-server
+    spec:
+      containers:
+      - name: okpy-server
+        image: {{.Values.dockerRegistry}}/cs61a/ok-server:{{.Values.dockerTag}}
+        imagePullPolicy: Always
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: MYSQL_URI
+        - name: DB_ROW_FORMAT
+          value: default
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: REDIS_URI
+        - name: STORAGE_PROVIDER
+          value: AZURE_BLOBS
+        - name: STORAGE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_NAME
+        - name: STORAGE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_KEY
+        - name: STORAGE_CONTAINER
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: STORAGE_CONTAINER
+        - name: OK_ENV
+          value: {{.Values.okEnv}}
+        - name: SENDGRID_USER
+          valueFrom:
+            secretKeyRef:
+              name: sendgrid
+              key: SENDGRID_USERNAME
+        - name: SENDGRID_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sendgrid
+              key: SENDGRID_PASSWORD
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          valueFrom:
+            secretKeyRef:
+              name: appinsights
+              key: APPLICATION_INSIGHTS_KEY
+        - name: MICROSOFT_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_APP_ID
+        - name: MICROSOFT_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_APP_KEY
+        - name: MICROSOFT_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_TENANT_ID
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: FLASK_SECRET_KEY
+        - name: AUTOGRADER_URL
+          value: https://{{.Values.letsencryptDomain}}/autopy
+        - name: APPLICATION_ROOT
+          value: /okpy
+        - name: SCRIPT_NAME
+          value: /okpy
+        ports:
+        - containerPort: 5000
+        resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    service: okpy-server
+  name: okpy-server
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 5000
+  selector:
+    service: okpy-server
+status:
+  loadBalancer: {}
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: okpy-server
+spec:
+  maxReplicas: 10
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: okpy-server
+  targetCPUUtilizationPercentage: 75

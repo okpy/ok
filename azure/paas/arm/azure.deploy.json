@@ -1,0 +1,206 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Name for the application to be deployed. Must be unique across Azure. Your deployment will be accessible at <app-name>.<resource-group-location>.cloudapp.azure.com"
+      }
+    },
+    "servicePrincipalAppId": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "ID of your service principal. Will be used by the setup script to create Azure resources on your behalf as well as by autopy to create grading container instances."
+      }
+    },
+    "servicePrincipalAppKey": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Key of your service principal. Will be used by the setup script to create Azure resources on your behalf as well as by autopy to create grading container instances."
+      }
+    },
+    "servicePrincipalTenantId": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Tenant ID of your service principal. Will be used by the setup script to create Azure resources on your behalf as well as by autopy to create grading container instances."
+      }
+    },
+    "servicePrincipalSubscriptionId": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Subscription ID of your service principal. Will be used by the setup script to create Azure resources on your behalf as well as by autopy to create grading container instances."
+      }
+    },
+    "azureContainerRegistryResourceGroup": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The name of the resource group in which your Azure Container Registry is located. The registry is assumed to contain the following images: cs61a/ok-server, cs61a/autopy_manager, cs61a/autopy_worker."
+      }
+    },
+    "azureContainerRegistryName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The name of your Azure Container Registry. The registry is assumed to contain the following images: cs61a/ok-server, cs61a/autopy_manager, cs61a/autopy_worker."
+      }
+    },
+    "contactEmail": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "An email address at which you can be reached. This will be used by Let's Encrypt to manage your TLS certificates."
+      }
+    },
+    "autopyAdminUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The name of the admin user to create for AutoPY."
+      }
+    },
+    "autopyAdminPassword": {
+      "type": "securestring",
+      "minLength": 8,
+      "metadata": {
+        "description": "The password for the AutoPY admin user."
+      }
+    },
+    "activeDirectoryAppId": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "ID of your Azure Active Directory application registration. Will be used for user authentication."
+      }
+    },
+    "activeDirectoryAppKey": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Key of your Azure Active Directory application registration. Will be used for user authentication."
+      }
+    },
+    "activeDirectoryTenantId": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Tenant ID for your Azure Active Directory application registration. Will be used for user authentication. Usually looks something like <some-name>.onmicrosoft.com"
+      }
+    },
+    "appDockerTag": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "latest",
+      "metadata": {
+        "description": "Docker tag of the OK application to deploy from your Azure Container Registry."
+      }
+    },
+    "setupDockerImage": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "cwolff/ok-setup:latest",
+      "metadata": {
+        "description": "Docker image to use for the OK application setup. Must be publicly accessible."
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('appName'), 'setup')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "osType": "Linux",
+        "restartPolicy": "Never",
+        "containers": [
+          {
+            "name": "ok-setup",
+            "properties": {
+              "image": "[parameters('setupDockerImage')]",
+              "environmentVariables": [
+                {
+                  "name": "SP_APP_ID",
+                  "value": "[parameters('servicePrincipalAppId')]"
+                },
+                {
+                  "name": "SP_APP_KEY",
+                  "value": "[parameters('servicePrincipalAppKey')]"
+                },
+                {
+                  "name": "SP_TENANT_ID",
+                  "value": "[parameters('servicePrincipalTenantId')]"
+                },
+                {
+                  "name": "SP_SUBSCRIPTION_ID",
+                  "value": "[parameters('servicePrincipalSubscriptionId')]"
+                },
+                {
+                  "name": "RESOURCE_GROUP_LOCATION",
+                  "value": "[resourceGroup().location]"
+                },
+                {
+                  "name": "RESOURCE_GROUP_NAME",
+                  "value": "[resourceGroup().name]"
+                },
+                {
+                  "name": "OK_NAME",
+                  "value": "[parameters('appName')]"
+                },
+                {
+                  "name": "ACR_RESOURCE_GROUP",
+                  "value": "[parameters('azureContainerRegistryResourceGroup')]"
+                },
+                {
+                  "name": "ACR_NAME",
+                  "value": "[parameters('azureContainerRegistryName')]"
+                },
+                {
+                  "name": "CONTACT_EMAIL",
+                  "value": "[parameters('contactEmail')]"
+                },
+                {
+                  "name": "ADMIN_USERNAME",
+                  "value": "[parameters('autopyAdminUsername')]"
+                },
+                {
+                  "name": "ADMIN_PASSWORD",
+                  "value": "[parameters('autopyAdminPassword')]"
+                },
+                {
+                  "name": "AD_APP_ID",
+                  "value": "[parameters('activeDirectoryAppId')]"
+                },
+                {
+                  "name": "AD_APP_KEY",
+                  "value": "[parameters('activeDirectoryAppKey')]"
+                },
+                {
+                  "name": "AD_TENANT_ID",
+                  "value": "[parameters('activeDirectoryTenantId')]"
+                },
+                {
+                  "name": "DOCKER_TAG",
+                  "value": "[parameters('appDockerTag')]"
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# ok settings
+
+dockerTag: latest
+dockerRegistry: changeme
+okEnv: prod
+autopyStorageSize: 1Gi
+
+# tls settings
+
+letsencryptDomain: changeme
+
+nginx-ingress:
+  rbac:
+    create: false
+    createRole: false
+    createClusterRole: false
+  controller:
+    replicaCount: 3
+
+kube-lego:
+  config:
+    LEGO_EMAIL: changeme
+    LEGO_URL: https://acme-v01.api.letsencrypt.org/directory

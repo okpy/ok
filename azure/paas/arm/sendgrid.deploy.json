@@ -4,15 +4,11 @@
   "parameters": {
     "sendgridAccountName": {
       "type": "string",
-      "metadata": {
-        "description": "Account Name"
-      }
+      "minLength": 1
     },
     "sendgridPassword": {
-      "type": "string",
-      "metadata": {
-        "description": "Account Name"
-      }
+      "type": "securestring",
+      "minLength": 8
     }
   },
   "resources": [
@@ -35,9 +31,9 @@
     }
   ],
   "outputs": {
-    "SendGrid": {
-      "type": "object",
-      "value": "[reference(resourceId('Sendgrid.Email/accounts', parameters('sendgridAccountName')))]"
+    "sendgridUserName": {
+      "type": "string",
+      "value": "[reference(resourceId('Sendgrid.Email/accounts', parameters('sendgridAccountName'))).username]"
     }
   }
 }
