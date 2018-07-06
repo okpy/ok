@@ -1,0 +1,14 @@
+{
+  "parameters": {
+    "nodeCount": {
+      "type": "int",
+      "minValue": 1,
+      "defaultValue": 3
+    },
+    "nodeVmSize": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Standard_DS2_v2"
+    }
+  }
+}

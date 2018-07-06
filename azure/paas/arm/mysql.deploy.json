@@ -2,29 +2,26 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "mySqlUsername": {
+    "mysqlDatabaseName": {
       "type": "string",
-      "minLength": 1,
-      "metadata": {
-        "description": "Database administrator login name"
-      }
+      "minLength": 1
     },
-    "mySqlAdminPassword": {
+    "mysqlUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mysqlPassword": {
       "type": "securestring",
       "minLength": 8,
-      "maxLength": 128,
-      "metadata": {
-        "description": "Database administrator password"
-      }
+      "maxLength": 128
     },
-    "mySqlServerName": {
+    "mysqlAccountName": {
       "type": "string",
-      "metadata": {
-        "description": "Unique server name"
-      }
+      "minLength": 1
     },
     "skuCapacity": {
       "defaultValue": 2,
+      "minValue": 1,
       "type": "int"
     },
     "skuFamily": {
@@ -56,18 +53,16 @@
       "type": "string"
     }
   },
-  "variables": {
-    "serverName": "[toLower(parameters('mySqlServerName'))]"
-  },
   "resources": [
     {
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
-      "name": "[variables('serverName')]",
+      "name": "[parameters('mysqlAccountName')]",
       "properties": {
+        "createMode": "Default",
         "version": "[parameters('version')]",
-        "administratorLogin": "[parameters('mySqlUsername')]",
-        "administratorLoginPassword": "[parameters('mySqlAdminPassword')]",
+        "administratorLogin": "[parameters('mysqlUserName')]",
+        "administratorLoginPassword": "[parameters('mysqlPassword')]",
         "storageProfile": {
           "storageMB": "[parameters('skuSizeMB')]",
           "backupRetentionDays": "[parameters('backupRetentionDays')]",
@@ -85,20 +80,20 @@
       "type": "Microsoft.DBforMySQL/servers",
       "resources": [
         {
-          "type": "firewallrules",
+          "type": "firewallRules",
           "apiVersion": "2017-12-01",
           "dependsOn": [
-            "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+            "[concat('Microsoft.DBforMySQL/servers/', parameters('mysqlAccountName'))]"
           ],
           "location": "[resourceGroup().location]",
-          "name": "[concat(variables('serverName'),'firewall')]",
+          "name": "[concat(parameters('mysqlAccountName'), 'firewall')]",
           "properties": {
             "startIpAddress": "0.0.0.0",
             "endIpAddress": "255.255.255.255"
           }
         },
         {
-          "name": "ok",
+          "name": "[parameters('mysqlDatabaseName')]",
           "type": "databases",
           "apiVersion": "2017-12-01",
           "properties": {
@@ -106,15 +101,15 @@
             "collation": "utf8_general_ci"
           },
           "dependsOn": [
-            "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+            "[concat('Microsoft.DBforMySQL/servers/', parameters('mysqlAccountName'))]"
           ]
         }
       ]
     }
   ],
   "outputs": {
-    "mySqlFQDN": {
-      "value": "[reference(resourceId('Microsoft.DBforMySQL/servers',variables('serverName'))).fullyQualifiedDomainName]",
+    "mysqlHost": {
+      "value": "[reference(resourceId('Microsoft.DBforMySQL/servers', parameters('mysqlAccountName'))).fullyQualifiedDomainName]",
       "type": "string"
     }
   }

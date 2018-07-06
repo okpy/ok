@@ -1,0 +1,8 @@
+apiVersion: "v1"
+name: ok
+description: A Helm Chart for the OK project
+version: 0.0.1
+keywords:
+  - ok
+sources:
+  - https://github.com/CAL-CS-61A-Staff/ok/

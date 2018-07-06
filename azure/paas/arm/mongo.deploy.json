@@ -1,0 +1,38 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "mongoAccountName": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "MongoDB",
+      "name": "[parameters('mongoAccountName')]",
+      "apiVersion": "2015-04-08",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "name": "[parameters('mongoAccountName')]"
+      }
+    }
+  ],
+  "outputs": {
+    "mongoPassword": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoAccountName')), '2015-04-08').primaryMasterKey]"
+    },
+    "mongoHost": {
+      "value": "[concat(parameters('mongoAccountName'), '.documents.azure.com')]",
+      "type": "string"
+    }
+  }
+}
