@@ -127,5 +127,10 @@ class Logger(gunicorn.glogging.Logger):
         self.cloud_logger.log_proto(struct_pb, severity=severity)
 
 
+try:
+    client = gcloud.logging.Client()
+except Exception:
+    Logger = gunicorn.glogging.Logger  # noqa: F811
+
 if os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY'):
-    Logger = gunicorn.glogging.Logger
+    Logger = gunicorn.glogging.Logger  # noqa: F811
