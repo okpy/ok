@@ -89,7 +89,7 @@ metadata:
   name: autopy-worker
 spec:
   maxReplicas: 20
-  minReplicas: 1
+  minReplicas: 3
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment

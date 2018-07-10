@@ -122,7 +122,7 @@ metadata:
   name: autopy-server
 spec:
   maxReplicas: 10
-  minReplicas: 1
+  minReplicas: 3
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment
