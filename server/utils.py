@@ -4,7 +4,7 @@ import logging
 from io import StringIO
 import random
 import re
-import urllib
+from urllib.error import HTTPError
 from urllib.parse import urlparse, urljoin
 from functools import lru_cache
 
@@ -17,7 +17,6 @@ import markdown
 from pynliner import fromString as emailFormat
 import pytz
 import requests
-from requests.auth import HTTPBasicAuth
 import sendgrid
 import sendgrid.helpers.mail as sg_helpers
 
@@ -113,11 +112,13 @@ def natural_time(date):
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 
+
 def first_name(name):
     """ Return the first name of a name."""
     if not isinstance(name, str):
         return name
     return name.split(' ')[0].title()
+
 
 def humanize_name(name):
     """ Return a canonical representation of a name in First Last format."""
@@ -142,19 +143,22 @@ def random_row(query):
         return None
     return query.offset(random.randrange(count)).first()
 
+
 def new_course_email(instructor, course):
     subject = "{} + OK".format(course.display_name)
     template = 'email/new_course.html'
-    text = "" # The template already includes the copy
+    text = ""  # The template already includes the copy
     link_text = "View OK Documentation"
     link = url_for('about.documentation', _external=True)
     # use +ok in cc'd emails so that those users are still valid recipients
-    return send_email(instructor.email, subject, text,
-               reply_to="ericpai@berkeley.edu",
-               from_name="OK Team",
-               cc=('ericpai+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
-               template=template, link_text=link_text, link=link,
-               course=course, instructor=instructor)
+    return send_email(
+        instructor.email, subject, text,
+        reply_to="ericpai@berkeley.edu",
+        from_name="OK Team",
+        cc=('ericpai+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
+        template=template, link_text=link_text, link=link,
+        course=course, instructor=instructor)
+
 
 def invite_email(member, recipient, assignment):
     subject = "{0} group invitation".format(assignment.display_name)
@@ -165,6 +169,7 @@ def invite_email(member, recipient, assignment):
 
     send_email(recipient.email, subject, text, template=template,
                link_text=link_text, link=link)
+
 
 def send_emails(recipients, subject, body, **kwargs):
     for email in recipients:
@@ -214,10 +219,9 @@ def send_email(to, subject, body, cc=(), from_name='Ok',
 
     try:
         response = sg.client.mail.send.post(request_body=mail.get())
-    except urllib.error.HTTPError:
+    except HTTPError:
         logger.error("Could not send the email", exc_info=True)
         return False
-
 
     if response.status_code != 202:
         logger.error("Could not send email: {} - {}"
@@ -225,8 +229,10 @@ def send_email(to, subject, body, cc=(), from_name='Ok',
         return False
     return True
 
+
 def ceildiv(a, b):
     return -(-a // b)
+
 
 def chunks(l, n):
     """ Divides L into N many chunks, each containing approximately the
@@ -300,6 +306,7 @@ def generate_number_table(num):
     """
     return ' UNION '.join('SELECT {} as pos'.format(i) for i in range(1, num + 1))
 
+
 def check_url(url):
     """Returns TRUE if the URL can be fetched."""
     try:
@@ -309,7 +316,6 @@ def check_url(url):
     except Exception:
         return False
 
-# Safe Cast
 
 def safe_cast(val, to_type, default=None):
     try:
