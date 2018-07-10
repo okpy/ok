@@ -1,5 +1,4 @@
-import datetime
-import json
+from datetime import datetime
 import logging
 import os
 import traceback
@@ -83,7 +82,7 @@ class Logger(gunicorn.glogging.Logger):
         status = resp.status
         if isinstance(status, str):
             status = status.split(None, 1)[0]
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
 
         level = logging.NOTSET
         message = {
@@ -105,7 +104,7 @@ class Logger(gunicorn.glogging.Logger):
             message['urlMapEntry'] = request_log.endpoint
             message['line'] = [
                 {
-                    'time': format_time(datetime.datetime.utcfromtimestamp(record.created)),
+                    'time': format_time(datetime.utcfromtimestamp(record.created)),
                     'severity': record.levelname,
                     'logMessage': access_formatter.format(record),
                     # The log viewer only wants real App Engine files, so we
