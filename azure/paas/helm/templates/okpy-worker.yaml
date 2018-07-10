@@ -51,16 +51,11 @@ spec:
               key: STORAGE_CONTAINER
         - name: OK_ENV
           value: {{.Values.okEnv}}
-        - name: SENDGRID_USER
+        - name: SENDGRID_KEY
           valueFrom:
             secretKeyRef:
               name: sendgrid
-              key: SENDGRID_USERNAME
-        - name: SENDGRID_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: sendgrid
-              key: SENDGRID_PASSWORD
+              key: SENDGRID_KEY
         - name: APPINSIGHTS_INSTRUMENTATIONKEY
           valueFrom:
             secretKeyRef:

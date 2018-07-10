@@ -171,42 +171,10 @@ def send_emails(recipients, subject, body, **kwargs):
         send_email(email, subject, body, **kwargs)
 
 
-def _create_sendgrid_api_client(sg_username, sg_password):
-    key_name = 'OKpy'
-    key_scopes = ['mail.send']
-    api_keys_root = 'https://api.sendgrid.com/v3/api_keys'
-    auth = HTTPBasicAuth(sg_username, sg_password)
-
-    response = requests.get(api_keys_root, auth=auth)
-    if not response.ok:
-        raise ValueError('unable to list sendgrid api keys')
-
-    existing_key = next((key['api_key_id']
-                         for key in response.json()['result']
-                         if key['name'] == key_name), None)
-    if existing_key:
-        api_key_delete = '{}/{}'.format(api_keys_root, existing_key)
-        response = requests.delete(api_key_delete, auth=auth)
-        if not response.ok:
-            raise ValueError('unable to delete existing sendgrid api key')
-
-    key_to_create = {'name': key_name, 'scopes': key_scopes}
-    response = requests.post(api_keys_root, auth=auth, json=key_to_create)
-    if not response.ok:
-        raise ValueError('unable to create new sendgrid api key')
-
-    api_key = response.json()['api_key']
-    return sendgrid.SendGridAPIClient(apikey=api_key)
-
-
 @lru_cache(maxsize=1)
 def _get_sendgrid_api_client():
     if constants.SENDGRID_KEY:
         return sendgrid.SendGridAPIClient(apikey=constants.SENDGRID_KEY)
-
-    if constants.SENDGRID_USERNAME and constants.SENDGRID_PASSWORD:
-        return _create_sendgrid_api_client(constants.SENDGRID_USERNAME,
-                                           constants.SENDGRID_PASSWORD)
 
     raise ValueError('no sendgrid credentials available')
 
