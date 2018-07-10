@@ -1,6 +1,15 @@
 FROM python:3.5-alpine
 
-RUN apk add --update patch ca-certificates nginx perl musl-dev openssl-dev libffi-dev python-dev gcc;
+RUN apk add --update \
+    patch \
+    ca-certificates \
+    nginx \
+    perl \
+    musl-dev \
+    openssl-dev \
+    libffi-dev \
+    python-dev \
+    gcc
 
 RUN mkdir /code/
 WORKDIR /code/
