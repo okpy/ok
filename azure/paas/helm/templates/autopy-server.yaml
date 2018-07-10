@@ -1,0 +1,130 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    service: autopy-server
+  name: autopy-server
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: autopy-server
+    spec:
+      containers:
+      - name: autopy-server
+        image: {{.Values.dockerRegistry}}/cs61a/autopy_manager:{{.Values.dockerTag}}
+        imagePullPolicy: Always
+        env:
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          valueFrom:
+            secretKeyRef:
+              name: appinsights
+              key: APPLICATION_INSIGHTS_KEY
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: REDIS_URI
+        - name: SENDGRID_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: sendgrid
+              key: SENDGRID_USERNAME
+        - name: SENDGRID_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sendgrid
+              key: SENDGRID_PASSWORD
+        - name: MONGODB_URL
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: MONGO_URI
+        - name: FLASK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: FLASK_SECRET_KEY
+        - name: AGFILES_KEY
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: AGFILES_KEY
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: AUTOPY_ADMIN_USERNAME
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: AUTOPY_ADMIN_PASSWORD
+        - name: APPLICATION_ROOT
+          value: /autopy
+        - name: SCRIPT_NAME
+          value: /autopy
+        - name: AUTOPY_URL
+          value: https://{{.Values.letsencryptDomain}}/autopy
+        - name: FILES_ROOT
+          value: /files
+        resources: {}
+        volumeMounts:
+          - mountPath: /files
+            name: autopy-server-files
+      volumes:
+      - name: autopy-server-files
+        persistentVolumeClaim:
+          claimName: autopy-server-files
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    service: autopy-server-files
+  name: autopy-server-files
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{.Values.autopyStorageSize}}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    service: autopy-server
+  name: autopy-server
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 5000
+  selector:
+    service: autopy-server
+status:
+  loadBalancer: {}
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: autopy-server
+spec:
+  maxReplicas: 10
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: autopy-server
+  targetCPUUtilizationPercentage: 75

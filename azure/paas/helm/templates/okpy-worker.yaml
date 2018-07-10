@@ -1,0 +1,106 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    service: okpy-worker
+  name: okpy-worker
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: okpy-worker
+    spec:
+      containers:
+      - name: okpy-worker
+        image: {{.Values.dockerRegistry}}/cs61a/ok-server:{{.Values.dockerTag}}
+        command: ["./worker.py"]
+        imagePullPolicy: Always
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: MYSQL_URI
+        - name: DB_ROW_FORMAT
+          value: default
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: REDIS_URI
+        - name: STORAGE_PROVIDER
+          value: AZURE_BLOBS
+        - name: STORAGE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_NAME
+        - name: STORAGE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_KEY
+        - name: STORAGE_CONTAINER
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: STORAGE_CONTAINER
+        - name: OK_ENV
+          value: {{.Values.okEnv}}
+        - name: SENDGRID_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sendgrid
+              key: SENDGRID_KEY
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          valueFrom:
+            secretKeyRef:
+              name: appinsights
+              key: APPLICATION_INSIGHTS_KEY
+        - name: MICROSOFT_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_APP_ID
+        - name: MICROSOFT_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_APP_KEY
+        - name: MICROSOFT_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: login
+              key: ACTIVE_DIRECTORY_TENANT_ID
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: okpyconf
+              key: FLASK_SECRET_KEY
+        - name: AUTOGRADER_URL
+          value: https://{{.Values.letsencryptDomain}}/autopy
+        - name: APPLICATION_ROOT
+          value: /okpy
+        - name: SCRIPT_NAME
+          value: /okpy
+        resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: okpy-worker
+spec:
+  maxReplicas: 20
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: okpy-worker
+  targetCPUUtilizationPercentage: 75

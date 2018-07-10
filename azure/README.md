@@ -53,8 +53,6 @@ environment variables:
 REDIS_URL=rediss://:{Password}@{CacheName}.redis.cache.windows.net:6380/0
 ```
 
-Please node this issue which may require manual regeneration of the Redis key: [https://github.com/Cal-CS-61A-Staff/ok/issues/1279](https://github.com/Cal-CS-61A-Staff/ok/issues/1279)
-
 ## Azure Application Insights
 
 The [Azure Application Insights](https://azure.microsoft.com/en-gb/services/application-insights/) logging and telemetry

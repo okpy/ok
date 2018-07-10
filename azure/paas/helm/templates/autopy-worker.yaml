@@ -1,0 +1,97 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    service: autopy-worker
+  name: autopy-worker
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: autopy-worker
+    spec:
+      containers:
+      - name: autopy-worker
+        image: {{.Values.dockerRegistry}}/cs61a/autopy_worker:{{.Values.dockerTag}}
+        imagePullPolicy: Always
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: REDIS_URI
+        - name: AGFILES_KEY
+          valueFrom:
+            secretKeyRef:
+              name: autopyconf
+              key: AGFILES_KEY
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          valueFrom:
+            secretKeyRef:
+              name: appinsights
+              key: APPLICATION_INSIGHTS_KEY
+        - name: OKPY_V3_URL
+          value: https://{{.Values.letsencryptDomain}}/okpy
+        - name: DOCKER_RUNNER
+          value: docker_runner.aci.DockerRunner
+        - name: ACI_AUTH_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: SP_APP_ID
+        - name: ACI_AUTH_APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: SP_APP_KEY
+        - name: ACI_AUTH_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: SP_TENANT_ID
+        - name: ACI_AUTH_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: SP_SUBSCRIPTION_ID
+        - name: ACI_STORAGE_ACCOUNT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_NAME
+        - name: ACI_STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_ACCOUNT_KEY
+        - name: ACI_RESOURCE_GROUP_NAME
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: RESOURCE_GROUP_NAME
+        - name: ACI_RESOURCE_GROUP_LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: serviceprincipal
+              key: RESOURCE_GROUP_LOCATION
+        resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: autopy-worker
+spec:
+  maxReplicas: 20
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: autopy-worker
+  targetCPUUtilizationPercentage: 75

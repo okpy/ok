@@ -1,0 +1,9 @@
+dependencies:
+
+- name: nginx-ingress
+  repository: "@stable"
+  version: 0.19.2
+
+- name: kube-lego
+  repository: "@stable"
+  version: 0.4.2

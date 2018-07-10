@@ -34,10 +34,10 @@ GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
+APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '/')
+
 AUTOGRADER_URL = os.getenv('AUTOGRADER_URL', 'https://autograder.cs61a.org')
 
-SENDGRID_USERNAME = os.getenv("SENDGRID_USERNAME")
-SENDGRID_PASSWORD = os.getenv("SENDGRID_PASSWORD")
 SENDGRID_KEY = os.getenv("SENDGRID_KEY")
 
 FORBIDDEN_ROUTE_NAMES = [
