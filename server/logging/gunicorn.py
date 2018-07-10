@@ -28,7 +28,7 @@ class ProcessCloudLogger:
     def __init__(self):
         self.logger_pid = None
         self.logger = None
-        self.log_name = os.environ.get('GOOGLE_LOG_NAME', 'ok-default')
+        self.log_name = os.getenv('GOOGLE_LOG_NAME', 'ok-default')
 
     def get_instance(self):
         pid = os.getpid()

@@ -15,7 +15,7 @@ from server.models import db, User, Course, Version
 from server.extensions import assets_env, cache
 
 # default to dev config
-env = os.environ.get('OK_ENV', 'dev')
+env = os.getenv('OK_ENV', 'dev')
 app = create_app(env)
 
 migrate = Migrate(app, db)
