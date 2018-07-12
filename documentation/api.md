@@ -9,7 +9,7 @@ The Ok Server API provides a variety of endpoints to interact with the Ok Server
 ## Authentication
 
 Ok uses access tokens to allow access to the API. To obtain a token for a specific account, use the ok-client
-to login with your Google account. Download the latest version of ok from the [GitHub Releases](https://github.com/Cal-CS-61A-Staff/ok-client/releases/) or from [cs61a.org/ok](http://cs61a.org/ok)
+to login with your Google account. Download the latest version of ok from the [GitHub Releases](https://github.com/okpy/ok-client/releases/) or from [cs61a.org/ok](http://cs61a.org/ok)
 
 Then run the following command
 `python3 ok --get-token`
@@ -70,7 +70,7 @@ curl "https://okpy.org/api/v3/"
     "code": 200,
     "message": "success",
     "data": {
-        "github": "https://github.com/Cal-CS-61A-Staff/ok",
+        "github": "https://github.com/okpy/ok",
         "url": "/api/v3/",
         "version": "v3",
         "documentation": "https://okpy.github.io/documentation"
@@ -99,7 +99,7 @@ curl "https://okpy.org/api/v3/version"
         "results": [
             {
                 "name": "ok-client",
-                "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.6.14/ok",
+                "download_link": "https://github.com/okpy/ok-client/releases/download/v1.6.14/ok",
                 "current_version": "v1.6.14"
             }
         ]

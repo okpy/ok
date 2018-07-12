@@ -13,7 +13,7 @@ def documentation():
 
 @about.route('/github/')
 def github():
-    return redirect('https://github.com/Cal-CS-61A-Staff/ok')
+    return redirect('https://github.com/okpy/ok')
 
 @about.route('/publications/')
 def research():

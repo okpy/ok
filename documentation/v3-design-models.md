@@ -10,7 +10,7 @@ See `models.py` for the most recent version of these models. This is intended as
   - Still leaning towards having the FS table - but not presenting it as a "Concept" to users. Users will just see a checkmark ✅ next to their submission.
 
 - Groups:
-  -  We have a list of constraints for groups on the [Wiki](https://github.com/Cal-CS-61A-Staff/ok/wiki/Group-&-Submission-Consistency)
+  -  We have a list of constraints for groups on the [Wiki](https://github.com/okpy/ok/wiki/Group-&-Submission-Consistency)
   -  What if we associate submissions & backups with groups?
     -   Makes it easier to get submissions (though not by much)
     -   Handling group transitions while maintaining the full list of constraints above will be hard.
@@ -232,7 +232,7 @@ class Group(db.Model, TimestampMixin):
     Members of a group can view each other's submissions.
 
     Specification:
-    https://github.com/Cal-CS-61A-Staff/ok/wiki/Group-&-Submission-Consistency
+    https://github.com/okpy/ok/wiki/Group-&-Submission-Consistency
     """
     id = db.Column(db.Integer(), primary_key=True)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)

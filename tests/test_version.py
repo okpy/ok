@@ -26,7 +26,7 @@ class TestVersion(OkTestCase):
 
         data = {
             "current_version": "v1.6.0",
-            "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok"
+            "download_link": "https://github.com/okpy/ok-client/releases/download/v1.5.4/ok"
         }
 
         response = self.client.post('/admin/versions/ok-client',
@@ -56,7 +56,7 @@ class TestVersion(OkTestCase):
 
         data = {
             "current_version": "v1.6.0",
-            "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok"
+            "download_link": "https://github.com/okpy/ok-client/releases/download/v1.5.4/ok"
         }
 
         response = self.client.post('/admin/versions/ok-client', data=data)
