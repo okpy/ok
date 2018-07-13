@@ -10,7 +10,7 @@ For more information about OAuth2, refer to these documents: [OAuth2 Simplified]
 
 [Demo of OK OAuth >](https://ok-oauth.app.cs61a.org)
 
-> [Demo Source Code >](https://github.com/Cal-CS-61A-Staff/ok/blob/master/documentation/sample_oauth.py)
+> [Demo Source Code >](https://github.com/okpy/ok/blob/master/documentation/sample_oauth.py)
 
 ## Registering an OAuth Client
 >> <h3>Demo App Redirect URIs</h3>
@@ -64,8 +64,8 @@ Parameter | URL
 
 ## Sample OK OAuth Client
 
-A functional OAuth Login implementation is provided [in the OK repo](https://github.com/Cal-CS-61A-Staff/ok/blob/master/documentation/sample_oauth.py).
-> [Example App Source Code >](https://github.com/Cal-CS-61A-Staff/ok/blob/master/documentation/sample_oauth.py)
+A functional OAuth Login implementation is provided [in the OK repo](https://github.com/okpy/ok/blob/master/documentation/sample_oauth.py).
+> [Example App Source Code >](https://github.com/okpy/ok/blob/master/documentation/sample_oauth.py)
 
 If you are using Python & Flask OAuthLib an example config is provided here.
 

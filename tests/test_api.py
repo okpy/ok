@@ -96,7 +96,7 @@ class TestApi(OkTestCase):
             'version': 'v3',
             'url': '/api/v3/',
             'documentation': 'https://okpy.github.io/documentation',
-            'github': 'https://github.com/Cal-CS-61A-Staff/ok'
+            'github': 'https://github.com/okpy/ok'
         }
         assert response.json['message'] == 'success'
         assert response.json['code'] == 200

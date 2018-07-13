@@ -594,7 +594,7 @@ if driver:
 
 
         # Commented out because this job occasionally times out on CI.
-        # https://github.com/Cal-CS-61A-Staff/ok/issues/1113
+        # https://github.com/okpy/ok/issues/1113
         # def test_job(self):
         #     self._login_as(self.staff1.email)
 
