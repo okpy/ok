@@ -78,6 +78,8 @@ spec:
             secretKeyRef:
               name: serviceprincipal
               key: RESOURCE_GROUP_LOCATION
+        - name: AUTOPY_LOG_LEVEL
+          value: {{.Values.logLevel}}
         resources: {}
       restartPolicy: Always
 status: {}
