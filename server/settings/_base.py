@@ -14,6 +14,8 @@ def initialize_config(cls):
 class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
 
+    LOG_LEVEL = os.getenv('OKPY_LOG_LEVEL', 'INFO')
+
     DEBUG = False
     ASSETS_DEBUG = False
     TESTING_LOGIN = False

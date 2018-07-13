@@ -72,6 +72,8 @@ spec:
           value: https://{{.Values.letsencryptDomain}}/autopy
         - name: FILES_ROOT
           value: /files
+        - name: AUTOPY_LOG_LEVEL
+          value: {{.Values.logLevel}}
         resources: {}
         volumeMounts:
           - mountPath: /files
