@@ -3,6 +3,7 @@ jinja2==2.9.6
 
 # WSGI Containers
 gunicorn==19.7.1
+envdir==1.0.1
 
 # Errors
 raven[flask]==6.0.0

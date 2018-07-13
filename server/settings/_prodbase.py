@@ -15,13 +15,13 @@ class Config(object):
 
     CACHE_TYPE = 'simple'
 
-    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+    STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER', 'ok-v3-user-files')
 
     RAVEN_IGNORE_EXCEPTIONS = raven_exceptions
 
-    if os.environ.get("GOOGLE_ID") and os.environ.get("GOOGLE_SECRET"):
+    if os.getenv("GOOGLE_ID") and os.getenv("GOOGLE_SECRET"):
         OAUTH_PROVIDER = 'GOOGLE'
-    elif os.environ.get("MICROSOFT_APP_ID") and os.environ.get("MICROSOFT_APP_SECRET"):
+    elif os.getenv("MICROSOFT_APP_ID") and os.getenv("MICROSOFT_APP_SECRET"):
         OAUTH_PROVIDER = 'MICROSOFT'
     else:
         print("Please set the Google or Microsoft OAuth ID and Secret variables.")

@@ -11,7 +11,7 @@ from server.settings._prodbase import Config as ProdBaseConfig
 class Config(ProdBaseConfig, BaseConfig):
     ENV = 'prod'
 
-    STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'GOOGLE_STORAGE')
+    STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'GOOGLE_STORAGE')
 
     MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # Max Upload Size is 30MB
 

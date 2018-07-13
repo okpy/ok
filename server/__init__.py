@@ -39,9 +39,8 @@ def create_app(environment_name=None):
 
     app = Flask(__name__)
 
-    env_module_path = os.getenv(
-        'OK_SERVER_CONFIG',
-        'server.settings.{}'.format(environment_name))
+    env_module_path = os.getenv('OK_SERVER_CONFIG',
+                                'server.settings.{}'.format(environment_name))
 
     if '/' in env_module_path:
         env_module_path = env_module_path.replace('/', '.')

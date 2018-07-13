@@ -1,5 +1,4 @@
-import datetime
-import json
+from datetime import datetime
 import logging
 import os
 import traceback
@@ -28,7 +27,7 @@ class ProcessCloudLogger:
     def __init__(self):
         self.logger_pid = None
         self.logger = None
-        self.log_name = os.environ.get('GOOGLE_LOG_NAME', 'ok-default')
+        self.log_name = os.getenv('GOOGLE_LOG_NAME', 'ok-default')
 
     def get_instance(self):
         pid = os.getpid()
@@ -83,7 +82,7 @@ class Logger(gunicorn.glogging.Logger):
         status = resp.status
         if isinstance(status, str):
             status = status.split(None, 1)[0]
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
 
         level = logging.NOTSET
         message = {
@@ -105,7 +104,7 @@ class Logger(gunicorn.glogging.Logger):
             message['urlMapEntry'] = request_log.endpoint
             message['line'] = [
                 {
-                    'time': format_time(datetime.datetime.utcfromtimestamp(record.created)),
+                    'time': format_time(datetime.utcfromtimestamp(record.created)),
                     'severity': record.levelname,
                     'logMessage': access_formatter.format(record),
                     # The log viewer only wants real App Engine files, so we
@@ -128,5 +127,10 @@ class Logger(gunicorn.glogging.Logger):
         self.cloud_logger.log_proto(struct_pb, severity=severity)
 
 
+try:
+    client = gcloud.logging.Client()
+except Exception:
+    Logger = gunicorn.glogging.Logger  # noqa: F811
+
 if os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY'):
-    Logger = gunicorn.glogging.Logger
+    Logger = gunicorn.glogging.Logger  # noqa: F811

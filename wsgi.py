@@ -4,5 +4,5 @@
 import os
 from server import create_app
 
-env = os.environ.get('OK_ENV', 'dev')
+env = os.getenv('OK_ENV', 'dev')
 app = create_app(env)
