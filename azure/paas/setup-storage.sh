@@ -29,10 +29,12 @@ az group deployment create \
 #
 
 storage_key="$(jq -r '.properties.outputs.storageKey.value' "${deployment_log}")"
+storage_connection_string="DefaultEndpointsProtocol=https;AccountName=${storage_name};AccountKey=${storage_key};EndpointSuffix=core.windows.net"
 
 cat > ./secrets/storage.env << EOF
 STORAGE_ACCOUNT_NAME=${storage_name}
 STORAGE_ACCOUNT_KEY=${storage_key}
+STORAGE_CONNECTION_STRING=${storage_connection_string}
 EOF
 
 log "Done with ${storage_name}"

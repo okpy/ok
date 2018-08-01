@@ -3,7 +3,6 @@
 dockerTag: latest
 dockerRegistry: changeme
 okEnv: prod
-autopyStorageSize: 1Gi
 logLevel: INFO
 
 # tls settings

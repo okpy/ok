@@ -71,33 +71,16 @@ spec:
         - name: AUTOPY_URL
           value: https://{{.Values.letsencryptDomain}}/autopy
         - name: FILES_ROOT
-          value: /files
+          value: agfiles
+        - name: AZURE_STORAGE_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: STORAGE_CONNECTION_STRING
         - name: AUTOPY_LOG_LEVEL
           value: {{.Values.logLevel}}
         resources: {}
-        volumeMounts:
-          - mountPath: /files
-            name: autopy-server-files
-      volumes:
-      - name: autopy-server-files
-        persistentVolumeClaim:
-          claimName: autopy-server-files
       restartPolicy: Always
-status: {}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  creationTimestamp: null
-  labels:
-    service: autopy-server-files
-  name: autopy-server-files
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{.Values.autopyStorageSize}}
 status: {}
 ---
 apiVersion: v1
