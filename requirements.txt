@@ -34,8 +34,8 @@ Flask-Login==0.4.0
 # File Storage
 lockfile==0.12.2 # For local storage
 # apache-libcloud==2.3.0
-# Branch that contains a fix for Azure stream blob upload - use until a fix for https://issues.apache.org/jira/projects/LIBCLOUD/issues/LIBCLOUD-993 is published
-https://github.com/jmspring/libcloud/archive/issue_933_azure_crash_v2.3.0-base.zip
+# libcloud with fixes for azure storage, remove when apache-libcloud>2.3.0 is published
+https://github.com/apache/libcloud/archive/9039968249cba20a546e5d1eb54ad2efbfa79f43.zip
 
 # OAuth
 
