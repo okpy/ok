@@ -16,7 +16,7 @@ sqlalchemy==1.2.8
 redis==2.10.5
 
 # Job Queue
-rq==0.5.3
+rq==0.12
 rq-dashboard==0.3.7 # pyup: != 0.3.8
 
 # Forms
@@ -82,7 +82,7 @@ bleach==2.0.0
 gcloud==0.18.3
 
 # Azure logging
-applicationinsights==0.11.3
+applicationinsights==0.11.7
 
 # Azure Storage
 azure-storage-blob==1.1.0
