@@ -1448,10 +1448,10 @@ def student_view(cid, email):
         else:
             email, role = form.email.data, form.role.data
             Enrollment.enroll_from_form(cid, form)
-            flash("Edited User Successfully", 'success')
+            flash('Edited User Successfully', 'success')
     else:
         if form.is_submitted():
-            flash("There is an issue with your request.", 'error')
+            flash('There is an issue with your request.', 'error')
 
     courses, current_course = get_courses(cid)
     assignments = current_course.assignments
