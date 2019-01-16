@@ -1,5 +1,6 @@
 {% extends "staff/base.html" %}
 {% import "_globalhelpers.html" as helpers %}
+{% import 'staff/_formhelpers.html' as forms %}
 
 {% block title %} {{ student.identifier }} - {{ current_course.display_name_with_semester }}{% endblock %}
 
@@ -96,6 +97,34 @@
           {% endwith %}
         </div>
       </div>
+
+      <!-- Box -->
+      <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">Edit Participant</h3>
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="box-body">
+            <!-- form goes here -->
+            {% call forms.render_form(form, action_url=url_for('.student_view', cid=current_course.id, email=student.email), action_text='Submit',
+            class_='form') %}
+                {{ forms.render_field(form.name, label_visible=true, placeholder='Name', required="required", type='text', value=(student.name or "")) }}
+                {{ forms.render_field(form.email, label_visible=true, required="required", value=student.email, readonly="readonly") }}
+                {{ forms.render_field(form.sid, label_visible=true, placeholder='1234567', type='text', value=(enrollment.sid or "")) }}
+                {{ forms.render_field(form.secondary, label_visible=true, placeholder='cs61a-abc', type='text', value=(enrollment.class_account or "")) }}
+                {{ forms.render_field(form.section, label_visible=true, placeholder='', type='text', value=(enrollment.section or "")) }}
+                {{ forms.render_field(form.role, label_visible=true) }}
+            {% endcall %}
+        </div>
+        <!-- /.box-body -->
+        <!-- /.box-footer-->
+    </div>
+    <!-- /.box -->
+
   </section>
 
   <!-- </body> do not close body in template-->

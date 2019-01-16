@@ -1437,9 +1437,22 @@ def client(client_id):
 # Student View #
 ################
 
-@admin.route("/course/<int:cid>/<string:email>")
+@admin.route("/course/<int:cid>/<string:email>", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def student_view(cid, email):
+
+    form = forms.EnrollmentForm()
+    if form.validate_on_submit():
+        if form.email.data != email:
+            flash("You cannot change the user's email.", 'error')
+        else:
+            email, role = form.email.data, form.role.data
+            Enrollment.enroll_from_form(cid, form)
+            flash("Edited User Successfully", 'success')
+    else:
+        if form.is_submitted():
+            flash("There is an issue with your request.", 'error')
+
     courses, current_course = get_courses(cid)
     assignments = current_course.assignments
 
@@ -1466,7 +1479,7 @@ def student_view(cid, email):
     return render_template('staff/student/overview.html',
                            courses=courses, current_course=current_course,
                            student=student, enrollment=enrollment,
-                           assignments=assignments, moss_results=moss_results)
+                           assignments=assignments, moss_results=moss_results, form=form)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
 @is_staff(course_arg='cid')
