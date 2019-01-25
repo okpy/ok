@@ -36,6 +36,8 @@ ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
 APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '/')
 
+# The default autograder url to inject into database
+# Each course can configure their own autograder url later
 AUTOGRADER_URL = os.getenv('AUTOGRADER_URL', 'https://autograder.cs61a.org')
 
 SENDGRID_KEY = os.getenv("SENDGRID_KEY")
