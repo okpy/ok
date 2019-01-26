@@ -16,7 +16,10 @@ RUN mkdir /code/
 WORKDIR /code/
 
 ADD requirements.txt .
-RUN pip3 --timeout=60 install --no-cache-dir -r requirements.txt
+
+# Adding --no-use-pep51 due to build error with pip 19.0.1
+# https://gist.github.com/dmulter/38330962002d28533d7dd7c1a70ee4f5
+RUN pip3 --timeout=60 install --no-cache-dir --no-use-pep51 -r requirements.txt
 
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
