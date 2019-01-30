@@ -30,7 +30,7 @@ import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
                               SCORE_KINDS, OAUTH_OUT_OF_BAND_URI,
-                              INSTRUCTOR_ROLE, ROLE_DISPLAY_NAMES)
+                              INSTRUCTOR_ROLE, ROLE_DISPLAY_NAMES, AUTOGRADER_URL)
 
 from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
@@ -256,6 +256,7 @@ class Course(Model):
     website = db.Column(db.String(255))
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
+    autograder_url = db.Column(db.String(255), server_default=AUTOGRADER_URL)
 
     @classmethod
     def can(cls, obj, user, action):

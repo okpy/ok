@@ -25,7 +25,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
 from server.contrib import analyze
 
 from server.constants import (EMAIL_FORMAT, INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, SCORE_KINDS, AUTOGRADER_URL)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
 import server.canvas.api as canvas_api
 import server.canvas.jobs
 from server.extensions import cache
@@ -558,7 +558,7 @@ def assignment(cid, aid):
         flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
-                           form=form, courses=courses, autograder_url=AUTOGRADER_URL,
+                           form=form, courses=courses, autograder_url=current_course.autograder_url,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
@@ -691,7 +691,7 @@ def view_scores(cid, aid):
         bar_charts[kind] = bar_chart.render().decode("utf-8")
 
     return render_template('staff/course/assignment/assignment.scores.html',
-                           autograder_url=AUTOGRADER_URL,
+                           autograder_url=current_course.autograder_url,
                            assignment=assign, current_course=current_course,
                            courses=courses, scores=all_scores,
                            score_plots=bar_charts)

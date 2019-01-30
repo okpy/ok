@@ -14,14 +14,14 @@ import oauthlib.common
 import requests
 
 from server import constants, jobs, utils
-from server.models import User, Assignment, Backup, Client, Score, Token, db
+from server.models import User, Assignment, Backup, Client, Score, Token, Course, db
 
 logger = logging.getLogger(__name__)
 
-def send_autograder(endpoint, data):
+def send_autograder(endpoint, data, autograder_url):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-    r = requests.post(constants.AUTOGRADER_URL + endpoint,
+    r = requests.post(autograder_url + endpoint,
                       data=json.dumps(data), headers=headers, timeout=8)
 
     if r.status_code == requests.codes.ok:
@@ -74,7 +74,7 @@ def send_batch(token, assignment, backup_ids, priority='default'):
         'access_token': token.access_token,
         'priority': priority,
         'ok-server-version': 'v3',
-    })
+    }, autograder_url=assignment.course.autograder_url)
     if response_json:
         return dict(zip(backup_ids, response_json['jobs']))
     else:
@@ -103,18 +103,20 @@ def submit_continuous(backup):
         'emails': [User.email_by_id(oid) for oid in backup.owners()]
     }
 
+    autograder_url = assignment.course.autograder_url
+
     if not backup.submitter.is_enrolled(assignment.course_id):
         raise ValueError("User is not enrolled and cannot be autograded")
 
-    return send_autograder('/api/file/grade/continous', data)
+    return send_autograder('/api/file/grade/continous', data, autograder_url=autograder_url)
 
-def check_job_results(job_ids):
+def check_job_results(job_ids, autograder_url):
     """Given a list of autograder job IDs, return a dict mapping job IDs to
     either null (if the job does not exist) of a dict with keys
         status: one of 'queued', 'finished', 'failed', 'started', 'deferred'
         result: string
     """
-    return send_autograder('/results', job_ids)
+    return send_autograder('/results', job_ids, autograder_url)
 
 GradingStatus = enum.Enum('GradingStatus', [
     'QUEUED',   # a job is queued
@@ -164,6 +166,8 @@ def autograde_backups(assignment, user_id, backup_ids, logger):
     ]
     num_tasks = len(tasks)
 
+    autograder_url = assignment.course.autograder_url
+
     def retry_task(task):
         if task.retries >= MAX_RETRIES:
             logger.error('Did not receive a score for backup {} after {} retries'.format(
@@ -176,7 +180,7 @@ def autograde_backups(assignment, user_id, backup_ids, logger):
 
     while True:
         time.sleep(POLL_INTERVAL)
-        results = check_job_results([task.job_id for task in tasks])
+        results = check_job_results([task.job_id for task in tasks], autograder_url)
 
         graded = len([task for task in tasks
             if task.status in (GradingStatus.DONE, GradingStatus.FAILED)])
