@@ -50,9 +50,9 @@ class CloudTestFile(TestFile, TestConfigMutationMixin):
     def setUpClass(cls):
         super().setUpClass()
 
-        storage_key = os.environ.get(cls.key_env_name)
-        storage_secret = os.environ.get(cls.secret_env_name)
-        storage_container = os.environ.get(cls.container_env_name)
+        storage_key = os.getenv(cls.key_env_name)
+        storage_secret = os.getenv(cls.secret_env_name)
+        storage_container = os.getenv(cls.container_env_name)
 
         if not storage_key or not storage_secret or not storage_container:
             raise unittest.SkipTest("Cloud storage credentials for {} not configured".format(cls.storage_provider))

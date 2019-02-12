@@ -87,6 +87,8 @@ spec:
           value: /okpy
         - name: SCRIPT_NAME
           value: /okpy
+        - name: OKPY_LOG_LEVEL
+          value: {{.Values.logLevel}}
         resources: {}
       restartPolicy: Always
 status: {}

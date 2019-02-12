@@ -28,8 +28,13 @@ def init_app(app):
     if app.debug:
         return
 
+    if __name__ != '__main__':
+        gunicorn_logger = logging.getLogger('gunicorn.error')
+        app.logger.handlers = gunicorn_logger.handlers
+        app.logger.setLevel(gunicorn_logger.level)
+
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(app.config['LOG_LEVEL'])
     root_logger.addHandler(RequestLogHandler())
     app.logger.propagate = True
 

@@ -92,18 +92,18 @@
         {{ filename }}
       </div>
       <div class="box-tools pull-right">
-          <button type="button" class="source-btn btn btn-box-tool">
+          <div class="source-btn btn btn-box-tool">
             <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename, raw=1) }}"
             class="no-dash dl-button source-file-download">
                 <i class="fa fa-eye"></i> Raw
             </a>
-          </button>
-          <button type="button" class="source-btn btn btn-box-tool">
+          </div>
+          <div class="source-btn btn btn-box-tool">
             <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
                 class="no-dash dl-button source-file-download">
                 <i class="fa fa-download"></i> Download
             </a>
-          </button>
+          </div>
           <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse">
               <i class="fa fa-minus"></i>
           </button>

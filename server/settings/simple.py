@@ -15,7 +15,8 @@ class Config(ProdBaseConfig, BaseConfig):
 
     CACHE_KEY_PREFIX = 'ok-web'
 
-    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER', os.path.abspath("./local-storage"))
+    STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER',
+                                  os.path.abspath("./local-storage"))
 
     @classmethod
     def get_default_db_url(cls):

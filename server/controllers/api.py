@@ -506,7 +506,7 @@ class V3Info(PublicResource):
             'version': API_VERSION,
             'url': '/api/{0}/'.format(API_VERSION),
             'documentation': 'https://okpy.github.io/documentation',
-            'github': 'https://github.com/Cal-CS-61A-Staff/ok'
+            'github': 'https://github.com/okpy/ok'
         }
 
 

@@ -6,9 +6,8 @@ services:
     image: cs61a/ok-server
     build: ..
     restart: always
-    command: /bin/bash -c "./manage.py resetdb && ./manage.py server"
     ports:
-      - "80:5000"
+      - 8080:5000
     volumes:
       - ..:/code
     links:

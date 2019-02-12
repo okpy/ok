@@ -6,7 +6,7 @@ These templates and scripts deploy [Ok.py](www.okpy.org) to Azure. In a producti
 
 The provided templates deploy everything within the Resource Group outlined below. Items outside the resource group are an indication as to how Ok.py can integrate with additional Azure services:
 
-![Azure PaaS Architecture](https://user-images.githubusercontent.com/1086421/42100204-91251e74-7b8d-11e8-8a89-88e917047270.png)
+![Azure PaaS Architecture](https://user-images.githubusercontent.com/1086421/43547159-75306220-95a8-11e8-8059-58c355fc32d0.png)
 
 ## Setup
 

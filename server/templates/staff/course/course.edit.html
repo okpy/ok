@@ -10,7 +10,7 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="url_for('.list_courses')"><i class="fa fa-list"></i> Courses </a></li>
+        <li><a href="{{ url_for('.list_courses') }}"><i class="fa fa-list"></i> Courses </a></li>
         <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
@@ -33,6 +33,7 @@
                     {{ forms.render_field(form.institution, label_visible=true, placeholder='UC Berkeley', type='text') }}
                     {{ forms.render_field(form.website, label_visible=true, placeholder='http://cs61a.org/', type='text') }}
                     <!-- {{ forms.render_field(form.timezone, label_visible=true, type='select') }} -->
+                    {{ forms.render_field(form.autograder_url, label_visible=true, value=current_course.autograder_url or 'https://autograder.cs61a.org/', type='text') }}
                     {{ forms.render_checkbox_field(form.active, label_visible=true) }}
                 {% endcall %}
               </div>

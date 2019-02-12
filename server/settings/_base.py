@@ -14,6 +14,8 @@ def initialize_config(cls):
 class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
 
+    LOG_LEVEL = os.getenv('OKPY_LOG_LEVEL', 'INFO')
+
     DEBUG = False
     ASSETS_DEBUG = False
     TESTING_LOGIN = False
@@ -23,9 +25,10 @@ class Config(object):
 
     STORAGE_SERVER = False
     STORAGE_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
-    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER', os.path.abspath("./local-storage"))
-    STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
-    STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '').replace('\\n', '\n')
+    STORAGE_CONTAINER = os.getenv('STORAGE_CONTAINER',
+                                  os.path.abspath("./local-storage"))
+    STORAGE_KEY = os.getenv('STORAGE_KEY', '')
+    STORAGE_SECRET = os.getenv('STORAGE_SECRET', '').replace('\\n', '\n')
 
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv('APPINSIGHTS_INSTRUMENTATIONKEY')
 
@@ -33,8 +36,8 @@ class Config(object):
 
     # Service Keys
     GOOGLE = dict(
-        consumer_key=os.environ.get('GOOGLE_ID'),
-        consumer_secret=os.environ.get('GOOGLE_SECRET'),
+        consumer_key=os.getenv('GOOGLE_ID'),
+        consumer_secret=os.getenv('GOOGLE_SECRET'),
         base_url='https://www.googleapis.com/oauth2/v3/',
         access_token_url='https://accounts.google.com/o/oauth2/token',
         authorize_url='https://accounts.google.com/o/oauth2/auth',
@@ -51,16 +54,16 @@ class Config(object):
     # Don't use 'common' as the AAD Endpoint as that will allow MSA, and non guest users to logon
     # when Tenant is set to the AAD Tenant name, this restricts users and guest users
     MICROSOFT = dict(
-        consumer_key=os.environ.get('MICROSOFT_APP_ID'),
-        consumer_secret=os.environ.get('MICROSOFT_APP_SECRET'),
-        tenent_id=os.environ.get('MICROSOFT_TENANT_ID'),
+        consumer_key=os.getenv('MICROSOFT_APP_ID'),
+        consumer_secret=os.getenv('MICROSOFT_APP_SECRET'),
+        tenent_id=os.getenv('MICROSOFT_TENANT_ID'),
         base_url='https://graph.microsoft.com/v1.0/',
         request_token_url=None,
         access_token_method='POST',
-        access_token_url='https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token' \
-            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID')),
-        authorize_url='https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize' \
-            .format(tenant_id=os.environ.get('MICROSOFT_TENANT_ID')),
+        access_token_url=('https://login.microsoftonline.com/{}/oauth2/v2.0/token'
+                          .format(os.getenv('MICROSOFT_TENANT_ID'))),
+        authorize_url=('https://login.microsoftonline.com/{}/oauth2/v2.0/authorize'
+                       .format(os.getenv('MICROSOFT_TENANT_ID'))),
         request_token_params={'scope': 'offline_access User.Read'}
     )
 

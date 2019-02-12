@@ -321,7 +321,7 @@ def seed_backups():
 
 def seed_versions():
     print('Seeding version...')
-    url = 'https://github.com/Cal-CS-61A-Staff/ok-client0/releases/download/v1.5.5/ok'
+    url = 'https://github.com/okpy/ok-client0/releases/download/v1.5.5/ok'
     ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
     db.session.add(ok)
 

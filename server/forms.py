@@ -648,6 +648,8 @@ class NewCourseForm(BaseForm):
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones],
                            default=TIMEZONE)
+    autograder_url = StringField('Autograder Endpoint (Optional)',
+                           validators=[validators.optional(), validators.url()])
 
     def validate(self):
         # if our validators do not pass
@@ -674,6 +676,8 @@ class CourseUpdateForm(BaseForm):
                           validators=[validators.optional(), validators.url()])
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
+    autograder_url = StringField('Autograder Endpoint (Optional)',
+                           validators=[validators.optional(), validators.url()])
 
 class PublishScores(BaseForm):
     published_scores = MultiCheckboxField(
