@@ -229,6 +229,12 @@ class User(Model, UserMixin):
                                  .filter(Enrollment.role.in_(STAFF_ROLES)))
         return query.count() > 0
 
+    @transaction
+    def update_email(self, email):
+        self.email = email
+        db.session.commit()        
+        return self
+
     @staticmethod
     def get_by_id(uid):
         """ Performs .query.get; potentially can be cached."""

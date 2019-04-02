@@ -1333,7 +1333,7 @@ def unenrollment(cid, user_id):
         flash("Unknown user", "warning")
 
     return redirect(url_for(".enrollment", cid=cid))
-
+        
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -1440,13 +1440,21 @@ def client(client_id):
 @admin.route("/course/<int:cid>/<string:email>", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def student_view(cid, email):
-
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
         if form.email.data != email:
-            flash("You cannot change the user's email.", 'error')
+
+            #Temporarily override the form's email data to update enrollment
+            new_email = form.email.data
+            form.email.data = email
+            Enrollment.enroll_from_form(cid, form)
+
+            #Modify usere's email using submitted data
+            user = User.lookup(email)
+            user.update_email(new_email)
+            flash('Edited User Successfully', 'success')
+            return redirect(url_for("admin.student_view", cid = cid, email = new_email), code=301)
         else:
-            email, role = form.email.data, form.role.data
             Enrollment.enroll_from_form(cid, form)
             flash('Edited User Successfully', 'success')
     else:
