@@ -1333,7 +1333,7 @@ def unenrollment(cid, user_id):
         flash("Unknown user", "warning")
 
     return redirect(url_for(".enrollment", cid=cid))
-        
+
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -1449,7 +1449,7 @@ def student_view(cid, email):
             form.email.data = email
             Enrollment.enroll_from_form(cid, form)
 
-            #Modify usere's email using submitted data
+            #Modify user's email using submitted data
             user = User.lookup(email)
             user.update_email(new_email)
             flash('Edited User Successfully', 'success')
