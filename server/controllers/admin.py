@@ -10,6 +10,8 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 from werkzeug.exceptions import BadRequest
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
@@ -1442,8 +1444,7 @@ def client(client_id):
 def student_view(cid, email):
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
-        if form.email.data != email:
-
+        if form.email.data != email:         
             #Temporarily override the form's email data to update enrollment
             new_email = form.email.data
             form.email.data = email
@@ -1451,8 +1452,13 @@ def student_view(cid, email):
 
             #Modify user's email using submitted data
             user = User.lookup(email)
-            user.update_email(new_email)
-            flash('Edited User Successfully', 'success')
+            try:
+                user.update_email(new_email)
+                flash('Edited User Successfully', 'success')
+            except SQLAlchemyError:
+                flash('Error modifying user email. Please ensure the new email is unique.', 'error')
+                new_email = email
+
             return redirect(url_for("admin.student_view", cid = cid, email = new_email), code=301)
         else:
             Enrollment.enroll_from_form(cid, form)
