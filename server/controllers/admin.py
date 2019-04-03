@@ -1445,7 +1445,7 @@ def student_view(cid, email):
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
         if form.email.data != email:         
-            #Temporarily override the form's email data to update enrollment
+            #Temporarily override the form's email data to update enrollment first
             new_email = form.email.data
             form.email.data = email
             Enrollment.enroll_from_form(cid, form)
