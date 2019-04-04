@@ -1450,7 +1450,7 @@ def student_view(cid, email):
 
             try:
                 if len(user.enrollments(roles=STAFF_ROLES)) > 0 or user.is_admin:
-                    raise Forbidden("Modifying course staff or administrator emails is not permitted")
+                    raise Forbidden("Modifying a course staff or administrator's email is not permitted")
                 user.update_email(new_email)
                 flash('Edited User Successfully', 'success')
             except SQLAlchemyError:
