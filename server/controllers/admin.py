@@ -184,6 +184,16 @@ def grading_view(backup, form=None, is_composition=False):
                            backup=backup, group=group, files=files, diff_type=diff_type,
                            task=task, form=form, is_composition=is_composition)
 
+@admin.route('/delete_backup/<hashid:bid>', methods=["POST"])
+@is_staff()
+def delete_backup(bid):
+    backup = Backup.query.get(bid)
+    if not backup:
+        abort(404)
+
+    db.session.delete(backup)
+    db.session.commit()
+
 @admin.route('/grading/<hashid:bid>')
 @is_staff()
 def grading(bid):

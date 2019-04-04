@@ -201,7 +201,7 @@
                       <th>Submitter</th>
                       <th>ID</th>
                       <th>Scores</th>
-                      <th>Action</th>
+                      <th>Actions</th>
                       <th>Flag</th>
                     </thead>
                     <tbody>
@@ -231,6 +231,9 @@
                               <a href="{{ url_for('.grading', bid=item.id, diff='short') }}" class="btn btn-primary btn-flat">
                                   Grade
                               </a>
+                              <a href="{{ url_for('.delete_backup', bid=item.id, diff='short') }}" class="btn btn-danger btn-flat">
+                                Delete
+                            </a>
                             </div>
                             </td>
                             <td>
