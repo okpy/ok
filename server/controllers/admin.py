@@ -8,7 +8,9 @@ from io import StringIO
 
 from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
+
+from sqlalchemy.exc import SQLAlchemyError
 
 from flask_login import current_user, login_required
 import pygal
@@ -1440,13 +1442,27 @@ def client(client_id):
 @admin.route("/course/<int:cid>/<string:email>", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def student_view(cid, email):
-
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
-        if form.email.data != email:
-            flash("You cannot change the user's email.", 'error')
+        if form.email.data != email:         
+            user = User.lookup(email)
+            new_email = form.email.data
+
+            try:
+                if len(user.enrollments(roles=STAFF_ROLES)) > 0 or user.is_admin:
+                    raise Forbidden("Modifying a course staff or administrator's email is not permitted")
+                user.update_email(new_email)
+                flash('Edited User Successfully', 'success')
+            except SQLAlchemyError:
+                flash('Error modifying user email. Please ensure the new email is unique.', 'error')
+                return redirect(request.url)
+            except Forbidden as e:
+                flash(e.description, 'error')
+                return redirect(request.url)
+                
+            Enrollment.enroll_from_form(cid, form)
+            return redirect(url_for("admin.student_view", cid = cid, email = new_email), code=301)
         else:
-            email, role = form.email.data, form.role.data
             Enrollment.enroll_from_form(cid, form)
             flash('Edited User Successfully', 'success')
     else:
