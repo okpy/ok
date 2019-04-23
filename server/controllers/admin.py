@@ -1480,6 +1480,10 @@ def student_view(cid, email):
     if not enrollment:
         flash("This email is not enrolled", 'warning')
 
+    # Change the value in the "role" select to not default to STUDENT_ROLE
+    form.role.default = enrollment.role
+    form.process()
+
     assignments = {
         'active': [a.user_status(student, staff_view=True) for a in assignments
                    if a.active],
