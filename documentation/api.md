@@ -284,7 +284,7 @@ access_token | None | (Required) Access Token of staff member
 
 #### Response
 Name | Type | Description
----------- | -------
+---------- | ------- | ---
 due_date | DateTime | UTC Time of deadline in iso8601 format.
 files | Dictionary | Template file names and contents
 name | String | Endpoint
@@ -397,7 +397,7 @@ offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with
 
 #### Response
 Name | Type | Description
----------- | -------
+---------- | ------- | ---
 backups | List |  A list of backup objects, sorted by time (most recent to oldest).
 has_more | Boolean | Indicates whether this response includes the last backup.
 count | Integer | The count of total backups from this user
@@ -460,7 +460,7 @@ offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with
 
 #### Response
 Name | Type | Description
----------- | -------
+---------- | ------- | ---
 backups | List |  A list of backup objects in no particular order
 count | Integer | The count of total backups from this user
 limit | Integer | The value of the limit parameter
