@@ -104,4 +104,4 @@ selenium==3.3.3
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
 
 # Temporary to fix #1354
-Werkzeug==0.14.1
+Werkzeug==0.15.3
