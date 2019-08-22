@@ -165,7 +165,7 @@ class TestFile(OkTestCase):
         encoded_id = utils.encode_id(self.file2.id)
         url = "/files/{0}".format(encoded_id)
         headers, data = self.fetch_file(url)
-        self.verify_download_headers(headers, self.file2.filename, "image/svg+xml")
+        self.verify_download_headers(headers, self.file2.filename, "image/svg+xml; charset=utf-8")
         self.verify_binary_download(CWD + "/../server/static/img/logo.svg", data)
 
     def test_binary_api_download(self):
@@ -174,7 +174,7 @@ class TestFile(OkTestCase):
         url = "/api/v3/file/{0}".format(encoded_id)
         self.assertEqual(self.file2.download_link, url)
         headers, data = self.fetch_file(url)
-        self.verify_download_headers(headers, self.file2.filename, "image/svg+xml")
+        self.verify_download_headers(headers, self.file2.filename, "image/svg+xml; charset=utf-8")
         self.verify_binary_download(CWD + "/../server/static/img/logo.svg", data)
 
     def test_unauth_download(self):
