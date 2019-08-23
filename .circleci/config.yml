@@ -10,7 +10,6 @@ jobs:
       OK_ENV: test
     docker:
       - image: circleci/python:3.5.5-jessie-browsers
-        command: /sbin/init
       - image: redis
     steps:
       - checkout
