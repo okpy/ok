@@ -1,4 +1,4 @@
-Flask>=0.12,<0.13,!=0.12.3 # 0.12.3 is a broken release. Ref: https://github.com/pallets/flask/issues/2728
+Flask==1.1.1
 Jinja2==2.10.1
 
 # WSGI Containers
@@ -103,5 +103,5 @@ selenium==3.3.3
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
 
-# Temporary to fix #1354
-Werkzeug==0.15.3
+Werkzeug==0.15.5
+
