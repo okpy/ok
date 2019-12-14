@@ -44,16 +44,18 @@ def get_headers(assignments):
     new_assignments = []
     for assignment in assignments:
         new_headers = ['{} ({})'.format(assignment.display_name, score_type.title()) for
-                score_type in get_score_types(assignment)]
+                score_type in get_score_types(assignment)
         if new_headers:
             new_assignments.append(assignment)
             headers.extend(new_headers)
+            headers.append('{} (Submitted At)'.format(assignment.display_name))
     return headers, new_assignments
 
 def export_student_grades(student, assignments):
     student_row = [student.user.email, student.sid]
     for assign in assignments:
         status = assign.user_status(student.user)
+        submission_time = status.subm_time
         scores = {s.kind.lower(): s.score for s in status.scores}
         scores = score_policy(scores)
         score_types = get_score_types(assign)
@@ -62,6 +64,10 @@ def export_student_grades(student, assignments):
                 student_row.append(scores[score_type])
             else:
                 student_row.append(0)
+        if submission_time:
+            student_row.append(submission_time)
+        else:
+            student_row.append('No Submission')
     return student_row
 
 
