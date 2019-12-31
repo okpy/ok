@@ -1,9 +1,12 @@
 import io
 import csv
 import datetime as dt
+from collections import defaultdict
+
+from sqlalchemy import func
 
 from server import jobs
-from server.models import Course, Enrollment, ExternalFile, db
+from server.models import Course, Enrollment, ExternalFile, db, GroupMember, Score
 from server.utils import encode_id, local_time
 from server.constants import STUDENT_ROLE
 
@@ -50,11 +53,11 @@ def get_headers(assignments):
             headers.extend(new_headers)
     return headers, new_assignments
 
-def export_student_grades(student, assignments):
+
+def export_student_grades(student, assignments, all_scores):
     student_row = [student.user.email, student.sid]
     for assign in assignments:
-        status = assign.user_status(student.user)
-        scores = {s.kind.lower(): s.score for s in status.scores}
+        scores = all_scores[assign.id][student.user.id]
         scores = score_policy(scores)
         score_types = get_score_types(assign)
         for score_type in score_types:
@@ -83,12 +86,56 @@ def export_grades():
     logger.info('')
 
     total_students = len(students)
+
+    users = [student.user for student in students]
+    user_ids = [user.id for user in users]
+
+    all_scores = {}
+
+    for assign in assignments:
+        scores = (
+            db.session.query(Score.user_id, Score.kind, func.max(Score.score))
+            .filter(
+                Score.user_id.in_(user_ids),
+                Score.assignment_id == assign.id,
+                Score.archived == False,
+            )
+            .group_by(Score.user_id, Score.kind)
+            .order_by(Score.score)
+            .all()
+        )
+
+        members = GroupMember.query.filter(
+            GroupMember.assignment_id == assign.id,
+            GroupMember.status == 'active'
+        ).all()
+
+        group_lookup = {}
+        for member in members:
+            if member.group_id not in group_lookup:
+                group_lookup[member.group_id] = []
+            group_lookup[member.group_id].append(member.user_id)
+
+        user_scores = defaultdict(lambda: defaultdict(int))
+        for user_id, kind, score in scores:
+            user_scores[user_id][kind] = score
+
+        for group in group_lookup.values():
+            best_scores = defaultdict(int)
+            for user_id in group:
+                for kind, score in user_scores[user_id].items():
+                    best_scores[kind] = max(best_scores[kind], score)
+            for user_id in group:
+                user_scores[user_id] = best_scores
+
+        all_scores[assign.id] = user_scores
+
     with io.StringIO() as f:
         writer = csv.writer(f)
         writer.writerow(headers) # write headers
 
         for i, student in enumerate(students, start=1):
-            row = export_student_grades(student, assignments)
+            row = export_student_grades(student, assignments, all_scores)
             writer.writerow(row)
             if i % 50 == 0:
                 logger.info('Exported {}/{}'.format(i, total_students))
