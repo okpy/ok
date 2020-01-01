@@ -68,28 +68,7 @@ def export_student_grades(student, assignments, all_scores):
     return student_row
 
 
-@jobs.background_job
-def export_grades():
-    logger = jobs.get_job_logger()
-    current_user = jobs.get_current_job().user
-    course = Course.query.get(jobs.get_current_job().course_id)
-    assignments = course.assignments
-    students = (Enrollment.query
-      .options(db.joinedload('user'))
-      .filter(Enrollment.role == STUDENT_ROLE, Enrollment.course == course)
-      .all())
-
-    headers, assignments = get_headers(assignments)
-    logger.info("Using these headers:")
-    for header in headers:
-        logger.info('\t' + header)
-    logger.info('')
-
-    total_students = len(students)
-
-    users = [student.user for student in students]
-    user_ids = [user.id for user in users]
-
+def collect_all_scores(assignments, user_ids):
     all_scores = {}
 
     for assign in assignments:
@@ -129,6 +108,31 @@ def export_grades():
                 user_scores[user_id] = best_scores
 
         all_scores[assign.id] = user_scores
+    return all_scores
+
+@jobs.background_job
+def export_grades():
+    logger = jobs.get_job_logger()
+    current_user = jobs.get_current_job().user
+    course = Course.query.get(jobs.get_current_job().course_id)
+    assignments = course.assignments
+    students = (Enrollment.query
+      .options(db.joinedload('user'))
+      .filter(Enrollment.role == STUDENT_ROLE, Enrollment.course == course)
+      .all())
+
+    headers, assignments = get_headers(assignments)
+    logger.info("Using these headers:")
+    for header in headers:
+        logger.info('\t' + header)
+    logger.info('')
+
+    total_students = len(students)
+
+    users = [student.user for student in students]
+    user_ids = [user.id for user in users]
+
+    all_scores = collect_all_scores(assignments, user_ids)
 
     with io.StringIO() as f:
         writer = csv.writer(f)
