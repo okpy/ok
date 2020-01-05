@@ -383,7 +383,7 @@ A user is specified through the use of their email in Ok.
 
 #### Permissions
 The access_token's user must have permission to view the backup. They must have
-at least staff level access to the assignment.
+at least staff level access to the assignment or be the same user as the user whose backups are requested.
 
 #### HTTP Request
 `GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>/export/<string:email>`
@@ -582,7 +582,6 @@ curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
             "download_link": "/api/v3/file/1abcdef",
             "id": "1abcdef"
         }],
-
     },
     "code": 200,
     "message": "success"
