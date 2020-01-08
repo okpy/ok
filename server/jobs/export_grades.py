@@ -54,10 +54,58 @@ def get_headers(assignments, *, export_submit_time):
     return headers, new_assignments
 
 
-def export_student_grades(student, assignments, all_scores, *, export_submit_time):
+def collect_records(user_ids, assignments):
+    all_records = {}
+
+    for assign in assignments:
+        raw_assign_records = (
+            db.session.query(Score, Backup)
+                .join(Backup, Backup.id == Score.backup_id)
+                .filter(
+                Score.user_id.in_(user_ids),
+                Score.assignment_id == assign.id,
+                Score.archived == False,
+            )
+                .all()
+        )
+
+        members = GroupMember.query.filter(
+            GroupMember.assignment_id == assign.id,
+            GroupMember.status == 'active'
+        ).all()
+
+        group_lookup = {}
+        for member in members:
+            if member.group_id not in group_lookup:
+                group_lookup[member.group_id] = []
+            group_lookup[member.group_id].append(member.user_id)
+
+        gen = lambda: [None, None]
+        key = lambda a: float("-inf") if a[0] is None else a[0].score
+
+        assign_records = defaultdict(lambda: defaultdict(gen))
+
+        for record in raw_assign_records:
+            score = record[0]
+            assign_records[score.user_id][score.kind] = max(record, assign_records[score.user_id][score.kind], key=key)
+
+        for group in group_lookup.values():
+            best_scores = defaultdict(gen)
+            for user_id in group:
+                for kind, score in assign_records[user_id].items():
+                    best_scores[kind] = max(best_scores[kind], score, key=key)
+            for user_id in group:
+                assign_records[user_id] = best_scores
+
+        all_records[assign.id] = assign_records
+
+    return all_records
+
+
+def export_student_grades(student, assignments, all_records, *, export_submit_time):
     student_row = [student.user.email, student.sid]
     for assign in assignments:
-        scores_for_each_kind = all_scores[assign.id][student.user.id]
+        scores_for_each_kind = all_records[assign.id][student.user.id]
         scores = score_policy({kind: score.score for kind, (score, backup) in scores_for_each_kind.items()})
         score_types = get_score_types(assign)
         for score_type in score_types:
@@ -79,17 +127,17 @@ def export_student_grades(student, assignments, all_scores, *, export_submit_tim
 
 
 @jobs.background_job
-def export_grades():
+def export_grades(selected_assignments, export_submit_time):
     logger = jobs.get_job_logger()
     current_user = jobs.get_current_job().user
     course = Course.query.get(jobs.get_current_job().course_id)
-    assignments = course.assignments
+    assignments = [Assignment.query.get(int(assign_id)) for assign_id in selected_assignments]
     students = (Enrollment.query
       .options(db.joinedload('user'))
       .filter(Enrollment.role == STUDENT_ROLE, Enrollment.course == course)
       .all())
 
-    headers, assignments = get_headers(assignments)
+    headers, assignments = get_headers(assignments, export_submit_time=export_submit_time)
     logger.info("Using these headers:")
     for header in headers:
         logger.info('\t' + header)
@@ -100,58 +148,14 @@ def export_grades():
     users = [student.user for student in students]
     user_ids = [user.id for user in users]
 
-    all_scores = {}
-
-    for assign in assignments:
-        scores = (
-            db.session.query(Score, Backup)
-            .join(Backup, Backup.id == Score.backup_id)
-            .filter(
-                Score.user_id.in_(user_ids),
-                Score.assignment_id == assign.id,
-                Score.archived == False,
-            )
-            .all()
-        )
-
-        logger.info(scores)
-
-        members = GroupMember.query.filter(
-            GroupMember.assignment_id == assign.id,
-            GroupMember.status == 'active'
-        ).all()
-
-        group_lookup = {}
-        for member in members:
-            if member.group_id not in group_lookup:
-                group_lookup[member.group_id] = []
-            group_lookup[member.group_id].append(member.user_id)
-
-        gen = lambda: [None, None]
-        key = lambda a: float("-inf") if a[0] is None else a[0].score
-
-        user_scores = defaultdict(lambda: defaultdict(gen))
-
-        for record in scores:
-            score = record[0]
-            user_scores[score.user_id][score.kind] = max(record, user_scores[score.user_id][score.kind], key=key)
-
-        for group in group_lookup.values():
-            best_scores = defaultdict(gen)
-            for user_id in group:
-                for kind, score in user_scores[user_id].items():
-                    best_scores[kind] = max(best_scores[kind], score, key=key)
-            for user_id in group:
-                user_scores[user_id] = best_scores
-
-        all_scores[assign.id] = user_scores
+    all_records = collect_records(user_ids, assignments)
 
     with io.StringIO() as f:
         writer = csv.writer(f)
         writer.writerow(headers) # write headers
 
         for i, student in enumerate(students, start=1):
-            row = export_student_grades(student, assignments, all_scores, export_submit_time=export_submit_time)
+            row = export_student_grades(student, assignments, all_records, export_submit_time=export_submit_time)
             writer.writerow(row)
             if i % 50 == 0:
                 logger.info('Exported {}/{}'.format(i, total_students))
