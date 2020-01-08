@@ -79,17 +79,17 @@ def export_student_grades(student, assignments, all_scores, *, export_submit_tim
 
 
 @jobs.background_job
-def export_grades(selected_assignments, export_submit_time):
+def export_grades():
     logger = jobs.get_job_logger()
     current_user = jobs.get_current_job().user
     course = Course.query.get(jobs.get_current_job().course_id)
-    assignments = [Assignment.query.get(int(assign_id)) for assign_id in selected_assignments]
+    assignments = course.assignments
     students = (Enrollment.query
       .options(db.joinedload('user'))
       .filter(Enrollment.role == STUDENT_ROLE, Enrollment.course == course)
       .all())
 
-    headers, assignments = get_headers(assignments, export_submit_time=export_submit_time)
+    headers, assignments = get_headers(assignments)
     logger.info("Using these headers:")
     for header in headers:
         logger.info('\t' + header)
