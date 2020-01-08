@@ -703,12 +703,15 @@ class EffortGradingForm(BaseForm):
 
 class ExportGradesForm(BaseForm):
     included = MultiCheckboxField('Included Assignments', description='Assignments with any published scores are checked by default')
+    export_submit_times = BooleanField('Export submission times', default=False)
 
     def __init__(self, assignments):
         super().__init__()
 
         self.included.choices = [(str(a.id), a.display_name) for a in assignments]
-        self.included.data = [str(a.id) for a in assignments if a.published_scores]
+
+        if self.included.data is None:
+            self.included.data = [str(a.id) for a in assignments if a.published_scores]
 
     def validate(self):
         return super().validate() and len(self.included.data) > 0

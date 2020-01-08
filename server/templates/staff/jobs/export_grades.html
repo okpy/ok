@@ -30,6 +30,7 @@
         <div class="box-body">
           {% call forms.render_form(form, action_text='Export Grades', class_='form') %}
             {{ forms.render_field(form.included, required='true', class_="checkbox-list") }}
+            {{ forms.render_checkbox_field(form.export_submit_times) }}
           {% endcall %}
         </div>
       </div>

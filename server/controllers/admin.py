@@ -414,6 +414,7 @@ def export_grades_job(cid):
     courses, current_course = get_courses(cid)
 
     form = forms.ExportGradesForm(current_course.assignments)
+
     if form.validate_on_submit():
         job = jobs.enqueue_job(
             export_grades.export_grades,
@@ -421,6 +422,8 @@ def export_grades_job(cid):
             timeout=2 * 60 * 60, # 1 hour
             course_id=cid,
             result_kind='link',
+            selected_assignments=form.included.data,
+            export_submit_time=form.export_submit_times.data,
             # no arguments
         )
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
@@ -907,7 +910,7 @@ def assign_grading(cid, aid):
         data = assign.course_submissions()
         backups = set(b['backup']['id'] for b in data if b['backup'])
         students = set(b['user']['id'] for b in data if b['backup'])
-        
+
         tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
                                                form.kind.data)
 
@@ -1444,7 +1447,7 @@ def client(client_id):
 def student_view(cid, email):
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
-        if form.email.data != email:         
+        if form.email.data != email:
             user = User.lookup(email)
             new_email = form.email.data
 
@@ -1459,7 +1462,7 @@ def student_view(cid, email):
             except Forbidden as e:
                 flash(e.description, 'error')
                 return redirect(request.url)
-                
+
             Enrollment.enroll_from_form(cid, form)
             return redirect(url_for("admin.student_view", cid = cid, email = new_email), code=301)
         else:
