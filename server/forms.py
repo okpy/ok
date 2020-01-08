@@ -702,13 +702,13 @@ class EffortGradingForm(BaseForm):
                     description="Decimal ratio that is multiplied to the final score of a late submission.")
 
 class ExportGradesForm(BaseForm):
-    included = MultiCheckboxField('Included Assignments', description='Assignments with any published scores are checked by default')
+    included = MultiCheckboxField('Included Assignments', description='You can only export assignments with published scores')
     export_submit_times = BooleanField('Export submission times', default=False)
 
     def __init__(self, assignments):
         super().__init__()
 
-        self.included.choices = [(str(a.id), a.display_name) for a in assignments]
+        self.included.choices = [(str(a.id), a.display_name) for a in assignments if a.published_scores]
 
         if self.included.data is None:
             self.included.data = [str(a.id) for a in assignments if a.published_scores]
