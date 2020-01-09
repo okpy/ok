@@ -137,14 +137,12 @@ def export_student_grades(student, assignments, all_records, *, export_submit_ti
 
         if export_submit_time:
             if scores_for_each_kind:
-                candidate_backup = next(iter(scores_for_each_kind.values()))[1]
-                if all(
-                    backup.submission_time == candidate_backup.submission_time
-                    for _, backup in scores_for_each_kind.values()
-                ):
-                    student_row.append(candidate_backup.submission_time)
-                else:
-                    student_row.append("Multiple Submissions Scored")
+                student_row.append(
+                    min(
+                        backup.submission_time
+                        for _, backup in scores_for_each_kind.values()
+                    )
+                )
             else:
                 student_row.append("No Submission")
     return student_row
