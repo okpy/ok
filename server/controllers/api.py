@@ -644,7 +644,7 @@ class ExportBackup(Resource):
                 return restful.abort(404)
             return restful.abort(403)
 
-        if user != target and not self.model.can(assign, user, 'export'):
+        if user.email != email and not self.model.can(assign, user, 'export'):
             return restful.abort(403)
 
         base_query = (models.Backup.query.filter(
