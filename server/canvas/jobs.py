@@ -74,7 +74,8 @@ def enroll_students(canvas_course_id):
     enrollment_info = []
     logger.info(row_format.format(email='EMAIL', name='NAME', sid='SID'))
     for student in api.get_students(canvas_course):
-        if not student['email']:
+        if not student.get("email"):
+            logger.warn("Student {} not enrolled, missing email address".format(student))
             continue
         info = {
             'email': student['email'],
