@@ -96,7 +96,11 @@
                         <i class="fa fa-thumbs-up"></i> Effort Grading
                   </a></li>
                   <li> <a href="{{ autograder_url }}" target="_blank" type="button">
-                        <i class="fa fa-gear"></i> Configure Autograder
+                      <i class="fa fa-gear"></i> Configure Autograder
+                  </a></li>
+
+                  <li> <a href="{{ url_for('.calculate_assign_slips', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-calculator"></i> Calculate Slips
                   </a></li>
                   <li>
                     {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}

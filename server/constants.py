@@ -21,6 +21,8 @@ SCORE_KINDS = ['composition', 'correctness', 'effort', 'total', 'partner a', 'pa
                'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
                'private', 'autograder', 'error']
 
+TIMESCALES = ['days', 'hours', 'minutes']
+
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 OAUTH_OUT_OF_BAND_URI = 'urn:ietf:wg:oauth:2.0:oob'
