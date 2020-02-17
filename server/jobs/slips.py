@@ -9,6 +9,18 @@ from server.models import Assignment, ExternalFile
 from server.utils import encode_id, local_time, output_csv_iterable
 from server.constants import TIMESCALES
 
+"""
+ TODO: 
+ - Use TIMESCALES instead of timescales
+ - Look through the code and search for optimizations
+ - Restrict calculation of slip days to only one assignment (weird otherwise)
+ - Calculate slip days separately for each relevant submission
+ - Remove the "show results" button
+ - Show SID in addition to the email
+ - Work around output_csv_iterable
+"""
+
+
 timescales = {'days':86400, 'hours':3600, 'minutes':60}
 
 def timediff(created, deadline, timescale):
