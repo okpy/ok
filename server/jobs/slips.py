@@ -16,6 +16,7 @@ from server.constants import TIMESCALES
  - Restrict calculation of slip days to only one assignment (weird otherwise)
  - Calculate slip days separately for each relevant submission
  - Remove the "show results" button
+ "show results" displays the table in the logger. Should we keep it?
  - Show SID in addition to the email
  - Work around output_csv_iterable
 """
@@ -90,7 +91,10 @@ def calculate_course_slips(assigns, timescale, show_results):
 
     return save_csv(csv_name, header, rows, show_results, user, course, logger)
 
-
+"""
+Changed this method so that it also returns the user's id.
+Is subm['user']['id'] the same as SID?
+"""
 @jobs.background_job
 def calculate_assign_slips(assign_id, timescale, show_results):
     logger = jobs.get_job_logger()
@@ -103,12 +107,14 @@ def calculate_assign_slips(assign_id, timescale, show_results):
     deadline = assignment.due_date
 
     def get_row(subm):
+        sid = subm['user']['id']
         email = subm['user']['email']
         created = subm['backup']['created']
         slips = max(0, timediff(created, deadline, timescale))
-        return (email, slips)
+        return sid, email, slips
 
     header = (
+        'User SID',
         'User Email', 
         'Slip {} Used'.format(timescale.title()))
     rows = (get_row(subm) for subm in subms)
