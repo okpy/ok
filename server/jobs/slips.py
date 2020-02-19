@@ -49,6 +49,14 @@ def save_csv(csv_name, header, rows, show_results, user, course, logger):
 
     return download_link
 
+"""
+Of how many submissions is the user's score comprised?
+Which submissions do we consider relevant? How many relevant submissions can there be?
+Would a pair of final submission and revision backup be sufficient?
+"""
+def return_relevant_submissions(assignment, user):
+    pass
+
 
 @jobs.background_job
 def calculate_course_slips(assigns, timescale, show_results):
