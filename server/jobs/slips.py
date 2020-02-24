@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import datetime as dt
 
 from server import jobs
-from server.models import Assignment, ExternalFile
+from server.models import Assignment, ExternalFile, User
 from server.utils import encode_id, local_time, output_csv_iterable
 from server.constants import TIMESCALES
 
@@ -17,7 +17,7 @@ from server.constants import TIMESCALES
  - Calculate slip days separately for each relevant submission
  - Remove the "show results" button
  "show results" displays the table in the logger. Should we keep it?
- - Show SID in addition to the email
+ - Show SID in addition to the email (NOT THE ID!)
  - Work around output_csv_iterable
 """
 
@@ -53,6 +53,10 @@ def save_csv(csv_name, header, rows, show_results, user, course, logger):
 Of how many submissions is the user's score comprised?
 Which submissions do we consider relevant? How many relevant submissions can there be?
 Would a pair of final submission and revision backup be sufficient?
+
+Points, Style points, Check points
+Points -> give best submission for effort, total and regrade
+
 """
 def return_relevant_submissions(assignment, user):
     pass
@@ -115,7 +119,10 @@ def calculate_assign_slips(assign_id, timescale, show_results):
     deadline = assignment.due_date
 
     def get_row(subm):
-        sid = subm['user']['id']
+        user_id = subm['user']['id']
+        user = User.get_by_id(user_id)
+        enrollment = user.enrollments()[0]
+        sid = enrollment.sid
         email = subm['user']['email']
         created = subm['backup']['created']
         slips = max(0, timediff(created, deadline, timescale))
