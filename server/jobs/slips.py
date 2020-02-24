@@ -15,10 +15,8 @@ from server.constants import TIMESCALES
  - Look through the code and search for optimizations
  - Restrict calculation of slip days to only one assignment (weird otherwise)
  - Calculate slip days separately for each relevant submission
- - Remove the "show results" button
- "show results" displays the table in the logger. Should we keep it?
- - Show SID in addition to the email (NOT THE ID!)
  - Work around output_csv_iterable
+ - Redesign calculating slips for the whole course
 """
 
 
@@ -103,10 +101,21 @@ def calculate_course_slips(assigns, timescale, show_results):
 
     return save_csv(csv_name, header, rows, show_results, user, course, logger)
 
-"""
-Changed this method so that it also returns the user's id.
-Is subm['user']['id'] the same as SID?
-"""
+
+def get_students_with_submission(assignment):
+    """Get a list of IDs of students who have made a submission
+    for the current assignment.
+
+    :param ASSIGNMENT instance of the model Assignment
+
+    This code is copied from the assignment_stats() method
+    in the Assignment model methods. May need refactoring."""
+
+    data = assignment.course_submissions()
+    students_ids = set(s['user']['id'] for s in data if s['backup'] and s['backup']['submit'])
+    return students_ids
+
+
 @jobs.background_job
 def calculate_assign_slips(assign_id, timescale, show_results):
     logger = jobs.get_job_logger()
@@ -115,16 +124,16 @@ def calculate_assign_slips(assign_id, timescale, show_results):
     user = jobs.get_current_job().user
     assignment = Assignment.query.get(assign_id)
     course = assignment.course
-    subms = assignment.course_submissions(include_empty=False)
+    students_ids = get_students_with_submission(assignment)
+    subms = [assignment.final_submission([id]) for id in students_ids]
     deadline = assignment.due_date
 
     def get_row(subm):
-        user_id = subm['user']['id']
-        user = User.get_by_id(user_id)
-        enrollment = user.enrollments()[0]
+        curr_user = subm.submitter
+        enrollment = curr_user.enrollments()[0]
         sid = enrollment.sid
-        email = subm['user']['email']
-        created = subm['backup']['created']
+        email = curr_user.email
+        created = subm.submission_time
         slips = max(0, timediff(created, deadline, timescale))
         return sid, email, slips
 
