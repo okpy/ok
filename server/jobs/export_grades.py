@@ -53,7 +53,7 @@ def get_score_types(assignment):
     return types
 
 
-def get_headers(assignments, *, export_submit_time):
+def get_headers(assignments):
     headers = ["Email", "SID"]
     new_assignments = []
     for assignment in assignments:
@@ -64,8 +64,6 @@ def get_headers(assignments, *, export_submit_time):
         if new_headers:
             new_assignments.append(assignment)
             headers.extend(new_headers)
-            if export_submit_time:
-                headers.append("{} (Submitted At)".format(assignment.display_name))
     return headers, new_assignments
 
 
@@ -135,21 +133,11 @@ def export_student_grades(student, assignments, all_records, *, export_submit_ti
             else:
                 student_row.append(0)
 
-        if export_submit_time:
-            if scores_for_each_kind:
-                student_row.append(
-                    min(
-                        backup.submission_time
-                        for _, backup in scores_for_each_kind.values()
-                    )
-                )
-            else:
-                student_row.append("No Submission")
     return student_row
 
 
 @jobs.background_job
-def export_grades(selected_assignments, export_submit_time):
+def export_grades(selected_assignments):
     logger = jobs.get_job_logger()
     current_user = jobs.get_current_job().user
     course = Course.query.get(jobs.get_current_job().course_id)
@@ -163,7 +151,7 @@ def export_grades(selected_assignments, export_submit_time):
     )
 
     headers, assignments = get_headers(
-        assignments, export_submit_time=export_submit_time
+        assignments
     )
     logger.info("Using these headers:")
     for header in headers:
@@ -183,7 +171,7 @@ def export_grades(selected_assignments, export_submit_time):
 
         for i, student in enumerate(students, start=1):
             row = export_student_grades(
-                student, assignments, all_records, export_submit_time=export_submit_time
+                student, assignments, all_records
             )
             writer.writerow(row)
             if i % 50 == 0:

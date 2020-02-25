@@ -423,7 +423,6 @@ def export_grades_job(cid):
             course_id=cid,
             result_kind='link',
             selected_assignments=form.included.data,
-            export_submit_time=form.export_submit_times.data,
             # no arguments
         )
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
