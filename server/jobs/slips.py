@@ -56,8 +56,6 @@ Points, Style points, Check points
 Points -> give best submission for effort, total and regrade
 
 """
-def return_relevant_submissions(assignment, user):
-    pass
 
 
 @jobs.background_job
