@@ -75,63 +75,110 @@
                 </div>
               </div>
               <div class="box-body no-padding">
-                <ul class="nav nav-pills nav-stacked">
-                  <li class="active"><a href="#"><i class="fa fa-book"></i> Overview
-                    {% if assignment.active %}
-                      <span class="label label-success pull-right">Active</span></a>
-                    {% else %}
-                      <span class="label label-warning pull-right">Inactive</span></a>
-                    {% endif %}
-                  </li>
-                  <li> <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-bar-chart-o"></i> Detailed Stats
-                  </a></li>
-                  <li> <a href="{{ url_for('.view_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-eye"></i> View Scores
-                  </a></li>
-                  <li> <a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-calendar"></i> Grant Extension
-                  </a></li>
-                  <li> <a href="{{ url_for('.effort_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-thumbs-up"></i> Effort Grading
-                  </a></li>
-                  <li> <a href="{{ autograder_url }}" target="_blank" type="button">
-                        <i class="fa fa-gear"></i> Configure Autograder
-                  </a></li>
-                  <li>
-                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}
-                        <button type="submit" class="ag-submit-btn" data-confirm="Send all submissions to the autograder?"> <i class="fa fa-send"></i> Queue on Autograder
-                        </button>
-                    {% endcall %}
-                 </li>
-                  <li> <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
-                     <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
-                  </a></li>
-                  <li> <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-user-plus"></i> Assign Grading
-                  </a></li>
-                  <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-inbox"></i> Grading Queues
-                  </a></li>
-                  <li> <a href="{{ url_for('.checkpoint_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-check"></i> Checkpoint Grading
-                  </a></li>
-                  <li> <a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
-                    <i class="fa fa-upload"></i> Upload Scores
-                  </a></li>
-                  <li> <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-file-archive-o"></i> Download Submissions
-                  </a></li>
-                  <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-gavel"></i> Run MOSS
-                  </a></li>
-                  <li> <a href="{{ url_for('.assignment_moss_results', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-list"></i> Moss Results
-                  </a></li>
-                  <li> <a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-github"></i> Search Github
-                  </a></li>
-                </ul>
+                  <ul class="nav nav-pills nav-stacked">
+                      <li class="active">
+                          <a href="#">
+                              <i class="fa fa-book"></i> Overview
+                              {% if assignment.active %}
+                              <span class="label label-success pull-right">Active</span>
+                          </a>
+                          {% else %}
+                          <span class="label label-warning pull-right">Inactive</span></a>
+                          {% endif %}
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-bar-chart-o"></i> Detailed Stats
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.view_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-eye"></i> View Scores
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-calendar"></i> Grant Extension
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.effort_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-thumbs-up"></i> Effort Grading
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ autograder_url }}" target="_blank" type="button">
+                              <i class="fa fa-gear"></i> Configure Autograder
+                          </a>
+                      </li>
+                      <li>
+                          {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}
+                          <button type="submit" class="ag-submit-btn" data-confirm="Send all submissions to the autograder?">
+                              <i class="fa fa-send"></i> Queue on Autograder
+                          </button>
+                          {% endcall %}
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-user-plus"></i> Assign Grading
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-inbox"></i> Grading Queues
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.checkpoint_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-check"></i> Checkpoint Grading
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-upload"></i> Upload Scores
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-file-archive-o"></i> Download Submissions
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-gavel"></i> Run MOSS
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.assignment_moss_results', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-list"></i> Moss Results
+                          </a>
+                      </li>
+                      <li>
+                          <a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}" type="button">
+                              <i class="fa fa-github"></i> Search Github
+                          </a>
+                      </li>
+                      <li>
+                          {% if assignment.course_submissions(include_empty=False)|length == 0 %}
+                              {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.delete_assignment', cid=current_course.id, aid=assignment.id), class_='form') %}
+                              <button type="submit" class="ag-submit-btn" data-confirm="Delete this assignment?">
+                                  <i class="fa fa-trash"></i> Delete Assignment
+                              </button>
+                              {% endcall %}
+                          {% else %}
+                              {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.delete_assignment', cid=current_course.id, aid=assignment.id), class_='form') %}
+                              <button type="submit" class="ag-submit-btn" data-confirm="WARNING: Assignment contains student submissions. Are you sure you want to delete?">
+                                  <i class="fa fa-trash"></i> Delete Assignment
+                              </button>
+                              {% endcall %}
+                          {% endif %}
+                      </li>
+                  </ul>
               </div>
               <!-- /.box-body -->
             </div>
@@ -140,14 +187,27 @@
 
             <div class="col-md-8">
               <div class="box">
-                <div class="box-header with-border">
-                  <h3 class="box-title">Edit {{ assignment.display_name }} Assignment</h3>
-                  <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                      <i class="fa fa-minus"></i>
-                    </button>
+                  <div class="box-header with-border">
+                      <h3 class="box-title" style="float:left">Edit {{ assignment.display_name }} Assignment</h3>
+                      {% if assignment.course_submissions(include_empty=False)|length == 0 %}
+                          {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.delete_assignment', cid=current_course.id, aid=assignment.id), class_='form') %}
+                          <button type="submit" style="float:left" class="btn btn-box-tool" data-confirm="Delete this assignment?" data-toggle="tooltip" title="Delete Assignment">
+                              <i class="fa fa-trash"></i>
+                          </button>
+                          {% endcall %}
+                      {% else %}
+                          {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.delete_assignment', cid=current_course.id, aid=assignment.id), class_='form') %}
+                          <button type="submit" style="float:left" class="btn btn-box-tool" data-confirm="WARNING: Assignment contains student submissions. Are you sure you want to delete?" data-toggle="tooltip" title="Delete Assignment">
+                              <i class="fa fa-trash"></i>
+                          </button>
+                          {% endcall %}
+                      {% endif %}
+                      <div class="box-tools pull-right">
+                          <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                              <i class="fa fa-minus"></i>
+                          </button>
+                      </div>
                   </div>
-                </div>
                 <div class="box-body">
                     <!-- form goes here -->
                     {% call forms.render_form(form, action_url="", action_text='Update Assignment', class_='form') %}
