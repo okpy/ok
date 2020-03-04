@@ -12,6 +12,7 @@ from server.constants import TIMESCALES
 """
  TODO: 
  - Support for timezone in filename?
+ - Remake templates as specified in the old pull request?
 """
 
 
