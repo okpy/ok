@@ -12,15 +12,14 @@ from server.constants import TIMESCALES
 """
  TODO: 
  - Use TIMESCALES instead of timescales
- - Look through the code and search for optimizations
- - Restrict calculation of slip days to only one assignment (weird otherwise)
- - Calculate slip days separately for each relevant submission
  - Work around output_csv_iterable
- - Redesign calculating slips for the whole course
+ 
+ - Support for timezone?
 """
 
 
-timescales = {'days':86400, 'hours':3600, 'minutes':60}
+timescales = {'days': 86400, 'hours': 3600, 'minutes': 60}
+
 
 def timediff(created, deadline, timescale):
     secs_over = (created - deadline).total_seconds()
@@ -83,6 +82,7 @@ def calculate_course_slips(assigns, timescale, show_results):
             email = curr_user.email
             created = subm.submission_time
             slips = max(0, timediff(created, deadline, timescale))
+            logger.info('LOG: ' + email + ' ' + str(slips))
             if slips > 0:
                 rows.append((assign.display_name, sid, email, slips))
 
@@ -91,8 +91,8 @@ def calculate_course_slips(assigns, timescale, show_results):
         'User SID',
         'User Email',
         'Slip {} Used'.format(timescale.title()))
-    created_time = local_time(dt.now(), course, fmt='%m-%d-%I-%M-%p')
-    csv_name = '{}_{}.csv'.format(course.offering.replace('/', '-'), created_time)
+    created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
+    csv_name = '{}_{}.csv'.format(course.display_name.replace('/', '-'), created_time)
 
     return save_csv(csv_name, header, rows, show_results, user, course, logger)
 
@@ -122,21 +122,22 @@ def calculate_assign_slips(assign_id, timescale, show_results):
     students_ids = get_students_with_submission(assignment)
     subms = [assignment.final_submission([id]) for id in students_ids]
     deadline = assignment.due_date
+    rows = []
 
-    def get_row(subm):
+    for subm in subms:
         curr_user = subm.submitter
         enrollment = curr_user.enrollments()[0]
         sid = enrollment.sid
         email = curr_user.email
         created = subm.submission_time
         slips = max(0, timediff(created, deadline, timescale))
-        return sid, email, slips
+        if slips > 0:
+            rows.append((sid, email, slips))
 
     header = (
         'User SID',
         'User Email', 
         'Slip {} Used'.format(timescale.title()))
-    rows = (get_row(subm) for subm in subms)
     created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
     csv_name = '{}_{}.csv'.format(assignment.display_name.replace('/', '-'), created_time)
 
