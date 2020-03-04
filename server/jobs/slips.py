@@ -34,7 +34,7 @@ def save_csv(csv_name, header, rows, show_results, user, course, logger):
     logger.info('Uploading...')
     upload = ExternalFile.upload(csv_iterable, 
                 user_id=user.id, course_id=course.id, name=csv_name, 
-                prefix='jobs/slips/{}'.format(course.offering))
+                prefix='slips_')
     logger.info('Saved as: {}'.format(upload.object_name))
 
     download_link = "/files/{}".format(encode_id(upload.id))
@@ -140,7 +140,7 @@ def calculate_assign_slips(assign_id, timescale, show_results):
         'User Email', 
         'Slip {} Used'.format(timescale.title()))
     rows = (get_row(subm) for subm in subms)
-    created_time = local_time(dt.now(), course, fmt='%m-%d-%I-%M-%p')
-    csv_name = '{}_{}.csv'.format(assignment.name.replace('/', '-'), created_time)
+    created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
+    csv_name = '{}_{}.csv'.format(assignment.display_name.replace('/', '-'), created_time)
 
     return save_csv(csv_name, header, rows, show_results, user, course, logger)
