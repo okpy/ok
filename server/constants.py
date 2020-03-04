@@ -22,7 +22,6 @@ SCORE_KINDS = ['composition', 'correctness', 'effort', 'total', 'partner a', 'pa
                'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
                'private', 'autograder', 'error']
 
-#TIMESCALES = ['days', 'hours', 'minutes']
 TIMESCALES = OrderedDict([('days', 86400), ('hours', 3600), ('minutes', 60)])
 
 API_PREFIX = '/api'
