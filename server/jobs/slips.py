@@ -68,32 +68,29 @@ def calculate_course_slips(assigns, timescale, show_results):
     course = job.course
     assigns_set = set(assigns)
     assigns = (a for a in course.assignments if a.id in assigns_set)
+    rows = []
 
-    course_slips = defaultdict(list)
     for i, assign in enumerate(assigns, 1):
         logger.info('Processing {} ({} of {})...'
-            .format(assign.display_name, i, len(assigns_set)))
-        subms = assign.course_submissions(include_empty=False)
+                    .format(assign.display_name, i, len(assigns_set)))
+        students_ids = get_students_with_submission(assign)
+        subms = [assign.final_submission([id]) for id in students_ids]
         deadline = assign.due_date
-        assign_slips = {}
         for subm in subms:
-            email = subm['user']['email']
-            created = subm['backup']['created']
+            curr_user = subm.submitter
+            enrollment = curr_user.enrollments()[0]
+            sid = enrollment.sid
+            email = curr_user.email
+            created = subm.submission_time
             slips = max(0, timediff(created, deadline, timescale))
-            assign_slips[email] = [(assign.display_name, slips)]
-        course_slips = {k:course_slips[k] + assign_slips[k] 
-                        for k in course_slips.keys() | assign_slips.keys()}
+            if slips > 0:
+                rows.append((assign.display_name, sid, email, slips))
 
-    def get_row(email, assign_slips):
-        total_slips = sum((s for a, s in assign_slips))
-        assignments = ', '.join([a for a, s in assign_slips if s > 0])
-        return (email, total_slips, assignments)
-    
     header = (
-        'User Email', 
-        'Slip {} Used'.format(timescale.title()),
-        'Late Assignments')
-    rows = (get_row(*user_slips) for user_slips in course_slips.items())
+        'Assignment',
+        'User SID',
+        'User Email',
+        'Slip {} Used'.format(timescale.title()))
     created_time = local_time(dt.now(), course, fmt='%m-%d-%I-%M-%p')
     csv_name = '{}_{}.csv'.format(course.offering.replace('/', '-'), created_time)
 
