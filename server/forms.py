@@ -772,7 +772,7 @@ class ExportAssignment(BaseForm):
 
 class AssignSlipCalculatorForm(BaseForm):
     timescale = SelectField('Time Scale', default="days",
-                            choices=[(c.lower(), c.title()) for c in TIMESCALES],
+                            choices=[(c.lower(), c.title()) for c in TIMESCALES.keys()],
                             description="Time scale for slip calculation.")
     show_results = BooleanField('Show Results', default=False)
 

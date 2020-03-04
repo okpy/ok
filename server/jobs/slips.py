@@ -16,12 +16,9 @@ from server.constants import TIMESCALES
 """
 
 
-timescales = {'days': 86400, 'hours': 3600, 'minutes': 60}
-
-
 def timediff(created, deadline, timescale):
     secs_over = (created - deadline).total_seconds()
-    return math.ceil(secs_over / timescales[timescale.lower()])
+    return math.ceil(secs_over / TIMESCALES[timescale.lower()])
 
 
 def save_csv(csv_name, header, rows, show_results, user, course, logger):
