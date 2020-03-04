@@ -256,17 +256,6 @@ def chunks(l, n):
         yield l[prev_index:index]
         prev_index = index
 
-
-def output_csv_iterable(header, rows):
-    """ Generate csv string for given header list and list of rows (lists). """
-    output = StringIO()
-    writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-    writer.writerow(header)
-    [writer.writerow(row) for row in rows]
-    rows = output.getvalue().split('\r\n')
-    return [bytes(row + '\r\n', 'utf-8') for row in rows]
-
-
 def generate_csv(query, items, selector_fn):
     """ Generate csv export of scores for assignment.
         selector_fn: 1 arg function that returns a list of dictionaries

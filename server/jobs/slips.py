@@ -6,15 +6,12 @@ from datetime import datetime as dt
 
 from server import jobs
 from server.models import Assignment, ExternalFile, User
-from server.utils import encode_id, local_time, output_csv_iterable
+from server.utils import encode_id, local_time, generate_csv
 from server.constants import TIMESCALES
 
 """
  TODO: 
- - Use TIMESCALES instead of timescales
- - Work around output_csv_iterable
- 
- - Support for timezone?
+ - Support for timezone in filename?
 """
 
 
@@ -28,7 +25,16 @@ def timediff(created, deadline, timescale):
 
 def save_csv(csv_name, header, rows, show_results, user, course, logger):
     logger.info('Outputting csv...\n')
-    csv_iterable = output_csv_iterable(header, rows)
+
+    def selector_fn(lst):
+        if len(lst) != len(header):
+            raise IndexError
+        result = {}
+        for i in range(len(lst)):
+            result[header[i]] = lst[i]
+        return [result]
+
+    csv_iterable = list(map(lambda x: bytes(x, 'utf-8'), generate_csv(rows, header, selector_fn)))
 
     logger.info('Uploading...')
     upload = ExternalFile.upload(csv_iterable, 
@@ -45,16 +51,6 @@ def save_csv(csv_name, header, rows, show_results, user, course, logger):
         logger.info(csv_data)
 
     return download_link
-
-"""
-Of how many submissions is the user's score comprised?
-Which submissions do we consider relevant? How many relevant submissions can there be?
-Would a pair of final submission and revision backup be sufficient?
-
-Points, Style points, Check points
-Points -> give best submission for effort, total and regrade
-
-"""
 
 
 @jobs.background_job
@@ -84,13 +80,13 @@ def calculate_course_slips(assigns, timescale, show_results):
             slips = max(0, timediff(created, deadline, timescale))
             logger.info('LOG: ' + email + ' ' + str(slips))
             if slips > 0:
-                rows.append((assign.display_name, sid, email, slips))
+                rows.append([assign.display_name, sid, email, slips])
 
-    header = (
+    header = [
         'Assignment',
         'User SID',
         'User Email',
-        'Slip {} Used'.format(timescale.title()))
+        'Slip {} Used'.format(timescale.title())]
     created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
     csv_name = '{}_{}.csv'.format(course.display_name.replace('/', '-'), created_time)
 
@@ -132,12 +128,12 @@ def calculate_assign_slips(assign_id, timescale, show_results):
         created = subm.submission_time
         slips = max(0, timediff(created, deadline, timescale))
         if slips > 0:
-            rows.append((sid, email, slips))
+            rows.append([sid, email, slips])
 
-    header = (
+    header = [
         'User SID',
         'User Email', 
-        'Slip {} Used'.format(timescale.title()))
+        'Slip {} Used'.format(timescale.title())]
     created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
     csv_name = '{}_{}.csv'.format(assignment.display_name.replace('/', '-'), created_time)
 
