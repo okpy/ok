@@ -63,26 +63,6 @@ def calculate_course_slips(assigns, timescale, show_results):
     assigns = [a for a in course.assignments if a.id in assigns_set]
     rows = []
 
-    # for i, assign in enumerate(assignments, 1):
-    #     logger.info('Processing {} ({} of {})...'
-    #                 .format(assign.display_name, i, len(assigns_set)))
-    #     students_ids = get_students_with_submission(assign)
-    #     subms = []
-    #     for id in students_ids:
-    #         subm = assign.final_submission([id])
-    #         if subm:
-    #             subms.append(subm)
-    #     deadline = assign.due_date
-    #     for subm in subms:
-    #         curr_user = subm.submitter
-    #         enrollment = curr_user.enrollments()[0]
-    #         sid = enrollment.sid
-    #         email = curr_user.email
-    #         created = subm.submission_time
-    #         slips = max(0, timediff(created, deadline, timescale))
-    #         if slips > 0:
-    #             rows.append([assign.display_name, sid, email, slips])
-
     enrollments = job.course.get_students()
     for enrollment in enrollments:
         sid = enrollment.sid
@@ -101,15 +81,6 @@ def calculate_course_slips(assigns, timescale, show_results):
                 slips = 0
             row.append(slips)
         rows.append(row)
-
-
-
-
-    # header = [
-    #     'Assignment',
-    #     'User SID',
-    #     'User Email',
-    #     'Slip {} Used'.format(timescale.title())]
 
     header = [
         'User SID',
