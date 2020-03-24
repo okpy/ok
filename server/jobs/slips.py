@@ -26,7 +26,7 @@ def save_csv(csv_name, header, rows, show_results, user, course, logger):
 
     def selector_fn(lst):
         if len(lst) != len(header):
-            raise IndexError
+            raise IndexError(str(lst) + " " + str(header))
         result = {}
         for i in range(len(lst)):
             result[header[i]] = lst[i]
@@ -60,34 +60,66 @@ def calculate_course_slips(assigns, timescale, show_results):
     user = job.user
     course = job.course
     assigns_set = set(assigns)
-    assigns = (a for a in course.assignments if a.id in assigns_set)
+    assigns = [a for a in course.assignments if a.id in assigns_set]
     rows = []
 
-    for i, assign in enumerate(assigns, 1):
-        logger.info('Processing {} ({} of {})...'
-                    .format(assign.display_name, i, len(assigns_set)))
-        students_ids = get_students_with_submission(assign)
-        subms = []
-        for id in students_ids:
-            subm = assign.final_submission([id])
+    # for i, assign in enumerate(assignments, 1):
+    #     logger.info('Processing {} ({} of {})...'
+    #                 .format(assign.display_name, i, len(assigns_set)))
+    #     students_ids = get_students_with_submission(assign)
+    #     subms = []
+    #     for id in students_ids:
+    #         subm = assign.final_submission([id])
+    #         if subm:
+    #             subms.append(subm)
+    #     deadline = assign.due_date
+    #     for subm in subms:
+    #         curr_user = subm.submitter
+    #         enrollment = curr_user.enrollments()[0]
+    #         sid = enrollment.sid
+    #         email = curr_user.email
+    #         created = subm.submission_time
+    #         slips = max(0, timediff(created, deadline, timescale))
+    #         if slips > 0:
+    #             rows.append([assign.display_name, sid, email, slips])
+
+    enrollments = job.course.get_students()
+    for enrollment in enrollments:
+        sid = enrollment.sid
+        student = enrollment.user
+        email = student.email
+        row = [sid, email]
+        student_id = student.id
+        logger.info('Processing {}\'s submissions'.format(email))
+        for assignment in assigns:
+            deadline = assignment.due_date
+            subm = assignment.final_submission([student_id])
             if subm:
-                subms.append(subm)
-        deadline = assign.due_date
-        for subm in subms:
-            curr_user = subm.submitter
-            enrollment = curr_user.enrollments()[0]
-            sid = enrollment.sid
-            email = curr_user.email
-            created = subm.submission_time
-            slips = max(0, timediff(created, deadline, timescale))
-            if slips > 0:
-                rows.append([assign.display_name, sid, email, slips])
+                created = subm.submission_time
+                slips = max(0, timediff(created, deadline, timescale))
+            else:
+                slips = 0
+            row.append(slips)
+        rows.append(row)
+
+
+
+
+    # header = [
+    #     'Assignment',
+    #     'User SID',
+    #     'User Email',
+    #     'Slip {} Used'.format(timescale.title())]
 
     header = [
-        'Assignment',
         'User SID',
         'User Email',
-        'Slip {} Used'.format(timescale.title())]
+    ]
+    for assignment in assigns:
+        assign_name = assignment.display_name
+        header.append('Slip {} Used on '.format(timescale.title())
+                      + assign_name)
+
     created_time = local_time(dt.now(), course, fmt='%m-%d_%I-%M-%p')
     csv_name = '{}_{}.csv'.format(course.display_name.replace('/', '-'), created_time)
 
