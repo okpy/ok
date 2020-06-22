@@ -1,9 +1,9 @@
 
 # make sure we have this version of oauth, for now
-oauthlib>=3.0.0
+oauthlib<3.0.0,>=2.1.0
+requests-oauthlib==1.1.0 
 
-
-Flask==1.1.1
+Flask==1.0.4
 Jinja2==2.10.1
 
 # WSGI Containers
@@ -71,6 +71,7 @@ pynliner<1.0
 
 # Autograder Interface
 requests==2.21.0
+idna<2.9,>=2.5
 
 # Front end
 itsdangerous==0.24
@@ -108,4 +109,4 @@ selenium==3.3.3
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
 
-Werkzeug==0.15.5
+Werkzeug==0.14.1
