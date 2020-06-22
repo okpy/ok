@@ -54,9 +54,9 @@ Flask-RQ==0.2
 pyjwt==1.6.1
 
 # Flask DB Extensions
-# Flask-SQLAlchemy==2.2
+Flask-SQLAlchemy==2.2
 # Fork of Flask-SQLAlchemy==2.2 that supports custom create_engine paramters - use until https://github.com/mitsuhiko/flask-sqlalchemy/issues/166 is resolved
-https://github.com/c-w/flask-sqlalchemy/archive/2.2-with-engine-params-fix.zip
+# https://github.com/c-w/flask-sqlalchemy/archive/2.2-with-engine-params-fix.zip
 Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.3
 
