@@ -1,6 +1,6 @@
 
 # make sure we have this version of oauth, for now
-oauthlib==2.0.2
+oauthlib>=3.0.0
 
 
 Flask==1.1.1
