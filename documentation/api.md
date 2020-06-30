@@ -291,6 +291,59 @@ name | String | Endpoint
 
 See example output for other fields.
 
+## Create an assignment
+>><h4> Example Request </h4>
+```python
+import requests
+data = {
+    'display_name': 'Test Assignment',
+    'due_date': '2016-11-07T06:59:59',
+    'lock_date': '2016-11-08T06:59:59''
+}
+url = "https://okpy.org/api/v3/cal/cs61a/su20/sample"
+access_token = 'test'
+r = requests.post(url.format(access_token), data=data)
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+    "data": {},
+    "code": 200,
+    "message": "success"
+}
+```
+
+Create a new backup or submission.
+Used by the ok-client to create a new backup or submission.
+
+#### Permissions
+The access_token must be for an admin or a staff member for the target course..
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/backups/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of admin / staff member
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+assignment | String | (Required) Assignment endpoint from staff dashboard
+messages | Dictionary | (Required) List of messages to associate with backup.
+submit | Boolean | (Optional, Default: False) Whether this is a submission
+
+#### Response
+Parameter | Type | Description
+---------- | ------- | -------
+email | String | The account the backup was created under
+key | String | The ID of the backup
+url | String | The url to the backup on the OK website
+assignment | String | The name of the assignment
+course | Dictionary | Course Information
+
 ## Group Info
 >><h4> Example Response </h4>
 ```
