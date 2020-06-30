@@ -21,7 +21,7 @@ from datetime import datetime as dt
 from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
 import flask_restful as restful
-from flask_restful import reqparse, fields, marshal_with
+from flask_restful import reqparse, fields, marshal_with, inputs
 from flask_restful.representations.json import output_json
 
 from server import models, utils
@@ -267,6 +267,51 @@ class AssignmentSchema(APISchema):
         'course': fields.Nested(CourseSchema.get_fields),
         'name': fields.String,
     }
+
+    post_fields = {
+    }
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('display_name', type=str, required=True, help='Display Name of Assignment')
+        self.parser.add_argument('due_date', type=inputs.datetime_from_iso8601, required=True, help='Due Date')
+        self.parser.add_argument('lock_date', type=inputs.datetime_from_iso8601, required=True, help='Lock Date')
+        self.parser.add_argument('max_group_size', type=int, default=1, help='Max Group Size')
+        self.parser.add_argument('url', type=str, default=False, help='URL')
+        self.parser.add_argument('revisions_allowed', type=bool, default=False, help='Enable Revisions')
+        self.parser.add_argument('autograding_key', type=str, help='Autograder Key')
+        self.parser.add_argument('continuous_autograding', type=bool, help='Send Submissions to Autograder Immediately')
+        self.parser.add_argument('uploads_enabled', type=bool, default=True, help='Enable Web Uploads')
+        self.parser.add_argument('upload_info', type=str, help='Upload Instructions')
+        self.parser.add_argument('visible', type=bool, default=True, help='Visible On Student Dashboard')
+
+    def create_assignment(self, offering, name):
+        args = self.parse_args()
+
+        course = models.Course.by_name(offering)
+
+        assignment = models.Assignment(
+            course_id=course.id,
+            creator_id=current_user.id,
+            display_name=args["display_name"],
+            name=name,
+            due_date=utils.server_time_obj(args["due_date"], course),
+            lock_date=utils.server_time_obj(args["due_date"], course),
+            max_group_size=args["max_group_size"],
+            url=args["url"],
+            revisions_allowed=args["revisions_allowed"],
+            autograding_key=args["autograding_key"],
+            continuous_autograding=args["continuous_autograding"],
+            uploads_enabled=args["uploads_enabled"],
+            upload_info=args["upload_info"],
+            visible=args["visible"],
+        )
+
+        models.db.session.add(assignment)
+
+        models.db.session.commit()
+
+        return assignment
 
 class CourseAssignmentSchema(APISchema):
     get_fields = {'assignments':
@@ -828,14 +873,15 @@ class Version(PublicResource):
         return {}
 
 class Assignment(Resource):
-    """ Infromation about an assignment
-    Authenticated. Permissions: >= User
+    """ Information about an assignment
+    Authenticated. Permissions: >= User, Staff Writable
     Used by: Collaboration/Scripts
     """
     model = models.Assignment
     schema = AssignmentSchema()
     required_scopes = {
-        'get': []
+        'get': [],
+        'post': ['all'],
     }
 
     @marshal_with(schema.get_fields)
@@ -846,6 +892,18 @@ class Assignment(Resource):
         elif not self.model.can(assign, user, 'view'):
             restful.abort(403)
         return assign
+
+    @marshal_with(schema.post_fields)
+    def post(self, name):
+        if not self.model.can(None, current_user, "create"):
+            restful.abort(403)
+        try:
+            offering, name = name.rsplit("/")
+            self.schema.create_assignment(offering, name)
+        except ValueError as e:
+            return restful.abort(403, message=str(e))
+        return {}
+
 
 class Group(Resource):
     """ Infromation about a group member by email.
