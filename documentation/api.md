@@ -291,6 +291,61 @@ name | String | Endpoint
 
 See example output for other fields.
 
+## Create an assignment
+>><h4> Example Request </h4>
+```python
+import requests
+data = {
+    'display_name': 'Test Assignment',
+    'due_date': '2016-11-07T06:59:59',
+    'lock_date': '2016-11-08T06:59:59''
+}
+url = "https://okpy.org/api/v3/cal/cs61a/su20/create_assignment?access_token={}"
+access_token = 'test'
+r = requests.post(url.format(access_token), data=data)
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+    "data": {},
+    "code": 200,
+    "message": "success"
+}
+```
+
+Create a new backup or submission.
+Used by the ok-client to create a new backup or submission.
+
+#### Permissions
+The access_token must be for an admin or a staff member for the target course..
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/cal/cs61a/su20/create_assignment/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of admin / staff member
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+display_name | String | (Required) The display name of the assignment
+due_date | String | (Required) The due date
+lock_date | String | (Required) The lock date
+max_group_size | Integer | (Optional, default 1) The max group size
+url | String | (Optional) URL
+revisions_allowed | Boolean | (Optional, default False) Enable revisions
+autograding_key | String | (Optional) Autograder key
+continuous_autograding | Boolean | (Optional) Send Submissions to Autograder Immediately
+uploads_enabled | Boolean | (Optional, default True) Whether to enable web uploads
+upload_info | String | (Optional) Uploading instructions
+visible | Boolean | (Optional, default True) Whether to make the assignment visible on the student dashboard
+
+#### Response
+Just a success or failure message
+
 ## Group Info
 >><h4> Example Response </h4>
 ```
