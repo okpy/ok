@@ -3,8 +3,6 @@ import dateutil.parser
 import json
 import random
 
-from server import constants
-
 from server.models import (db, Assignment, Backup, Course, User,
                            Version, Group)
 from server.utils import encode_id
@@ -556,8 +554,32 @@ class TestApi(OkTestCase):
             self.assert_403(response)
             self.logout()
 
+    def test_create_assignment(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+        response = self.client.post("/api/v3/assignment/" + self.course.offering + "/newassignment", json={
+            'display_name': 'API Test Assignment',
+            'due_date': '2016-11-07T06:59:59',
+            'lock_date': '2016-11-08T06:59:59',
+        })
+        self.assert200(response)
 
+        assignment = Assignment.query.filter_by(name=self.course.offering + '/newassignment').one()
 
+        self.assertEqual(assignment.display_name, 'API Test Assignment')
+        self.assertEqual(assignment.due_date.day, 7)
+
+        self.login(self.user1.email)
+        response = self.client.post("/api/v3/assignment/" + self.course.offering + "/newassignment2", json={
+            'display_name': 'API Test Assignment',
+            'due_date': '2016-11-07T06:59:59',
+            'lock_date': '2016-11-08T06:59:59',
+        })
+        self.assert403(response)
+
+        assignment = Assignment.query.filter_by(name=self.course.offering + '/newassignment2').one_or_none()
+
+        self.assertEqual(assignment, None)
 
     def test_user_api(self):
         self._test_backup(True)

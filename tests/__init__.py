@@ -14,7 +14,9 @@ from server import constants
 
 class OkTestCase(TestCase):
     def create_app(self):
-        return create_app('test')
+        app = create_app('test')
+        app.debug = True
+        return app
 
     def setUp(self):
         db.drop_all()

@@ -285,18 +285,18 @@ class AssignmentSchema(APISchema):
         self.parser.add_argument('upload_info', type=str, help='Upload Instructions')
         self.parser.add_argument('visible', type=bool, default=True, help='Visible On Student Dashboard')
 
-    def create_assignment(self, offering, name):
+    def create_assignment(self, user, offering, name):
         args = self.parse_args()
 
         course = models.Course.by_name(offering)
 
         assignment = models.Assignment(
-            course_id=course.id,
-            creator_id=current_user.id,
+            course=course,
+            creator_id=user.id,
             display_name=args["display_name"],
             name=name,
             due_date=utils.server_time_obj(args["due_date"], course),
-            lock_date=utils.server_time_obj(args["due_date"], course),
+            lock_date=utils.server_time_obj(args["lock_date"], course),
             max_group_size=args["max_group_size"],
             url=args["url"],
             revisions_allowed=args["revisions_allowed"],
@@ -306,6 +306,10 @@ class AssignmentSchema(APISchema):
             upload_info=args["upload_info"],
             visible=args["visible"],
         )
+
+        if not models.Assignment.can(assignment, user, "create"):
+            models.db.session.remove()
+            restful.abort(403)
 
         models.db.session.add(assignment)
 
@@ -881,7 +885,7 @@ class Assignment(Resource):
     schema = AssignmentSchema()
     required_scopes = {
         'get': [],
-        'post': ['all'],
+        'post': [],
     }
 
     @marshal_with(schema.get_fields)
@@ -894,14 +898,9 @@ class Assignment(Resource):
         return assign
 
     @marshal_with(schema.post_fields)
-    def post(self, name):
-        if not self.model.can(None, current_user, "create"):
-            restful.abort(403)
-        try:
-            offering, name = name.rsplit("/")
-            self.schema.create_assignment(offering, name)
-        except ValueError as e:
-            return restful.abort(403, message=str(e))
+    def post(self, user, name):
+        offering, _ = name.rsplit("/", 1)
+        self.schema.create_assignment(user, offering, name)
         return {}
 
 
