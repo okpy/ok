@@ -9,7 +9,7 @@ RUN apk add --update \
     musl-dev \
     openssl-dev \
     libffi-dev \
-    python-dev \
+    python3-dev \
     gcc
 
 RUN mkdir /code/
