@@ -277,7 +277,7 @@ class AssignmentSchema(APISchema):
         self.parser.add_argument('due_date', type=inputs.datetime_from_iso8601, required=True, help='Due Date')
         self.parser.add_argument('lock_date', type=inputs.datetime_from_iso8601, required=True, help='Lock Date')
         self.parser.add_argument('max_group_size', type=int, default=1, help='Max Group Size')
-        self.parser.add_argument('url', type=str, default=False, help='URL')
+        self.parser.add_argument('url', type=str, default="", help='URL')
         self.parser.add_argument('revisions_allowed', type=bool, default=False, help='Enable Revisions')
         self.parser.add_argument('autograding_key', type=str, help='Autograder Key')
         self.parser.add_argument('continuous_autograding', type=bool, help='Send Submissions to Autograder Immediately')
