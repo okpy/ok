@@ -307,7 +307,7 @@ class AssignmentSchema(APISchema):
             visible=args["visible"],
         )
 
-        old_assignment = models.Assignment.name_to_assign_info(args['assignment'])
+        old_assignment = models.Assignment.name_to_assign_info(name)
 
         if old_assignment is not None:
             constructor_fields['id'] = old_assignment.id
