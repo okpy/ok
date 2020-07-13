@@ -290,7 +290,7 @@ class AssignmentSchema(APISchema):
 
         course = models.Course.by_name(offering)
 
-        assignment = models.Assignment(
+        constructor_fields = dict(
             course=course,
             creator_id=user.id,
             display_name=args["display_name"],
@@ -306,6 +306,13 @@ class AssignmentSchema(APISchema):
             upload_info=args["upload_info"],
             visible=args["visible"],
         )
+
+        assignment = models.Assignment.query.filter_by(name=name).one_or_none()
+        if assignment is not None:
+            for k, v in constructor_fields.items():
+                setattr(assignment, k, v)
+        else:
+            assignment = models.Assignment(**constructor_fields)
 
         if not models.Assignment.can(assignment, user, "create"):
             models.db.session.remove()

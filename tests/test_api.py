@@ -569,6 +569,17 @@ class TestApi(OkTestCase):
         self.assertEqual(assignment.display_name, 'API Test Assignment')
         self.assertEqual(assignment.due_date.day, 7)
 
+        response = self.client.post("/api/v3/assignment/" + self.course.offering + "/newassignment", json={
+            'display_name': 'API Test Assignment',
+            'due_date': '2016-11-10T06:59:59',
+            'lock_date': '2016-11-11T06:59:59',
+        })
+        self.assert200(response)
+
+        assignment = Assignment.query.filter_by(name=self.course.offering + '/newassignment').one()
+
+        self.assertEqual(assignment.due_date.day, 10)
+
         self.login(self.user1.email)
         response = self.client.post("/api/v3/assignment/" + self.course.offering + "/newassignment2", json={
             'display_name': 'API Test Assignment',
