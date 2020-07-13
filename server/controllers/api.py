@@ -307,12 +307,12 @@ class AssignmentSchema(APISchema):
             visible=args["visible"],
         )
 
-        old_assignment = models.Assignment.name_to_assign_info(name)
-
-        if old_assignment is not None:
-            constructor_fields['id'] = old_assignment.id
-
-        assignment = models.Assignment(**constructor_fields)
+        assignment = models.Assignment.query.filter_by(name=name).one_or_none()
+        if assignment is not None:
+            for k, v in constructor_fields.items():
+                setattr(assignment, k, v)
+        else:
+            assignment = models.Assignment(**constructor_fields)
 
         if not models.Assignment.can(assignment, user, "create"):
             models.db.session.remove()
