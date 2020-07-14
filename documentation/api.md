@@ -314,8 +314,7 @@ response = r.json()
 }
 ```
 
-Create a new backup or submission.
-Used by the ok-client to create a new backup or submission.
+Create an assignment. If it exists, clobber it and replace with the given parameters.
 
 #### Permissions
 The access_token must be for an admin or a staff member for the target course..
