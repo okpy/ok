@@ -1,4 +1,6 @@
 # TODO: Split models into distinct .py files
+from fnmatch import fnmatch
+
 from werkzeug.exceptions import BadRequest
 
 from flask_sqlalchemy import SQLAlchemy
@@ -232,7 +234,7 @@ class User(Model, UserMixin):
     @transaction
     def update_email(self, email):
         self.email = email
-        db.session.commit()        
+        db.session.commit()
         return self
 
     @staticmethod
@@ -1621,7 +1623,10 @@ class Client(Model):
         parse_result = urllib.parse.urlparse(redirect_uri)
         if parse_result.hostname in ('localhost', '127.0.0.1'):
             return True
-        return redirect_uri in self.redirect_uris
+        for candidate_redirect_uri in self.redirect_uris:
+            if fnmatch(redirect_uri, candidate_redirect_uri):
+                return True
+        return False
 
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
