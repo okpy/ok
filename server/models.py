@@ -232,7 +232,7 @@ class User(Model, UserMixin):
     @transaction
     def update_email(self, email):
         self.email = email
-        db.session.commit()        
+        db.session.commit()
         return self
 
     @staticmethod
@@ -1622,6 +1622,12 @@ class Client(Model):
         if parse_result.hostname in ('localhost', '127.0.0.1'):
             return True
         return redirect_uri in self.redirect_uris
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if action == "view" or action == "edit":
+            return user.is_admin or obj.user_id == user.id
+        return False  # unimplemented
 
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -534,6 +534,30 @@ class CommentSchema(APISchema):
         models.db.session.commit()
         return {}
 
+class ClientSchema(APISchema):
+    client_fields = {
+        'client_name': fields.String,
+        'owner_email': fields.String,
+        'description': fields.String,
+        'client_id': fields.String,
+        'is_confidential': fields.Boolean,
+        'allowed_redirects': fields.List(fields.String),
+    }
+
+class ClientRedirectURLSchema(APISchema):
+    post_fields = {}
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('url', type=str, required=True,
+                                 help='New URL to authorize for redirects')
+
+    def add_redirect_url(self, client: models.Client):
+        args = self.parse_args()
+        url = args['url']
+        client.redirect_uris = client.redirect_uris + [url]
+        models.db.session.commit()
+        return {}
 
 class Resource(restful.Resource):
     version = 'v3'
@@ -1026,6 +1050,54 @@ class File(Resource):
     def get(self, user, file_id):
         return files.file_download(file_id, user)
 
+class Client(Resource):
+    """ View OAuth clients programmatically.
+        Authenticated. Permissions: >= Staff owning the client
+    """
+    schema = ClientSchema()
+    model = models.Client
+
+    @marshal_with(schema.client_fields)
+    def get(self, user, client_id):
+        client = models.Client.query.get(client_id)
+        if not client:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Client.can(client, user, "view"):
+            restful.abort(403)
+        return {
+            'client_name': client.name,
+            'owner_email': client.user.email,
+            'description': client.description,
+            'client_id': client.client_id,
+            'is_confidential': client.is_confidential,
+            'allowed_redirects': client.redirect_uris,
+        }
+
+class ClientRedirectURL(Resource):
+    """
+    Add redirect URLs to OAuth clients.
+    Authenticated. Permissions: >= Staff owning the client
+    """
+    schema = ClientRedirectURLSchema()
+    model = models.Comment
+
+    @marshal_with(schema.post_fields)
+    def post(self, user, client_id):
+        client = models.Client.query.get(client_id)
+        if not client:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Client.can(client, user, "edit"):
+            restful.abort(403)
+
+        return self.schema.add_redirect_url(client)
+
+
 # Endpoints
 api.add_resource(V3Info, '/v3/')
 
@@ -1054,3 +1126,5 @@ api.add_resource(Score, '/v3/score/')
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
 api.add_resource(File, '/v3/file/<hashid:file_id>')
+api.add_resource(Client, '/v3/client/<string:client_id>')
+api.add_resource(ClientRedirectURL, '/v3/client/<string:client_id>/redirect_urls')
