@@ -961,6 +961,11 @@ Parameter | Default | Description
 ---------- | ------- | -------
 access_token | None | (Required) Access Token of staff member
 
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+url | String | (Required) The newly added redirect URL
+
 #### Response
 Parameter | Type | Description
 ---------- | ------- | -------
