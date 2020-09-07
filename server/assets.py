@@ -4,7 +4,7 @@ from flask_assets import Bundle
 # when debugging, and we'll minify them in production anyway.
 
 debug_js = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.js',
+    'https://unpkg.com/tota11y@0.1.5/build/tota11y.js',
     output='public/js/debug.js'
 )
 
@@ -17,8 +17,8 @@ landing_css = Bundle(
 common_css = Bundle(
     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css',
     'https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700',
-    'https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css',
+    'https://unpkg.com/ionicons@4.2.4/dist/css/ionicons.css',
+    'https://unpkg.com/sweetalert@1.1.3/dist/sweetalert.css',
     'css/helper.css',
     'css/swal-theme.css',
     'lib/datepicker/css/bootstrap-datetimepicker.css',
@@ -37,8 +37,8 @@ oauth_css = Bundle(
 common_js = Bundle(
     'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.js',
     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.0.1/markdown-it.js',
+    'https://unpkg.com/sweetalert@1.1.3/dist/sweetalert.min.js',
+    'https://unpkg.com/markdown-it@8.0.1/dist/markdown-it.js',
     'https://cdn.rawgit.com/okpy/markdown-it-sanitizer/a328e3d/dist/markdown-it-sanitizer.js',
     'https://cdn.rawgit.com/okpy/markdown-it-anchor/722f7a89/dist/markdown-it-anchor.js',
     'https://cdn.ravenjs.com/2.1.0/raven.js',
@@ -52,13 +52,13 @@ common_js = Bundle(
 )
 
 dropzone_css = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css',
+    'https://unpkg.com/dropzone@4.3.0/dist/dropzone.css',
     'css/dropzone.css',
     filters='cssmin',
     output='public/css/dropzone.css'
 )
 dropzone_js = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js',
+    'https://unpkg.com/dropzone@4.3.0/dist/dropzone.js',
     'js/dropzone.js',
     filters='jsmin',
     output='public/js/dropzone.js'
@@ -71,16 +71,16 @@ student_css = Bundle(
 )
 
 student_js = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.js',
+    'https://unpkg.com/instantclick@3.1.0/instantclick.js',
     'js/student.js',
     filters='jsmin',
     output='public/js/student.js'
 )
 
 staff_css = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/AdminLTE.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/skins/skin-black-light.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.css',
+    'https://unpkg.com/admin-lte@2.3.6/dist/css/AdminLTE.css',
+    'https://unpkg.com/admin-lte@2.3.6/dist/css/skins/skin-black-light.css',
+    'https://unpkg.com/eonasdan-bootstrap-datetimepicker@4.17.47/build/css/bootstrap-datetimepicker.css',
     'css/staff.css',
     'css/jquery.steps.css',
     filters='cssmin',
@@ -88,10 +88,10 @@ staff_css = Bundle(
 )
 
 staff_js = Bundle(
-    'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/js/app.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/list.js/1.2.0/list.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js',
+    'https://unpkg.com/moment@2.14.1/moment.js',
+    'https://unpkg.com/admin-lte@2.3.6/dist/js/app.js',
+    'https://unpkg.com/list.js@1.2.0/dist/list.js',
+    'https://unpkg.com/eonasdan-bootstrap-datetimepicker@4.17.47/src/js/bootstrap-datetimepicker.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jquery-steps/1.1.0/jquery.steps.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/jquery.validate.js',
     'js/staff.js',
