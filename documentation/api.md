@@ -882,6 +882,96 @@ access_token | None | (Required) Access Token of staff member
 #### Response
 Returns a redirect or a file response as an attachment.
 
+# OAuth Clients
+
+## OAuth Client Info
+>><h4> Example Response </h4>
+```
+curl "https://okpy.org/api/v3/client/test_client"
+{
+    "code":200,
+    "data":{
+        "allowed_redirects":[
+            "test"
+        ],
+        "client_id":"test_client",
+        "client_name":"Test Client",
+        "description":"",
+        "is_confidential":false,
+        "owner_email":"staff1@bitdiddle.net"
+    },
+    "message":"success"
+}
+```
+
+Get info on a particular OAuth client.
+
+#### Permissions
+Requires an access token. The access token must belong to an admin or to the owner of the OAuth client.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/client/<string:client_id>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member
+
+#### Response
+Parameter | Type | Description
+---------- | ------- | -------
+allowed_redirects | List | List of allowed redirect URLs
+client_id | String | ID of the OAuth client
+client_name | String | Name of the OAuth client
+description | String | Description of the OAuth client
+is_confidential | String | Whether the OAuth client is a confidential client (i.e. whether the secret is hidden from users)
+owner_email | String | The email address of the staff member owning the OAuth client
+
+## Add allowed redirect URL
+>><h4> Example Request </h4>
+```python
+import requests
+data = {
+    'url': 'https://google.com/oauth/authorized',
+}
+url = 'https://okpy.org/api/v3/client/test_client/redirect_urls'
+access_token = 'test'
+r = requests.post(url.format(access_token), data=data)
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+    "data": {},
+    "code": 200,
+    "message": "success"
+}
+```
+
+Add a new redirect URL to an OAuth client.
+
+#### Permissions
+Requires an access token. The access token must belong to an admin or to the owner of the OAuth client.
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/client/<string:client_id>/redirect_urls`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+url | String | (Required) The newly added redirect URL
+
+#### Response
+Parameter | Type | Description
+---------- | ------- | -------
+success | Boolean | Whether the redirect URL was added
+message | String | More details about the success state
+
 # Errors
 
 The Ok API uses the following error codes:

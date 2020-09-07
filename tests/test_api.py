@@ -3,8 +3,8 @@ import dateutil.parser
 import json
 import random
 
-from server.models import (db, Assignment, Backup, Course, User,
-                           Version, Group)
+from server.models import (Client, db, Assignment, Backup, Course, User,
+                           Version, Group, )
 from server.utils import encode_id
 
 from tests import OkTestCase
@@ -676,3 +676,44 @@ class TestApi(OkTestCase):
         auth_response = self.client.get(student_endpoint)
         self.assert_200(auth_response)
         self.assertEqual(anon_response.json['data'], auth_response.json['data'])
+
+    def test_client(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+        db.session.add(Client(
+            name='Test Client',
+            description='',
+            user=self.staff1,
+            client_id='test_client',
+            client_secret='secret',
+            redirect_uris=[],
+            default_scopes=['all'],
+            is_confidential=False
+        ))
+
+        response = self.client.get('/api/v3/client/test_client')
+        self.assertEqual(
+            response.json['data'],
+            {'allowed_redirects': [], 'client_id': 'test_client', 'client_name': 'Test Client', 'description': '',
+             'is_confidential': False, 'owner_email': 'staff1@bitdiddle.net'}
+        )
+
+        response = self.client.post('/api/v3/client/test_client/redirect_urls', json={'url': 'test'})
+        self.assert_200(response)
+
+        response = self.client.get('/api/v3/client/test_client')
+        self.assertEqual(response.json['data']['allowed_redirects'], ['test'])
+
+        self.login(self.admin.email)
+        response = self.client.post('/api/v3/client/test_client/redirect_urls', json={'url': 'test2'})
+        self.assert_200(response)
+
+        response = self.client.get('/api/v3/client/test_client')
+        self.assertEqual(response.json['data']['allowed_redirects'], ['test', 'test2'])
+
+        self.login(self.staff2.email)
+        response = self.client.post('/api/v3/client/test_client/redirect_urls', json={'url': 'test3'})
+        self.assert_403(response)
+
+        response = self.client.get('/api/v3/client/test_client')
+        self.assert_403(response)
