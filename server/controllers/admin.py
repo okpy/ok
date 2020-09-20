@@ -216,7 +216,7 @@ def composition(bid):
     if existing:
         form.kind.data = "composition"
         form.message.data = existing.message
-        form.score.data = existing.score
+        form.score.data = str(existing.score)
     return grading_view(backup, form=form, is_composition=True)
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
@@ -907,7 +907,7 @@ def assign_grading(cid, aid):
         data = assign.course_submissions()
         backups = set(b['backup']['id'] for b in data if b['backup'])
         students = set(b['user']['id'] for b in data if b['backup'])
-        
+
         tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
                                                form.kind.data)
 
@@ -1444,7 +1444,7 @@ def client(client_id):
 def student_view(cid, email):
     form = forms.EnrollmentForm()
     if form.validate_on_submit():
-        if form.email.data != email:         
+        if form.email.data != email:
             user = User.lookup(email)
             new_email = form.email.data
 
@@ -1459,7 +1459,7 @@ def student_view(cid, email):
             except Forbidden as e:
                 flash(e.description, 'error')
                 return redirect(request.url)
-                
+
             Enrollment.enroll_from_form(cid, form)
             return redirect(url_for("admin.student_view", cid = cid, email = new_email), code=301)
         else:
