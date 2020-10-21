@@ -432,8 +432,9 @@ class BatchCSVScoreForm(SubmissionTimeForm):
 
     def is_number(self, s):
         try:
-            return bool(s and float(s))
-        except Exception:
+            float(s)
+            return True
+        except:
             return False
 
     def validate(self):
