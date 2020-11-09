@@ -1621,6 +1621,9 @@ class Client(Model):
         parse_result = urllib.parse.urlparse(redirect_uri)
         if parse_result.hostname in ('localhost', '127.0.0.1'):
             return True
+        parts = parse_result.hostname.split(".")
+        if parts[-2:] == ["cs61a", "org"]:
+            return True
         return redirect_uri in self.redirect_uris
 
     @classmethod
