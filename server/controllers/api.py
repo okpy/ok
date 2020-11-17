@@ -17,6 +17,7 @@ API.py - /api/{version}/endpoints
 """
 from functools import wraps
 from datetime import datetime as dt
+import io, csv
 
 from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
@@ -26,8 +27,9 @@ from flask_restful.representations.json import output_json
 
 from server import models, utils
 from server.autograder import submit_continuous
-from server.constants import STAFF_ROLES, VALID_ROLES
+from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 from server.controllers import files
+from server.jobs import export_grades
 from server.utils import encode_id, decode_id
 
 endpoints = Blueprint('api', __name__)
@@ -332,6 +334,11 @@ class CourseEnrollmentSchema(APISchema):
     get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
                   for role in VALID_ROLES}
 
+class CourseGradesSchema(APISchema):
+    get_fields = {
+        'requester': fields.String,
+        'grades': fields.String
+    }
 
 class GroupSchema(APISchema):
     member_fields = {
@@ -864,6 +871,54 @@ class CourseAssignment(PublicResource):
             restful.abort(404)
         return {'assignments': course.assignments}
 
+class CourseGrades(Resource):
+    """ All grades for a given course.
+        Authenticated. Permissions: Staff
+        Used by: Export Scripts.
+    """
+    schema = CourseGradesSchema()
+    model = models.Course
+    
+    @marshal_with(schema.get_fields)
+    def get(self, offering, user):
+        if offering is None:
+            restful.abort(405)
+
+        course = self.model.by_name(offering)
+        if not self.model.can(course, user, 'export'):
+            return restful.abort(403)
+
+        assignments = course.assignments
+        students = (models.Enrollment.query
+                        .options(models.db.joinedload('user'))
+                        .filter(models.Enrollment.role == STUDENT_ROLE, models.Enrollment.course == course)
+                        .all())
+
+        headers, assignments = export_grades.get_headers(assignments)
+        total_students = len(students)
+
+        users = [student.user for student in students]
+        user_ids = [user.id for user in users]
+
+        all_scores = export_grades.collect_all_scores(assignments, user_ids)
+
+        with io.StringIO() as f:
+            writer = csv.writer(f)
+            writer.writerow(headers) # write headers
+
+            for i, student in enumerate(students, start=1):
+                row = export_grades.export_student_grades(student, assignments, all_scores)
+                writer.writerow(row)
+            f.seek(0)
+            # convert to bytes for csv upload
+            csv_bytes = io.BytesIO(bytearray(f.read(), 'utf-8'))
+
+        return {
+            "requester": user.email,
+            "grades": csv_bytes.getvalue().decode('utf-8')
+        }
+
+
 class Score(Resource):
     """ Score creation.
         Authenticated. Permissions: >= Staff
@@ -1119,6 +1174,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 COURSE_BASE = '/v3/course/<offering:offering>'
 api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
+api.add_resource(CourseGrades, COURSE_BASE + '/grades')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')

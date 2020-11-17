@@ -416,7 +416,7 @@ def export_grades_job(cid):
     form = forms.ExportGradesForm(current_course.assignments)
     if form.validate_on_submit():
         job = jobs.enqueue_job(
-            export_grades.export_grades,
+            export_grades.export_grades_background,
             description="Export Grades for {}".format(current_course.offering),
             timeout=2 * 60 * 60, # 1 hour
             course_id=cid,
