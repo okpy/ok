@@ -110,12 +110,6 @@ def collect_all_scores(assignments, user_ids):
     return all_scores
 
 @jobs.background_job
-def export_grades_background():
-    return export_grades()
-
-def export_grades_foreground():
-    return export_grades()
-
 def export_grades():
     logger = jobs.get_job_logger()
     current_user = jobs.get_current_job().user
