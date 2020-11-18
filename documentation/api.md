@@ -234,6 +234,37 @@ access_token | None | (Required) Access Token of staff member or OK admin
 See example response.
 <!-- End Endpoint -->
 
+## Roster
+>><h4> Example Response </h4>
+```
+curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/roster?access_token=test"
+{
+    "data": {
+        "requester": "okstaff@okpy.org",
+        "roster": "email,name,sid,class_account,section,role\nemail@example.edu,John Doe,929282,,,Student\rokstudent@okpy.org,,,,,Student\r"
+    },
+    "code": 200,
+    "message": "success"
+}
+```
+
+Get the current roster for a specific course.
+
+#### Permissions
+The access_token must be for an admin or a staff member for the target course.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/course/<offering:course>/roster`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member or OK admin
+
+#### Response
+See example response.
+<!-- End Endpoint -->
+
 # Assignments
 
 ## List Assignments
