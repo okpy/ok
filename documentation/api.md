@@ -210,7 +210,7 @@ curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/grades?access_token=test"
 {
     "data": {
         "requester": "okstaff@okpy.org",
-        "grades": "Email,SID,Project 1 (Total),Project 1 (Composition)\remail@example.edu,,14.3,2.0\rokstudent@okpy.org,,6.7,1.0"
+        "grades": "Email,SID,Project 1 (Total),Project 1 (Composition)\remail@example.edu,,14.3,2.0\rokstudent@okpy.org,,6.7,1.0\r"
     },
     "code": 200,
     "message": "success"
