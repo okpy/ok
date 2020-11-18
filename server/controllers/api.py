@@ -334,6 +334,12 @@ class CourseEnrollmentSchema(APISchema):
     get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
                   for role in VALID_ROLES}
 
+class CourseRosterSchema(APISchema):
+    get_fields = {
+        'requester': fields.String,
+        'roster': fields.String
+    }
+
 class CourseGradesSchema(APISchema):
     get_fields = {
         'requester': fields.String,
@@ -836,7 +842,7 @@ class Enrollment(Resource):
         return resource == requester
 
 class CourseEnrollment(Resource):
-    """ Information about all students in a course.
+    """ Information about all people in a course.
     Authenticated. Permissions: >= User or admins
     Used by: Export scripts.
     """
@@ -856,6 +862,37 @@ class CourseEnrollment(Resource):
         for p in course.participations:
             data[p.role].append(p.user)
         return data
+
+class CourseRoster(Resource):
+    """ Information about all students in a course.
+    Authenticated. Permissions: >= Staff
+    Used by: Export scripts.
+    """
+    model = models.Course
+    schema = CourseRosterSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering, user):
+        course = self.model.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        if not self.model.can(course, user, 'staff'):
+            restful.abort(403)
+        
+        query = (models.Enrollment.query.options(models.db.joinedload('user'))
+                       .filter_by(course_id=course.id)
+                       .filter(models.Enrollment.role.in_([STUDENT_ROLE]))
+                       .order_by(models.Enrollment.role))
+        items = models.User.export_items + models.Enrollment.export_items
+
+        def row_to_csv(row):
+            return [row.export, row.user.export]
+
+        csv_generator = utils.generate_csv(query, items, row_to_csv)
+        return {
+            'requester': user.email,
+            'roster': ''.join(list(csv_generator))
+        }
 
 class CourseAssignment(PublicResource):
     """ All assignments for a course.
@@ -1173,6 +1210,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 # Course Info
 COURSE_BASE = '/v3/course/<offering:offering>'
 api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
+api.add_resource(CourseRoster, COURSE_BASE + '/roster')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
 api.add_resource(CourseGrades, COURSE_BASE + '/grades')
 

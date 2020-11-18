@@ -749,3 +749,35 @@ class TestApi(OkTestCase):
         endpoint = '/api/v3/course/cal/cs61a/sp16/grades'
         response = self.client.get(endpoint)
         self.assert_200(response)
+    
+    def test_course_roster(self):
+        self._test_backup(True)
+        self.login(self.staff1.email)
+
+        endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        
+        self.login(self.staff2.email)
+
+        endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+
+        self.login(self.user1.email)
+
+        endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.login(self.user6.email)
+
+        endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.login(self.admin.email)
+
+        endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
