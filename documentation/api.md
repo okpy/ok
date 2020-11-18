@@ -203,6 +203,37 @@ access_token | None | (Required) Access Token of staff member
 See example response.
 <!-- End Endpoint -->
 
+## Grades
+>><h4> Example Response </h4>
+```
+curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/grades?access_token=test"
+{
+    "data": {
+        "requester": "okstaff@okpy.org",
+        "grades": "Email,SID,Project 1 (Total),Project 1 (Composition)\remail@example.edu,,14.3,2.0\rokstudent@okpy.org,,6.7,1.0\r"
+    },
+    "code": 200,
+    "message": "success"
+}
+```
+
+Get all current grades for a specific course.
+
+#### Permissions
+The access_token must be for an admin or a staff member for the target course.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/course/<offering:course>/grades`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member or OK admin
+
+#### Response
+See example response.
+<!-- End Endpoint -->
+
 # Assignments
 
 ## List Assignments
