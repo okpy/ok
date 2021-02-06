@@ -22,7 +22,7 @@ def send_autograder(endpoint, data, autograder_url):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     r = requests.post(autograder_url + endpoint,
-                      data=json.dumps(data), headers=headers, timeout=8)
+                      data=json.dumps(data), headers=headers, timeout=30)
 
     if r.status_code == requests.codes.ok:
         if r.text == "OK":  # e.g. when the token is "test"
