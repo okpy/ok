@@ -23,9 +23,6 @@ def score_policy(scores):
     if scores_checker(scores, TOTAL_KINDS):
         total_score = max(score_grabber(scores, TOTAL_KINDS))
         scores['total'] = total_score
-    if scores_checker(scores, COMP_KINDS):
-        composition_score = max(score_grabber(scores, COMP_KINDS))
-        scores['composition'] = composition_score
     return scores
 
 
@@ -34,8 +31,10 @@ def get_score_types(assignment):
     scores = [s.lower() for s in assignment.published_scores]
     if scores_checker(scores, TOTAL_KINDS):
         types.append('total')
-    if scores_checker(scores, COMP_KINDS):
+    if scores_checker(scores, ['composition']):
         types.append('composition')
+    if scores_checker(scores, ['revision']):
+        types.append('revision')
     if scores_checker(scores, ['checkpoint 1']):
         types.append('checkpoint 1')
     if scores_checker(scores, ['checkpoint 2']):
@@ -59,6 +58,8 @@ def export_student_grades(student, assignments, all_scores):
         scores = all_scores[assign.id][student.user.id]
         scores = score_policy(scores)
         score_types = get_score_types(assign)
+        if 'revision' in score_types:
+            scores['composition'] = max(scores.get('composition', 0), scores.get('revision', 0))
         for score_type in score_types:
             if score_type in scores:
                 student_row.append(scores[score_type])
