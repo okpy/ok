@@ -107,6 +107,26 @@ def authenticate(func):
     return wrapper
 
 
+def token_authenticate(func):
+    """ Checks that the requested course's export access token matches the
+        provided token.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        offering, token = kwargs.get("offering", ""), request.args.get("export_token", "")
+        if not offering or not token:
+            restful.abort(401)
+        course = models.Course.by_name(offering)
+        if not course:
+            restful.abort(404)
+        if not course.export_access_token_active:
+            restful.abort(401)
+        if not course.export_access_token == token:
+            restful.abort(403)
+        return func(*args, **kwargs)
+    return wrapper
+
+
 def check_scopes(func):
     """ Check scopes for route against user scopes (if using OAuth)
     """
@@ -590,6 +610,10 @@ class Resource(restful.Resource):
         return False
 
 
+class TokenResource(Resource):
+    method_decorators = [token_authenticate]
+
+
 class PublicResource(Resource):
     method_decorators = []
 
@@ -605,7 +629,7 @@ class V3Info(PublicResource):
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
-    """ Submission creation/retrieval resource.
+    """ Submission creation/retrieval resource
         Authenticated. Permissions: >= User/Staff
         Used by: Ok Client, Submission/Exports, Autograder
     """
@@ -655,9 +679,9 @@ class Backup(Resource):
 
 
 class Revision(Resource):
-    """ Like Backup, but creates composition revisions backups after the deadline.
+    """ Like Backup, but creates composition revisions backups post-deadline
         Authenticated. Permissions: >= User/Staff
-        Used by: Ok Client Submission/Exports.
+        Used by: Ok Client Submission/Exports
     """
     schema = BackupSchema()
     model = models.Backup
@@ -717,9 +741,9 @@ class Revision(Resource):
 
 
 class ExportBackup(Resource):
-    """ Export backup retreival resource without submitter information.
+    """ Export backup retreival resource without submitter information
         Authenticated. Permissions: >= Staff
-        Used by: Export Scripts.
+        Used by: Export Scripts
     """
     schema = BackupSchema()
     model = models.Assignment
@@ -758,9 +782,9 @@ class ExportBackup(Resource):
         return data
 
 class ExportFinal(Resource):
-    """ Export backup retreival.
+    """ Export backup retreival
         Authenticated. Permissions: >= Staff
-        Used by: Export Scripts.
+        Used by: Export Scripts
     """
     schema = BackupSchema()
     model = models.Assignment
@@ -816,12 +840,12 @@ class ExportFinal(Resource):
                 'has_more': has_more}
 
 class Enrollment(Resource):
-    """ View what courses an email is enrolled in.
-        Authenticated. Permissions: >= User or admins.
+    """ View what courses an email is enrolled in
+        Authenticated. Permissions: >= User or admins
         Used by: Ok Client Auth
 
-        TODO: Make ok-client use user API instead.
-        Display course level enrollment here.
+        TODO: Make ok-client use user API instead, and
+        display course level enrollment here
     """
     model = models.Enrollment
     schema = EnrollmentSchema()
@@ -842,9 +866,9 @@ class Enrollment(Resource):
         return resource == requester
 
 class CourseEnrollment(Resource):
-    """ Information about all people in a course.
-    Authenticated. Permissions: >= User or admins
-    Used by: Export scripts.
+    """ Information about all people in a course
+        Authenticated. Permissions: >= User or admins
+        Used by: Export Scripts
     """
     model = models.Course
     schema = CourseEnrollmentSchema()
@@ -863,10 +887,39 @@ class CourseEnrollment(Resource):
             data[p.role].append(p.user)
         return data
 
+def course_roster_helper(course):
+    query = (models.Enrollment.query.options(models.db.joinedload('user'))
+                    .filter_by(course_id=course.id)
+                    .filter(models.Enrollment.role.in_([STUDENT_ROLE]))
+                    .order_by(models.Enrollment.role))
+    items = models.User.export_items + models.Enrollment.export_items
+
+    def row_to_csv(row):
+        return [row.export, row.user.export]
+
+    csv_generator = utils.generate_csv(query, items, row_to_csv)
+    return ''.join(list(csv_generator))
+
+class CourseRosterExport(TokenResource):
+    """ Information about all students in a course
+        Authenticated. Permissions: Export Token
+        Used by: Export Scripts
+    """
+    model = models.Course
+    schema = CourseRosterSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering):
+        course = self.model.by_name(offering)
+        csv_data = course_roster_helper(course)
+        return {
+            'requester': 'export_access_token',
+            'roster': csv_data
+        }
+
 class CourseRoster(Resource):
-    """ Information about all students in a course.
-    Authenticated. Permissions: >= Staff
-    Used by: Export scripts.
+    """ Information about all students in a course
+        Authenticated. Permissions: >= Staff
     """
     model = models.Course
     schema = CourseRosterSchema()
@@ -878,25 +931,16 @@ class CourseRoster(Resource):
             restful.abort(404)
         if not self.model.can(course, user, 'staff'):
             restful.abort(403)
-        
-        query = (models.Enrollment.query.options(models.db.joinedload('user'))
-                       .filter_by(course_id=course.id)
-                       .filter(models.Enrollment.role.in_([STUDENT_ROLE]))
-                       .order_by(models.Enrollment.role))
-        items = models.User.export_items + models.Enrollment.export_items
 
-        def row_to_csv(row):
-            return [row.export, row.user.export]
-
-        csv_generator = utils.generate_csv(query, items, row_to_csv)
+        csv_data = course_roster_helper(course)
         return {
             'requester': user.email,
-            'roster': ''.join(list(csv_generator))
+            'roster': csv_data
         }
 
 class CourseAssignment(PublicResource):
-    """ All assignments for a course.
-    Not authenticated. Permissions: Global
+    """ All assignments for a course
+        Not authenticated. Permissions: Global
     """
     model = models.Course
     schema = CourseAssignmentSchema()
@@ -908,10 +952,52 @@ class CourseAssignment(PublicResource):
             restful.abort(404)
         return {'assignments': course.assignments}
 
+def course_grades_helper(course):
+    assignments = course.assignments
+    students = (models.Enrollment.query
+                    .options(models.db.joinedload('user'))
+                    .filter(models.Enrollment.role == STUDENT_ROLE, models.Enrollment.course == course)
+                    .all())
+
+    headers, assignments = export_grades.get_headers(assignments)
+
+    users = [student.user for student in students]
+    user_ids = [user.id for user in users]
+
+    all_scores = export_grades.collect_all_scores(assignments, user_ids)
+
+    with io.StringIO() as f:
+        writer = csv.writer(f)
+        writer.writerow(headers) # write headers
+
+        for i, student in enumerate(students, start=1):
+            row = export_grades.export_student_grades(student, assignments, all_scores)
+            writer.writerow(row)
+        f.seek(0)
+        # convert to bytes for csv upload
+        csv_bytes = io.BytesIO(bytearray(f.read(), 'utf-8'))
+    return csv_bytes
+
+class CourseGradesExport(TokenResource):
+    """ All grades for a given course
+        Authenticated. Permissions: Export Token
+        Used by: Export Scripts
+    """
+    model = models.Course
+    schema = CourseGradesSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering):
+        course = self.model.by_name(offering)
+        csv_bytes = course_grades_helper(course)
+        return {
+            "requester": "export_access_token",
+            "grades": csv_bytes.getvalue().decode('utf-8')
+        }
+
 class CourseGrades(Resource):
-    """ All grades for a given course.
+    """ All grades for a given course
         Authenticated. Permissions: Staff
-        Used by: Export Scripts.
     """
     schema = CourseGradesSchema()
     model = models.Course
@@ -925,31 +1011,7 @@ class CourseGrades(Resource):
         if not self.model.can(course, user, 'export'):
             return restful.abort(403)
 
-        assignments = course.assignments
-        students = (models.Enrollment.query
-                        .options(models.db.joinedload('user'))
-                        .filter(models.Enrollment.role == STUDENT_ROLE, models.Enrollment.course == course)
-                        .all())
-
-        headers, assignments = export_grades.get_headers(assignments)
-        total_students = len(students)
-
-        users = [student.user for student in students]
-        user_ids = [user.id for user in users]
-
-        all_scores = export_grades.collect_all_scores(assignments, user_ids)
-
-        with io.StringIO() as f:
-            writer = csv.writer(f)
-            writer.writerow(headers) # write headers
-
-            for i, student in enumerate(students, start=1):
-                row = export_grades.export_student_grades(student, assignments, all_scores)
-                writer.writerow(row)
-            f.seek(0)
-            # convert to bytes for csv upload
-            csv_bytes = io.BytesIO(bytearray(f.read(), 'utf-8'))
-
+        csv_bytes = course_grades_helper(course)
         return {
             "requester": user.email,
             "grades": csv_bytes.getvalue().decode('utf-8')
@@ -977,8 +1039,8 @@ class Score(Resource):
 
 class Version(PublicResource):
     """ Current version of a client
-    Permissions: World Readable, Staff Writable
-    Used by: Ok Client updates, automated Ok Client deploys
+        Permissions: World Readable, Staff Writable
+        Used by: Ok Client updates, automated Ok Client deploys
     """
     model = models.Version
     schema = VersionSchema()
@@ -1001,8 +1063,8 @@ class Version(PublicResource):
 
 class Assignment(Resource):
     """ Information about an assignment
-    Authenticated. Permissions: >= User, Staff Writable
-    Used by: Collaboration/Scripts
+        Authenticated. Permissions: >= User, Staff Writable
+        Used by: Collaboration/Scripts
     """
     model = models.Assignment
     schema = AssignmentSchema()
@@ -1028,9 +1090,9 @@ class Assignment(Resource):
 
 
 class Group(Resource):
-    """ Infromation about a group member by email.
-    Authenticated. Permissions: >= User
-    Used by: Collaboration/Scripts
+    """ Infromation about a group member by email
+        Authenticated. Permissions: >= User
+        Used by: Collaboration/Scripts
     """
     model = models.Group
     schema = GroupSchema()
@@ -1065,11 +1127,11 @@ class Group(Resource):
         restful.abort(403)
 
 class User(Resource):
-    """ Infromation about the current user.
-    Authenticated. Permissions: >= User
-    Only admins can view other users
+    """ Information about the current user
+        Authenticated. Permissions: >= User
+        Only admins can view other users
 
-    Used by: External tools for auth info
+        Used by: External tools for auth info
     """
     model = models.User
     schema = UserSchema()
@@ -1096,7 +1158,7 @@ class User(Resource):
         restful.abort(403)
 
 class Comment(Resource):
-    """ Create comments programmatically.
+    """ Create comments programmatically
         Authenticated. Permissions: >= Student/Staff
         Used by: Third Party Composition Review
     """
@@ -1132,9 +1194,9 @@ class Comment(Resource):
 
 
 class File(Resource):
-    """ Redirect (or download) a file. No Schema due to redirect
+    """ Redirect (or download) a file; no schema due to redirect
         Authenticated. Permissions: >= User/Staff
-        Used by: Course Scripts.
+        Used by: Course Scripts
     """
     schema = None
     model = models.ExternalFile
@@ -1143,7 +1205,7 @@ class File(Resource):
         return files.file_download(file_id, user)
 
 class Client(Resource):
-    """ View OAuth clients programmatically.
+    """ View OAuth clients programmatically
         Authenticated. Permissions: >= Staff owning the client
     """
     schema = ClientSchema()
@@ -1169,9 +1231,8 @@ class Client(Resource):
         }
 
 class ClientRedirectURL(Resource):
-    """
-    Add redirect URLs to OAuth clients.
-    Authenticated. Permissions: >= Staff owning the client
+    """ Add redirect URLs to OAuth clients
+        Authenticated. Permissions: >= Staff owning the client
     """
     schema = ClientRedirectURLSchema()
     model = models.Comment
@@ -1211,8 +1272,10 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 COURSE_BASE = '/v3/course/<offering:offering>'
 api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
 api.add_resource(CourseRoster, COURSE_BASE + '/roster')
+api.add_resource(CourseRosterExport, COURSE_BASE + '/export/roster')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
 api.add_resource(CourseGrades, COURSE_BASE + '/grades')
+api.add_resource(CourseGradesExport, COURSE_BASE + '/export/grades')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')

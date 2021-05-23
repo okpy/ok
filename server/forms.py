@@ -679,6 +679,9 @@ class CourseUpdateForm(BaseForm):
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
     autograder_url = StringField('Autograder Endpoint (Optional)',
                            validators=[validators.optional(), validators.url()])
+    export_access_token = StringField('Exports Token (Optional)',
+                           validators=[validators.optional()])
+    export_access_token_active = BooleanField('Activate Exports Token', default=False)
 
 class PublishScores(BaseForm):
     published_scores = MultiCheckboxField(
