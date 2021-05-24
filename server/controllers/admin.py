@@ -488,6 +488,15 @@ def section_console(cid, sctn_id=None):
     else:
         enrollments = []
 
+    pending_extension_requests = []
+    for e in enrollments:
+        pending_extension_requests.extend(
+            ExtensionRequest.query.filter(
+                ExtensionRequest.user_id == e.user_id
+            ).all()
+        )
+    csrf_form = forms.CSRFForm()
+
     student_emails = []
     for enrollment in enrollments:
         student_emails.append(EMAIL_FORMAT.format(
@@ -499,7 +508,9 @@ def section_console(cid, sctn_id=None):
     return render_template(
         'staff/course/section/section.html',
         courses=courses, form=form, current_course=current_course,
-        enrollments=enrollments, staff=staff, emails=student_emails_str)
+        enrollments=enrollments, staff=staff, emails=student_emails_str,
+        pending_extension_requests=pending_extension_requests,
+        csrf_form=csrf_form)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')

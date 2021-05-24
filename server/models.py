@@ -1933,6 +1933,14 @@ class ExtensionRequest(Model):
     def delete(cls, ext):
         db.session.delete(ext)
         db.session.commit()
+    
+    @classmethod
+    def can(cls, obj, user, action):
+        if not user:
+            return False
+        if user.is_admin:
+            return True
+        return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
 
 class Extension(Model):

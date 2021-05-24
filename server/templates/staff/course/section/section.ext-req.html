@@ -1,0 +1,62 @@
+<div class="box">
+    <div class="box-header">
+        <h3 class="box-title"><span> {{ title }} </span></h3>
+        <div class="box-tools">
+            <div class="box-tools pull-right">
+
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding table-loading" style="display: block;" id="{{ title }}-list">
+        <table class="table table-hover">
+            <thead>
+                <th class="sort" data-sort="name">Assignment</th>
+                <th class="sort" data-sort="email">Student</th>
+                <th>Message</th>
+                <th>Grant</th>
+                <th>Delete</th>
+            </thead>
+
+            <tbody class="list">
+                {%- for request in requests %}
+                <tr>
+                    <td class="name"><a href="{{ url_for('.assignment', cid=current_course.id, aid=request.assignment.id) }}">{{ request.assignment.display_name }}</a></td>
+                    <td class="email"><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=request.user.email, aid=request.assignment.id) }}">
+                        {{ request.user.identifier }}
+                        </a>
+                    </td>
+                    <td>{{ request.message | default('—', true)}}</td>
+                    <td><a href="{{ url_for('.create_extension', cid=current_course.id, email=request.user.email, aid=request.assignment.id, reason=request.message) }}">Grant</a></td>
+                    <td>
+                        {% call forms.render_form_bare(csrf_form, action_url=url_for('.delete_extension_request', cid=current_course.id, req_id=request.id), class_='form') %}
+                            <button class='btn btn-danger btn-flat' data-confirm="Are you sure you want to delete {{ request.user.email }}'s extension request for {{ request.assignment.display_name }}?">
+                                <i class='fa fa-trash-o'></i>
+                            </button>
+                        {% endcall %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+    <div class="box-footer">
+        <div class="pull-left">
+        <h5 class="box-title"><span> Total: {{ requests | length }} </span></h5>
+        </div>
+    </div>
+
+</div>
+<style type="text/css">
+    #copy {
+    color: #444;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 100%;
+}
+</style>
