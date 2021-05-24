@@ -1,0 +1,71 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %}  Extension Requests - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        Extension Requests for {{ current_course.display_name }}
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.list_extensions', cid=current_course.id) }}"><i class="fa fa-life-ring"></i>Extensions</a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.list_extension_requests', cid=current_course.id) }}"><i class="fa fa-list"></i>Extension Requests</a></li>
+    	</ol>
+  </section>
+
+  <section class="content">
+
+  		{% include 'alerts.html' %}
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                    <h3 class="box-title"> All Extension Requests </h3>
+                    </div>
+                    <div class="box-body table-responsive no-padding">
+                    <table class="table table-striped">
+                        <tbody><tr>
+                            <th>Assignment</th>
+                            <th>Student</th>
+                            <th>Message</th>
+                            <th>Grant</th>
+                            <th>Delete</th>
+                        </tr>
+
+                        {% for request in requests %}
+                        <tr>
+                            <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=request.assignment.id) }}">{{ request.assignment.display_name }}</a></td>
+                            <td><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=request.user.email, aid=request.assignment.id) }}">
+                                {{ request.user.identifier }}
+                                </a>
+                            </td>
+                            <td>{{ request.message | default('—', true)}}</td>
+                            <td><a href="{{ url_for('.create_extension', cid=current_course.id, email=request.user.email, aid=request.assignment.id, reason=request.message) }}">Grant</a></td>
+                            <td>
+                                {% call forms.render_form_bare(csrf_form, action_url=url_for('.delete_extension_request', cid=current_course.id, req_id=request.id), class_='form') %}
+                                    <button class='btn btn-danger btn-flat' data-confirm="Are you sure you want to delete {{ request.user.email }}'s extension request for {{ request.assignment.display_name }}?">
+                                        <i class='fa fa-trash-o'></i>
+                                    </button>
+                                {% endcall %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if not requests %}
+                        <h3 class="table-empty-state-heading">No extensions have been requested</h3>
+                        <h4 class="table-empty-state-details"></h4>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+  </section>
+{% endblock %}

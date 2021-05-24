@@ -20,7 +20,7 @@ import requests.exceptions
 from server import autograder
 
 import server.controllers.api as ok_api
-from server.models import (User, Course, Assignment, Enrollment, Version,
+from server.models import (ExtensionRequest, User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, MossResult,
                            Extension, db)
@@ -1714,6 +1714,20 @@ def list_extensions(cid):
                             courses=courses, current_course=current_course,
                             extensions=extensions, csrf_form=csrf_form)
 
+@admin.route("/course/<int:cid>/extensions/requests")
+@is_staff(course_arg='cid')
+def list_extension_requests(cid):
+    courses, current_course = get_courses(cid)
+
+    requests = (ExtensionRequest.query.join(ExtensionRequest.assignment)
+                           .options(db.joinedload('user'),
+                                    db.joinedload('assignment'))
+                           .filter(Assignment.course_id == cid).all())
+    csrf_form = forms.CSRFForm()
+    return render_template('staff/course/extension/requests.html',
+                            courses=courses, current_course=current_course,
+                            requests=requests, csrf_form=csrf_form)
+
 @admin.route("/course/<int:cid>/extensions/new",
                 methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -1734,6 +1748,10 @@ def create_extension(cid):
         form.process() # Update defaults & choices
         if not form.email.data:
             form.email.data = request.args.get('email')
+        if not form.reason.data:
+            form.reason.data = request.args.get('reason')
+        if not form.expires.data and request.args.get('expires'):
+            form.expires.data = utils.local_time_obj(dt.datetime.fromtimestamp(request.args.get('expires')))
         if not form.expires.data:
             extra_week =  utils.local_time_obj(dt.datetime.utcnow(), current_course) + dt.timedelta(days=7)
             form.expires.data = extra_week.replace(hour=23, minute=59, second=59)
@@ -1754,6 +1772,9 @@ def create_extension(cid):
                             message=form.reason.data, expires=expires,
                             custom_submission_time=custom_time)
             emails = ', '.join([u.email for u in ext.members()])
+            req = ExtensionRequest.get_extension_request(student=student, assignment=assign)
+            if req:
+                ExtensionRequest.delete(req)
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
             return redirect(url_for('.list_extensions', cid=cid))
@@ -1825,6 +1846,20 @@ def delete_extension(cid, ext_id):
         Extension.delete(extension)
         flash("Revoked extension", "success")
         return redirect(url_for('.list_extensions', cid=cid))
+    abort(401)
+
+
+@admin.route("/course/<int:cid>/extensions/requests/<hashid:req_id>/delete", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_extension_request(cid, req_id):
+    request = ExtensionRequest.query.get_or_404(req_id)
+    if not ExtensionRequest.can(request, current_user, 'delete'):
+        abort(401)
+
+    if forms.CSRFForm().validate_on_submit():
+        ExtensionRequest.delete(request)
+        flash("Deleted extension request", "success")
+        return redirect(url_for('.list_extension_requests', cid=cid))
     abort(401)
 
 

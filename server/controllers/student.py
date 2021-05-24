@@ -9,10 +9,11 @@ import os
 import time
 
 from server import highlight, models, utils
+from server import forms
 from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import (User, Course, Assignment, Group, Backup, Message,
+from server.models import (ExtensionRequest, User, Course, Assignment, Group, Backup, Message,
                            ExternalFile, Extension, db)
 from server.utils import is_safe_redirect_url, send_emails, invite_email
 
@@ -108,6 +109,7 @@ def assignment(name):
     if group:
         can_invite = len(group.members) < assign.max_group_size
     has_extension = Extension.get_extension(current_user, assign)
+    has_pending_extension_request = ExtensionRequest.get_extension_request(current_user, assign)
 
     data = {
         'course': assign.course,
@@ -122,9 +124,28 @@ def assignment(name):
         'can_invite': can_invite,
         'can_remove': can_remove,
         'has_extension': has_extension,
+        'has_pending_extension_request': has_pending_extension_request,
         'csrf_form': CSRFForm()
     }
     return render_template('student/assignment/index.html', **data)
+
+
+@student.route('/<assignment_name:name>/request_extension', methods=['GET', 'POST'])
+@login_required
+def request_extension(name):
+    assign = get_assignment(name)
+
+    if request.method == 'GET':
+        form = forms.ExtensionRequestForm()
+        form.assignment_id = assign.id
+        form.email = current_user.email
+        return render_template('student/assignment/request_extension.html', course=assign.course, assignment=assign, form=form)
+
+    if request.method == 'POST':
+        reason = request.form.get("reason")
+        ExtensionRequest.create(assign, current_user, reason)
+        flash(f"Your request for an extension on {assign.display_name} has been submitted.")
+        return redirect(url_for('.assignment', name=name))
 
 
 @student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
