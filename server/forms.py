@@ -4,7 +4,7 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 import requests.exceptions
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, RadioField, Field,
+                     SelectMultipleField, RadioField, TextField, Field,
                      widgets, validators)
 from wtforms.fields.html5 import EmailField
 
@@ -275,6 +275,7 @@ class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
     role = SelectField('Role', default=STUDENT_ROLE,
                        choices=list(ROLE_DISPLAY_NAMES.items()))
+    replace = TextField('Replace Current Roster (type "replace" to confirm)')
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
@@ -304,6 +305,9 @@ class BatchEnrollmentForm(BaseForm):
                 err = "{0} is not a valid email".format(row[0])
                 self.csv.errors.append(err)
                 return False
+        if self.replace.data not in ("", "replace"):
+            self.replace.errors.append("Replacement confirmation must be empty or \"replace\"")
+            return False
         return True
 
 

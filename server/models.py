@@ -915,6 +915,14 @@ class Enrollment(Model):
 
     @staticmethod
     @transaction
+    def wipe(cid, role):
+        enrollments = Enrollment.query.filter_by(course_id=cid, role=role).all()
+        for e in enrollments:
+            db.session.delete(e)
+        db.session.commit()
+
+    @staticmethod
+    @transaction
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
@@ -928,6 +936,8 @@ class Enrollment(Model):
                 'class_account': entry[3],
                 'section': entry[4],
             })
+        if form.replace.data == "replace" and enrollment_info:
+            Enrollment.wipe(cid, role)
         return Enrollment.create(cid, enrollment_info, role)
 
     @staticmethod
