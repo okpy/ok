@@ -263,6 +263,8 @@ class Course(Model):
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
     autograder_url = db.Column(db.String(255), server_default=AUTOGRADER_URL)
+    export_access_token = db.Column(db.String(255), nullable=True, default="")
+    export_access_token_active = db.Column(db.Boolean(), nullable=False, default=False)
 
     @classmethod
     def can(cls, obj, user, action):
@@ -915,6 +917,14 @@ class Enrollment(Model):
 
     @staticmethod
     @transaction
+    def wipe(cid, role):
+        enrollments = Enrollment.query.filter_by(course_id=cid, role=role).all()
+        for e in enrollments:
+            db.session.delete(e)
+        db.session.commit()
+
+    @staticmethod
+    @transaction
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
@@ -928,6 +938,8 @@ class Enrollment(Model):
                 'class_account': entry[3],
                 'section': entry[4],
             })
+        if form.replace.data == "replace" and enrollment_info:
+            Enrollment.wipe(cid, role)
         return Enrollment.create(cid, enrollment_info, role)
 
     @staticmethod

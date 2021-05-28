@@ -35,6 +35,8 @@
                     <!-- {{ forms.render_field(form.timezone, label_visible=true, type='select') }} -->
                     {{ forms.render_field(form.autograder_url, label_visible=true, value=current_course.autograder_url or 'https://autograder.cs61a.org/', type='text') }}
                     {{ forms.render_checkbox_field(form.active, label_visible=true) }}
+                    {{ forms.render_field(form.export_access_token, label_visible=true, value=current_course.export_access_token, type='text') }}
+                    {{ forms.render_checkbox_field(form.export_access_token_active, label_visible=true) }}
                 {% endcall %}
               </div>
               <!-- /.box-body -->
