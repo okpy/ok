@@ -86,6 +86,16 @@ class Config(object):
         else:
             db_url = cls.get_default_db_url()
 
+        client_cert, client_key, server_ca = os.getenv("DB_CLIENT_CERT"), os.getenv("DB_CLIENT_KEY"), os.getenv("DB_SERVER_CA")
+        if client_cert and client_key and server_ca:
+            with open("cert.pem", "w") as c:
+                c.write(client_cert)
+            with open("key.pem", "w") as k:
+                k.write(client_key)
+            with open("ca.pem", "w") as s:
+                s.write(server_ca)
+            db_url += f"&ssl_key={os.path.abspath('./key.pem')}&ssl_cert={os.path.abspath('./cert.pem')}&ssl_ca={os.path.abspath('./ca.pem')}"
+
         cls.SQLALCHEMY_DATABASE_URI = db_url
 
         # If using sqlite use absolute path (otherwise we break migrations)
