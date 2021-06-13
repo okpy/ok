@@ -94,7 +94,7 @@ class Config(object):
                 k.write(client_key)
             with open("ca.pem", "w") as s:
                 s.write(server_ca)
-            db_url += f"&ssl_key={os.path.abspath('./key.pem')}&ssl_cert={os.path.abspath('./cert.pem')}&ssl_ca={os.path.abspath('./ca.pem')}"
+            db_url += "&ssl_key={}&ssl_cert={}&ssl_ca={}".format(os.path.abspath('./key.pem'), os.path.abspath('./cert.pem'), os.path.abspath('./ca.pem'))
 
         cls.SQLALCHEMY_DATABASE_URI = db_url
 
