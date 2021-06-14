@@ -1,59 +1,64 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ok-worker-deployment
+  creationTimestamp: null
   labels:
+    app: ok-worker
     role: worker
     tier: backend
-    app: ok-worker
+  name: ok-worker-deployment
 spec:
+  progressDeadlineSeconds: 2147483647
   replicas: 3
-  strategy: {}
+  revisionHistoryLimit: 2147483647
+  selector:
+    matchLabels:
+      app: ok-worker
+      role: worker
+      tier: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
+      creationTimestamp: null
       labels:
+        app: ok-worker
         role: worker
         tier: backend
-        app: ok-worker
     spec:
       containers:
-      - name: ok-v3-worker
-        image: cs61a/ok-server
-        imagePullPolicy: Always
-        command:
-          - ./worker.py
+      - command:
+        - ./worker.py
         env:
         - name: OK_ENV
           value: prod
         - name: GET_HOSTS_FROM
           value: dns
-          # If your cluster config does not include a dns service, then to
-          # instead access environment variables to find service host
-          # info, comment out the 'value: dns' line above, and uncomment the
-          # line below.
-          # value: env
         - name: REDIS_HOST
           value: redis-master
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: ok-secrets
               key: key
+              name: ok-secrets
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: ok-db
               key: db
+              name: ok-db
         - name: GOOGLE_ID
           valueFrom:
             secretKeyRef:
-              name: ok-login
               key: google-id
+              name: ok-login
         - name: GOOGLE_SECRET
           valueFrom:
             secretKeyRef:
-              name: ok-login
               key: google-secret
+              name: ok-login
         - name: STORAGE_PROVIDER
           value: GOOGLE_STORAGE
         - name: STORAGE_CONTAINER
@@ -61,33 +66,46 @@ spec:
         - name: STORAGE_KEY
           valueFrom:
             secretKeyRef:
-              name: ok-storage
               key: storage-key
+              name: ok-storage
         - name: STORAGE_SECRET
           valueFrom:
             secretKeyRef:
-              name: ok-storage
               key: storage-secret
+              name: ok-storage
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: ok-services
               key: sentry-dsn
+              name: ok-services
         - name: SENDGRID_USER
           valueFrom:
             secretKeyRef:
-              name: ok-services
               key: sendgrid-user
+              name: ok-services
         - name: SENDGRID_KEY
           valueFrom:
             secretKeyRef:
-              name: ok-services
               key: sendgrid-key
+              name: ok-services
+        image: cs61a/ok-server
+        imagePullPolicy: Always
+        name: ok-v3-worker
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
         volumeMounts:
-        - name: db_ssl
-          mountPath: "/db_ssl"
+        - mountPath: /db_ssl
+          name: db-ssl
           readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
       volumes:
-      - name: db_ssl
+      - name: db-ssl
         secret:
+          defaultMode: 420
           secretName: ok-db
+status: {}
