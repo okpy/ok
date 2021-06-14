@@ -53,21 +53,6 @@ spec:
             secretKeyRef:
               name: ok-db
               key: db
-        - name: DB_CLIENT_CERT
-          valueFrom:
-            secretKeyRef:
-              name: ok-db
-              key: client_cert
-        - name: DB_CLIENT_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ok-db
-              key: client_key
-        - name: DB_SERVER_CA
-          valueFrom:
-            secretKeyRef:
-              name: ok-db
-              key: server_ca
         - name: GOOGLE_ID
           valueFrom:
             secretKeyRef:
@@ -109,3 +94,11 @@ spec:
               key: sendgrid-key
         - name: GOOGLE_LOG_NAME
           value: ok-staging
+        volumeMounts:
+        - name: db_ssl
+          mountPath: "/db_ssl"
+          readOnly: true
+      volumes:
+      - name: db_ssl
+        secret:
+          secretName: ok-db

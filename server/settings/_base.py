@@ -88,20 +88,18 @@ class Config(object):
 
         cls.SQLALCHEMY_DATABASE_URI = db_url
 
-        client_cert, client_key, server_ca = os.getenv("DB_CLIENT_CERT"), os.getenv("DB_CLIENT_KEY"), os.getenv("DB_SERVER_CA")
+        client_cert, client_key, server_ca = (
+            os.path.exists("/db_ssl/client_cert.pem"),
+            os.path.exists("/db_ssl/client_key.pem"),
+            os.path.exists("/db_ssl/server_ca.pem"),
+        )
         if client_cert and client_key and server_ca:
-            with open("cert.pem", "w") as c:
-                c.write(client_cert)
-            with open("key.pem", "w") as k:
-                k.write(client_key)
-            with open("ca.pem", "w") as s:
-                s.write(server_ca)
             cls.SQLALCHEMY_ENGINE_OPTS = {
                 'connect_args': {
                     'ssl': {
-                        'ca': os.path.abspath("./ca.pem"),
-                        'cert': os.path.abspath("./cert.pem"),
-                        'key': os.path.abspath("./key.pem")
+                        'ca': "/db_ssl/server_ca.pem",
+                        'cert': "/db_ssl/client_cert.pem",
+                        'key': "/db_ssl/client_key.pem",
                     }
                 }
             }
