@@ -88,6 +88,22 @@ class Config(object):
 
         cls.SQLALCHEMY_DATABASE_URI = db_url
 
+        client_cert, client_key, server_ca = (
+            os.path.exists("/db_ssl/client_cert.pem"),
+            os.path.exists("/db_ssl/client_key.pem"),
+            os.path.exists("/db_ssl/server_ca.pem"),
+        )
+        if client_cert and client_key and server_ca:
+            cls.SQLALCHEMY_ENGINE_OPTS = {
+                'connect_args': {
+                    'ssl': {
+                        'ca': "/db_ssl/server_ca.pem",
+                        'cert': "/db_ssl/client_cert.pem",
+                        'key': "/db_ssl/client_key.pem",
+                    }
+                }
+            }
+
         # If using sqlite use absolute path (otherwise we break migrations)
         sqlite_prefix = 'sqlite:///'
         if cls.SQLALCHEMY_DATABASE_URI.startswith(sqlite_prefix):

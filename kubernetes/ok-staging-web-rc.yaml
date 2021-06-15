@@ -94,3 +94,11 @@ spec:
               key: sendgrid-key
         - name: GOOGLE_LOG_NAME
           value: ok-staging
+        volumeMounts:
+        - name: db_ssl
+          mountPath: "/db_ssl"
+          readOnly: true
+      volumes:
+      - name: db_ssl
+        secret:
+          secretName: ok-db
