@@ -151,7 +151,7 @@ def request_extension(name):
         if staff_record:
             send_email(
                 staff_record.user.email,
-                f"New Extension Request for {assign.display_name}",
+                f"[{assign.course.display_name}] New Extension Request for {assign.display_name}",
                 "You have a pending extension request! Visit your Okpy section console to handle this request.",
                 from_name=assign.course.display_name,
                 link=url_for(".section_console"),
