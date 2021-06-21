@@ -13,9 +13,9 @@ from server import forms
 from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import (ExtensionRequest, User, Course, Assignment, Group, Backup, Message,
+from server.models import (Enrollment, ExtensionRequest, User, Course, Assignment, Group, Backup, Message,
                            ExternalFile, Extension, db)
-from server.utils import is_safe_redirect_url, send_emails, invite_email
+from server.utils import is_safe_redirect_url, send_emails, invite_email, send_email
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +144,19 @@ def request_extension(name):
     if request.method == 'POST':
         reason = request.form.get("reason")
         ExtensionRequest.create(assign, current_user, reason)
+        staff_record = (Enrollment.query
+                        .filter_by(course_id=assign.course.id)
+                        .filter(Enrollment.role.in_(STAFF_ROLES))
+                        .one_or_none())
+        if staff_record:
+            send_email(
+                staff_record.user.email,
+                f"New Extension Request for {assign.display_name}",
+                "You have a pending extension request! Visit your Okpy section console to handle this request.",
+                from_name=assign.course.display_name,
+                link=url_for(".section_console"),
+                link_text="Section Console",
+            )
         flash(f"Your request for an extension on {assign.display_name} has been submitted.")
         return redirect(url_for('.assignment', name=name))
 

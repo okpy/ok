@@ -1786,6 +1786,12 @@ def create_extension(cid):
             req = ExtensionRequest.get_extension_request(student=student, assignment=assign)
             if req:
                 ExtensionRequest.delete(req)
+                utils.send_email(
+                    student.email,
+                    f"[{assign.course.display_name}] Extension Granted for {assign.display_name}",
+                    f"You have been granted an extension for {assign.display_name}. Your new deadline is {utils.local_time(expires, assign.course)}. To request a further extension, use the same process as you used for this extension!",
+                    from_name=assign.course.display_name,
+                )
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
             return redirect(url_for('.list_extensions', cid=cid))
