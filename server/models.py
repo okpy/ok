@@ -1912,6 +1912,49 @@ class ExternalFile(Model):
 # Extensions #
 ##############
 
+class ExtensionRequest(Model):
+    """ Extension requests allow students to request an extension. """
+    __tablename__ = 'extension_request'
+    __table_args__ = (
+        UniqueConstraint('assignment_id', 'user_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(mysql.MEDIUMTEXT)
+
+    user = db.relationship("User", foreign_keys='ExtensionRequest.user_id')
+    assignment = db.relationship("Assignment")
+
+    @classmethod
+    def create(cls, assignment, user, message=None):
+        ext = cls(assignment=assignment, user=user, message=message)
+        db.session.add(ext)
+        db.session.commit()
+        return ext
+    
+    @classmethod
+    def get_extension_request(cls, student, assignment):
+        """ Returns the extension request if the student has one """
+        group_members = assignment.active_user_ids(student.id)
+        return cls.query.filter(cls.assignment == assignment,
+                                cls.user_id.in_(group_members)).first()
+    
+    @classmethod
+    def delete(cls, ext):
+        db.session.delete(ext)
+        db.session.commit()
+    
+    @classmethod
+    def can(cls, obj, user, action):
+        if not user:
+            return False
+        if user.is_admin:
+            return True
+        return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
+
+
 class Extension(Model):
     """ Extensions allows students to submit after the deadline. """
     __tablename__ = 'extension'

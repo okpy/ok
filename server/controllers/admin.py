@@ -20,7 +20,7 @@ import requests.exceptions
 from server import autograder
 
 import server.controllers.api as ok_api
-from server.models import (User, Course, Assignment, Enrollment, Version,
+from server.models import (ExtensionRequest, User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, MossResult,
                            Extension, db)
@@ -488,6 +488,15 @@ def section_console(cid, sctn_id=None):
     else:
         enrollments = []
 
+    pending_extension_requests = []
+    for e in enrollments:
+        pending_extension_requests.extend(
+            ExtensionRequest.query.filter(
+                ExtensionRequest.user_id == e.user_id
+            ).all()
+        )
+    csrf_form = forms.CSRFForm()
+
     student_emails = []
     for enrollment in enrollments:
         student_emails.append(EMAIL_FORMAT.format(
@@ -499,7 +508,9 @@ def section_console(cid, sctn_id=None):
     return render_template(
         'staff/course/section/section.html',
         courses=courses, form=form, current_course=current_course,
-        enrollments=enrollments, staff=staff, emails=student_emails_str)
+        enrollments=enrollments, staff=staff, emails=student_emails_str,
+        pending_extension_requests=pending_extension_requests,
+        csrf_form=csrf_form)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
@@ -1714,6 +1725,20 @@ def list_extensions(cid):
                             courses=courses, current_course=current_course,
                             extensions=extensions, csrf_form=csrf_form)
 
+@admin.route("/course/<int:cid>/extensions/requests")
+@is_staff(course_arg='cid')
+def list_extension_requests(cid):
+    courses, current_course = get_courses(cid)
+
+    requests = (ExtensionRequest.query.join(ExtensionRequest.assignment)
+                           .options(db.joinedload('user'),
+                                    db.joinedload('assignment'))
+                           .filter(Assignment.course_id == cid).all())
+    csrf_form = forms.CSRFForm()
+    return render_template('staff/course/extension/requests.html',
+                            courses=courses, current_course=current_course,
+                            requests=requests, csrf_form=csrf_form)
+
 @admin.route("/course/<int:cid>/extensions/new",
                 methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -1734,6 +1759,10 @@ def create_extension(cid):
         form.process() # Update defaults & choices
         if not form.email.data:
             form.email.data = request.args.get('email')
+        if not form.reason.data:
+            form.reason.data = request.args.get('reason')
+        if not form.expires.data and request.args.get('expires'):
+            form.expires.data = utils.local_time_obj(dt.datetime.fromtimestamp(request.args.get('expires')))
         if not form.expires.data:
             extra_week =  utils.local_time_obj(dt.datetime.utcnow(), current_course) + dt.timedelta(days=7)
             form.expires.data = extra_week.replace(hour=23, minute=59, second=59)
@@ -1754,6 +1783,15 @@ def create_extension(cid):
                             message=form.reason.data, expires=expires,
                             custom_submission_time=custom_time)
             emails = ', '.join([u.email for u in ext.members()])
+            req = ExtensionRequest.get_extension_request(student=student, assignment=assign)
+            if req:
+                ExtensionRequest.delete(req)
+                utils.send_email(
+                    student.email,
+                    "[{}] Extension Granted for {}".format(assign.course.display_name, assign.display_name),
+                    "You have been granted an extension for {}. Your new deadline is {utils.local_time(expires, assign.course)}. To request a further extension, use the same process as you used for this extension!".format(assign.display_name),
+                    from_name=assign.course.display_name,
+                )
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
             return redirect(url_for('.list_extensions', cid=cid))
@@ -1825,6 +1863,20 @@ def delete_extension(cid, ext_id):
         Extension.delete(extension)
         flash("Revoked extension", "success")
         return redirect(url_for('.list_extensions', cid=cid))
+    abort(401)
+
+
+@admin.route("/course/<int:cid>/extensions/requests/<hashid:req_id>/delete", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_extension_request(cid, req_id):
+    request = ExtensionRequest.query.get_or_404(req_id)
+    if not ExtensionRequest.can(request, current_user, 'delete'):
+        abort(401)
+
+    if forms.CSRFForm().validate_on_submit():
+        ExtensionRequest.delete(request)
+        flash("Deleted extension request", "success")
+        return redirect(url_for('.list_extension_requests', cid=cid))
     abort(401)
 
 

@@ -22,6 +22,11 @@
 <section class="content">
     {% include 'alerts.html' %}
     <div class="row">
+            {% for requests, title in ((pending_extension_requests, "Pending Extension Requests"),) %}
+                {% if requests %}
+                    {% include 'staff/course/section/section.ext-req.html' %}
+                {% endif %}
+            {% endfor %}
             {% for roster, title in ((enrollments, "Your Students"),) %}
                 {% if roster %}
                     {% include 'staff/course/section/section.list.html' %}

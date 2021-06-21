@@ -508,6 +508,31 @@ class BatchCSVScoreForm(SubmissionTimeForm):
         return True
 
 
+class ExtensionRequestForm(SubmissionTimeForm):
+    assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
+    email = EmailField('Student Email',
+                       validators=[validators.required(), validators.email()])
+    reason = StringField('Reason for Request',
+                         description="Why are you requesting this extension?",
+                         validators=[validators.optional()])
+
+    def __init__(self, obj=None, **kwargs):
+        self.obj = obj
+        super(ExtensionRequestForm, self).__init__(obj=obj, **kwargs)
+
+    def validate(self):
+        check_validate = super(ExtensionRequestForm, self).validate()
+        # if our validators do not pass
+        if not check_validate:
+            return False
+        user = User.lookup(self.email.data)
+        if not user:
+            message = "{} does not have an OK account".format(self.email.data)
+            self.email.errors.append(message)
+            return False
+        return check_validate
+
+
 class ExtensionForm(SubmissionTimeForm):
     assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
     expires = DateTimeField('Extension Expiry', validators=[validators.required()])
