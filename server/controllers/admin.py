@@ -517,8 +517,8 @@ def section_console(cid, sctn_id=None):
 def course_assignments(cid):
     courses, current_course = get_courses(cid)
     assgns = current_course.assignments
-    active_asgns = [a for a in assgns if a.active]
-    due_asgns = [a for a in assgns if not a.active]
+    active_asgns = sorted([a for a in assgns if a.active], key=lambda a: a.due_date)
+    due_asgns = sorted([a for a in assgns if not a.active], key=lambda a: a.due_date)
     # TODO CLEANUP : Better way to send this data to the template.
     return render_template('staff/course/assignment/assignments.html',
                            courses=courses, current_course=current_course,
