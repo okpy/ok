@@ -1,5 +1,6 @@
 """App constants"""
 import os
+from collections import OrderedDict
 
 STUDENT_ROLE = 'student'
 GRADER_ROLE = 'grader'
@@ -20,6 +21,8 @@ STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 SCORE_KINDS = ['composition', 'correctness', 'effort', 'total', 'partner a', 'partner b',
                'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
                'private', 'autograder', 'error']
+
+TIMESCALES = OrderedDict([('days', 86400), ('hours', 3600), ('minutes', 60)])
 
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']

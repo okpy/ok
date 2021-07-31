@@ -15,7 +15,7 @@ import re
 from server import utils
 import server.canvas.api as canvas_api
 from server.models import Assignment, User, Client, Course, Message, CanvasCourse
-from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
+from server.constants import (SCORE_KINDS, TIMESCALES, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
                               OAUTH_OUT_OF_BAND_URI)
@@ -801,6 +801,17 @@ class EmailScoresForm(BaseForm):
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,
                              description="Enable to remove identifying information from submissions")
+
+
+class AssignSlipCalculatorForm(BaseForm):
+    timescale = SelectField('Time Scale', default="days",
+                            choices=[(c.lower(), c.title()) for c in TIMESCALES.keys()],
+                            description="Time scale for slip calculation.")
+    show_results = BooleanField('Show Results', default=False)
+
+class CourseSlipCalculatorForm(AssignSlipCalculatorForm):
+    assigns = MultiCheckboxField('Completed Assignments ', coerce=int,
+                            description="Select which completed assignments to calculate slips for.")
 
 ##########
 # Canvas #

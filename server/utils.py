@@ -256,7 +256,6 @@ def chunks(l, n):
         yield l[prev_index:index]
         prev_index = index
 
-
 def generate_csv(query, items, selector_fn):
     """ Generate csv export of scores for assignment.
         selector_fn: 1 arg function that returns a list of dictionaries
