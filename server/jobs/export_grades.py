@@ -80,7 +80,6 @@ def collect_all_scores(assignments, user_ids):
                 Score.archived == False,
             )
             .group_by(Score.user_id, Score.kind)
-            .order_by(Score.score)
             .all()
         )
 
