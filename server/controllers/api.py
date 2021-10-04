@@ -377,6 +377,55 @@ class GroupSchema(APISchema):
         'members': fields.List(fields.Nested(member_fields)),
     }
 
+class BackupStaffSchema(APISchema):
+    post_fields = {
+        'email': fields.String,
+        'key': fields.String,
+        'course': fields.Nested(CourseSchema.get_fields),
+        'assignment': fields.String,
+    }
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('assignment', type=str, required=True,
+                                 help='Name of Assignment')
+        self.parser.add_argument('messages', type=dict, required=True,
+                                 help='Backup Contents as JSON')
+        self.parser.add_argument('email', type=str, required=True,
+                                 help='Student Email for Backup')
+        self.parser.add_argument('submit', type=bool, default=False,
+                                 help='Flagged as a submission')
+
+    def store_backup(self):
+        args = self.parse_args()
+        user = models.User.lookup(args['email'])
+
+        assignment = models.Assignment.name_to_assign_info(args['assignment'])
+        lock_flag = not assignment['active']
+        eligible_submit = args['submit'] and not lock_flag
+        if not assignment:
+            raise ValueError('Assignment does not exist')
+        lock_flag = not assignment['active']
+        past_due = dt.utcnow() > assignment['due_date']
+        backup = make_backup(user, assignment['id'], args['messages'], True)
+
+        if past_due:
+            assign_obj = models.Assignment.by_name(args['assignment'])
+            extension = models.Extension.get_extension(user, assign_obj, time=backup.created)
+            # Submissions after the deadline with an extension are allowed
+            if extension:
+                backup.submit = True  # Need to set if the assignment is inactive
+                backup.custom_submission_time = extension.custom_submission_time or assign_obj.due_date
+                eligible_submit = True
+            elif lock_flag:
+                raise ValueError('Late Submission of {}'.format(args['assignment']))
+
+        models.db.session.commit()
+
+        if (eligible_submit and assignment['autograding_key']
+                and assignment['continuous_autograding']):
+            submit_continuous(backup)
+        return backup
 
 class BackupSchema(APISchema):
     get_fields = {
@@ -739,6 +788,25 @@ class Revision(Resource):
             'assignment': assignment.name,
         }
 
+class StaffBackup(TokenResource):
+    """ Backup submission without student authenticated.
+        Permissions = staff
+        Used by: Prairie Learn for integration
+    """
+    schema = BackupStaffSchema()
+    model = models.Backup
+    @marshal_with(schema.post_fields)
+    def post(self, offering):
+        backup = self.schema.store_backup()
+        backup_url = url_for('student.code', name=backup.assignment.name, submit=backup.submit,
+                             bid=backup.id, _external=True)
+        return {
+            'email': backup.submitter.email,
+            'key': encode_id(backup.id),
+            'url': backup_url,
+            'course': backup.assignment.course,
+            'assignment': backup.assignment.name
+        }
 
 class ExportBackup(Resource):
     """ Export backup retreival resource without submitter information
@@ -1236,7 +1304,6 @@ class ClientRedirectURL(Resource):
     """
     schema = ClientRedirectURLSchema()
     model = models.Comment
-
     @marshal_with(schema.post_fields)
     def post(self, user, client_id):
         client = models.Client.query.get(client_id)
@@ -1276,6 +1343,7 @@ api.add_resource(CourseRosterExport, COURSE_BASE + '/export/roster')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
 api.add_resource(CourseGrades, COURSE_BASE + '/grades')
 api.add_resource(CourseGradesExport, COURSE_BASE + '/export/grades')
+api.add_resource(StaffBackup, COURSE_BASE + '/staff/backups/')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
