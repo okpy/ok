@@ -33,9 +33,9 @@ import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-from server.jobs import (example, export, moss, scores_audit, github_search,
+from server.jobs import (assign_grading_queues, example, export, moss, scores_audit, github_search,
                          scores_notify, checkpoint, effort, upload_scores,
-                        export_grades)
+                         export_grades, )
 
 import server.highlight as highlight
 import server.utils as utils
@@ -907,26 +907,17 @@ def assign_grading(cid, aid):
         form.process()
 
     if form.validate_on_submit():
-        # TODO: Use worker job for this (this is query intensive)
-        selected_users = []
-        for hash_id in form.staff.data:
-            user = User.get_by_id(utils.decode_id(hash_id))
-            if user and user.is_enrolled(cid, roles=STAFF_ROLES):
-                selected_users.append(user)
-
-        # Available backups
-        data = assign.course_submissions()
-        backups = set(b['backup']['id'] for b in data if b['backup'])
-        students = set(b['user']['id'] for b in data if b['backup'])
-
-        tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
-                                               form.kind.data)
-
-        num_with_submissions = len(students)
-        flash(("Created {0} tasks ({1} students) for {2} staff."
-               .format(len(tasks), num_with_submissions, len(selected_users))),
-              "success")
-        return redirect(url_for('.assignment', cid=cid, aid=aid))
+        job = jobs.enqueue_job(
+            assign_grading_queues.assign_grading_queues,
+            description="Assign Grading Queues for {}".format(assign.name),
+            timeout=2 * 60 * 60,  # 1 hour
+            course_id=cid,
+            # params
+            assignment_id=assign.id,
+            staff=form.staff.data,
+            kind=form.kind.data,
+        )
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
     # Return template with options for who has to grade.
     return render_template('staff/grading/assign_tasks.html',
