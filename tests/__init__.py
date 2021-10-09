@@ -67,6 +67,7 @@ class OkTestCase(TestCase):
         * 2 staff members (self.staff1, self.staff2) as TAs
         * 1 lab assistant (self.lab_assistant1) as lab assistants
         * 1 Admin (okadmin@okpy.org)
+        * 1 export access token named 'test'
         """
         self.admin = User(email='okadmin@okpy.org', is_admin=True)
         db.session.add(self.admin)
@@ -75,7 +76,9 @@ class OkTestCase(TestCase):
         self.course = Course(
             offering='cal/cs61a/sp16',
             institution='UC Berkeley',
-            display_name='CS 61A')
+            display_name='CS 61A',
+            export_access_token='test',
+            export_access_token_active=True)
         self.assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
             creator_id=self.admin.id,

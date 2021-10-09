@@ -15,6 +15,7 @@ class Config(DevBaseConfig, BaseConfig):
 
     APPINSIGHTS_INSTRUMENTATIONKEY = ''
 
+    PRESERVE_CONTEXT_ON_EXCEPTION = False
     @classmethod
     def get_default_db_url(cls):
         return os.getenv('SQLALCHEMY_URL', 'sqlite:///../oktest.db')
