@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+spec:
+  domains:
+    - okpy.org
+metadata:
+  name: managed-cert-2
+
