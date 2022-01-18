@@ -25,7 +25,7 @@ import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with, inputs
 from flask_restful.representations.json import output_json
 
-from server import models, utils
+from server import forms, models, utils
 from server.autograder import submit_continuous
 from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 from server.controllers import files
@@ -353,6 +353,19 @@ class CourseAssignmentSchema(APISchema):
 class CourseEnrollmentSchema(APISchema):
     get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
                   for role in VALID_ROLES}
+
+    put_fields = {
+        'new': fields.Integer,
+        'updated': fields.Integer,
+    }
+
+class CourseSingleEnrollmentSchema(APISchema):
+    get_fields = {
+        'user': fields.Nested(UserSchema.simple_fields),
+        'role': fields.String,
+        'class_account': fields.String,
+        'section': fields.String,
+    }
 
 class CourseRosterSchema(APISchema):
     get_fields = {
@@ -867,10 +880,11 @@ class Enrollment(Resource):
 
 class CourseEnrollment(Resource):
     """ Information about all people in a course
-        Authenticated. Permissions: >= User or admins
+        Authenticated. Permissions: >= Staff or admins
         Used by: Export Scripts
     """
     model = models.Course
+    model2 = models.Enrollment
     schema = CourseEnrollmentSchema()
 
     @marshal_with(schema.get_fields)
@@ -886,6 +900,65 @@ class CourseEnrollment(Resource):
         for p in course.participations:
             data[p.role].append(p.user)
         return data
+
+    @marshal_with(schema.put_fields)
+    def put(self, offering, user):
+        course = self.model.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        if not self.model.can(course, user, 'staff'):
+            restful.abort(403)
+        batch_form = forms.BatchEnrollmentForm(meta={'csrf': False})
+        print(request.json)
+        batch_form.csv.data = request.json.get('csv')
+        batch_form.role.data = request.json.get('role')
+        batch_form.replace.data = request.json.get('replace', '')
+        if not batch_form.validate():
+            restful.abort(400, message='Form validation failed', data=batch_form.errors)
+        new, updated = self.model2.enroll_from_csv(course.id, batch_form)
+        return {
+            'new': new,
+            'updated': updated,
+        }
+
+class CourseSingleEnrollment(Resource):
+    """ Information about one person in a course
+        Authenticated. Permissions: >= Staff or admins
+    """
+    model1 = models.Course
+    model2 = models.Enrollment
+    schema = CourseSingleEnrollmentSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering, email, user):
+        course = self.model1.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        if not self.model1.can(course, user, 'staff'):
+            restful.abort(403)
+        target = models.User.lookup(email)
+        if target is None:
+            restful.abort(404)
+        enrollment = target.is_enrolled(course.id)
+        if not enrollment:
+            restful.abort(404)
+        target = enrollment.user # lazy-load
+        return enrollment
+
+    def delete(self, offering, email, user):
+        course = self.model1.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        if not self.model1.can(course, user, 'staff'):
+            restful.abort(403)
+        target = models.User.lookup(email)
+        if target is None:
+            restful.abort(404)
+        enrollment = target.is_enrolled(course.id)
+        if not enrollment:
+            restful.abort(404)
+        enrollment.unenroll()
+        return {}
 
 def course_roster_helper(course):
     query = (models.Enrollment.query.options(models.db.joinedload('user'))
@@ -1271,6 +1344,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 # Course Info
 COURSE_BASE = '/v3/course/<offering:offering>'
 api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
+api.add_resource(CourseSingleEnrollment, COURSE_BASE + '/enrollment/<string:email>')
 api.add_resource(CourseRoster, COURSE_BASE + '/roster')
 api.add_resource(CourseRosterExport, COURSE_BASE + '/export/roster')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
