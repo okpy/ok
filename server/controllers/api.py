@@ -887,6 +887,25 @@ class CourseEnrollment(Resource):
             data[p.role].append(p.user)
         return data
 
+class CourseEnrollmentExport(TokenResource):
+    """ Information about all people in a course
+        Authenticated. Permissions: Export Token
+    """
+    model = models.Course
+    schema = CourseEnrollmentSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering):
+        course = self.model.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        data = {}
+        for role in VALID_ROLES:
+            data[role] = []
+        for p in course.participations:
+            data[p.role].append(p.user)
+        return data
+
 def course_roster_helper(course):
     query = (models.Enrollment.query.options(models.db.joinedload('user'))
                     .filter_by(course_id=course.id)
@@ -1001,7 +1020,7 @@ class CourseGrades(Resource):
     """
     schema = CourseGradesSchema()
     model = models.Course
-    
+
     @marshal_with(schema.get_fields)
     def get(self, offering, user):
         if offering is None:
@@ -1271,6 +1290,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 # Course Info
 COURSE_BASE = '/v3/course/<offering:offering>'
 api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
+api.add_resource(CourseEnrollmentExport, COURSE_BASE + '/export/enrollment')
 api.add_resource(CourseRoster, COURSE_BASE + '/roster')
 api.add_resource(CourseRosterExport, COURSE_BASE + '/export/roster')
 api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
