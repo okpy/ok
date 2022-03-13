@@ -201,7 +201,7 @@
                       <th>Submitter</th>
                       <th>ID</th>
                       <th>Scores</th>
-                      <th>Action</th>
+                      <th>Actions</th>
                       <th>Flag</th>
                     </thead>
                     <tbody>
@@ -231,6 +231,11 @@
                               <a href="{{ url_for('.grading', bid=item.id, diff='short') }}" class="btn btn-primary btn-flat">
                                   Grade
                               </a>
+                              {% call forms.render_form_bare(csrf_form, action_url=url_for('.delete_backup', bid=item.id), class_='') %}
+                                <button class="btn btn-danger btn-flat"  type="submit" value="remove">
+                                    Delete
+                                </button>
+                              {% endcall %}
                             </div>
                             </td>
                             <td>
