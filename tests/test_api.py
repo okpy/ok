@@ -781,3 +781,69 @@ class TestApi(OkTestCase):
         endpoint = '/api/v3/course/cal/cs61a/sp16/roster'
         response = self.client.get(endpoint)
         self.assert_200(response)
+
+    def test_export_token_submit(self, submit=True, delay=10, success=True, export_token='test'):
+        self.setup_course()
+
+        email = self.user1.email
+        course = self.course
+        assignment = self.assignment
+        user = User.lookup(email)
+        endpoint = f'/api/v3/course/{course.offering}/staff/backups/?export_token={export_token}&email={email}'
+
+        # Offset the due date & lock_dates
+        assignment.due_date = assignment.due_date + dt.timedelta(hours=delay)
+        assignment.lock_date = assignment.lock_date + dt.timedelta(days=delay)
+
+        okversion = Version(name="ok-client", current_version="v1.5.0",
+                         download_link="http://localhost/ok")
+
+        db.session.add(okversion)
+        db.session.commit()
+
+        data = {
+            'assignment': assignment.name,
+            'messages': {
+                'file_contents': {
+                    "hog.py": "def add(x, y): pass"
+                }
+            },
+            'submit': True,
+        }
+        response = self.client.post(endpoint,
+                                    data=json.dumps(data),
+                                    headers=[('Content-Type', 'application/json')])
+
+        backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+
+        assert backup is not None
+
+        if success or not submit:
+            assert response.json['data'] == {
+                'email': email,
+                'key': encode_id(backup.id),
+                'course': {
+                    'id': course.id,
+                    'offering': course.offering,
+                    'display_name': course.display_name,
+                    'active': course.active,
+                    'timezone': 'America/Los_Angeles'
+                },
+                'assignment': assignment.name
+            }
+            self.assert_200(response)
+
+        if not success:
+            self.assert_403(response)
+            submit = False
+            assert response.json['data'] == {
+                'data': {
+                    'backup': True,
+                    'late': True
+                }
+            }
+
+        assert backup.assignment == assignment
+        assert backup.submitter_id == user.id
+        assert len(backup.messages) == len(data['messages'])
+        assert backup.submit == submit
