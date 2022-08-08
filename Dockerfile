@@ -1,4 +1,4 @@
-FROM python:3.5-alpine
+FROM python:3.8-alpine
 
 RUN apk add --update \
     supervisor \
@@ -23,6 +23,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
 
 ADD . .
+
+RUN mkdir /etc/nginx/conf.d
 
 RUN mv docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
     mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf && \
