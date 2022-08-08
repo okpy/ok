@@ -5,6 +5,7 @@ Docs: http://selenium-python.readthedocs.io/getting-started.html
 import datetime
 import json
 import os
+import re
 import signal
 import time
 import urllib.parse
@@ -380,6 +381,29 @@ if driver:
             self.page_load(self.get_server_url() + "/admin/grading/" + bid)
             self.driver.find_element_by_id('autograde-button').click()
             self.assertIn("Submitted to the autograder", self.driver.page_source)
+
+        def test_assignment_send_backup_to_ag(self):
+            self._login(role="admin")
+            self.assignment.autograding_key = "test" # Autograder will respond with 200
+            models.db.session.commit()
+
+            # find a backup
+            backup = models.Backup(
+                submitter_id=self.user1.id,
+                assignment=self.assignment,
+            )
+            models.db.session.add(backup)
+            models.db.session.commit()
+
+            bid = utils.encode_id(backup.id)
+            bid_word = utils.encode_word_id(backup.id)
+            self.page_load(self.get_server_url() + "/admin/grading/" + bid)
+            content = self.driver.page_source
+            self.page_load(self.get_server_url() + "/admin/grading_get_word/" + bid)
+            extract_word = [x.group(1) for x in re.finditer("word = '(.*)'", self.driver.page_source)]
+            self.assertEqual([bid_word], extract_word)
+            self.page_load(self.get_server_url() + "/admin/grading_word/" + bid_word)
+            self.assertEqual(content, self.driver.page_source)
 
         def test_admin_enrollment(self):
             self._login(role="admin")
