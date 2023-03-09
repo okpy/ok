@@ -574,6 +574,23 @@ def assignment(cid, aid):
                            form=form, courses=courses, autograder_url=current_course.autograder_url,
                            current_course=current_course)
 
+@admin.route("/course/<int:cid>/assignments", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_assignment(cid):
+    assign = Assignment.query.filter_by(id=request.args.get("aid"), course_id=cid).one_or_none()
+    if not assign:
+        return abort(404)
+    if not Assignment.can(assign, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        Backup.query.filter_by(assignment=assign).delete()
+        db.session.delete(assign)
+        db.session.commit()   
+        flash("Successfully deleted assignment", "success")
+        return redirect(url_for('.course_assignments', cid=cid))
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
 @is_staff(course_arg='cid')
 def assignment_stats(cid, aid):
