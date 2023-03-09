@@ -584,7 +584,7 @@ def assignment_stats(cid, aid):
         return abort(401)
 
     stats = Assignment.assignment_stats(assign.id)
-
+    
     submissions = [d for d in stats.pop('raw_data')]
 
     pie_chart = pygal.Pie(half_pie=True, disable_xml_declaration=True,
@@ -1312,7 +1312,7 @@ def enrollment(cid):
     students = current_course.get_students()
     staff = current_course.get_staff()
     lab_assistants = current_course.get_participants([LAB_ASSISTANT_ROLE])
-
+    
     return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
@@ -1436,6 +1436,28 @@ def client(client_id):
         flash(flash_msg, "success")
         return redirect(url_for(".clients"))
     return render_template('staff/edit_client.html', client=client, form=form, courses=courses)
+
+@admin.route("/course/<int:cid>/unenrolled", methods=['GET'])
+@is_staff(course_arg='cid')
+def unenrolled(cid):
+    courses, current_course = get_courses(cid)
+    
+    unenrolled_submitters = []
+    staff = set(s.user for s in current_course.get_staff())
+    lab_assistants = set(l.user for l in current_course.get_participants([LAB_ASSISTANT_ROLE]))
+    students = set(e.user for e in current_course.get_students())
+
+    submissions = Backup.query.join(Backup.assignment).filter(Assignment.course_id == cid).all()
+    submissions = set(User.query.get(b.submitter_id) for b in submissions)
+
+    for s in submissions:
+        if s not in students and s not in staff and s not in lab_assistants:
+            unenrolled_submitters.append(s)
+
+    return render_template('staff/course/enrollment/enrollment.unenrolled.html',
+                            current_course=current_course,
+                            unenrolled_submitters=unenrolled_submitters,
+                            title="Submitter")
 
 ################
 # Student View #

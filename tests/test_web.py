@@ -388,6 +388,12 @@ if driver:
             self.assertTrue(self.course.offering in self.driver.page_source)
             self.assertTrue('Export Roster' in self.driver.page_source)
 
+        def test_admin_enrollment_unenrolled(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/unenrolled")
+            self.assertIn('Un-Enrolled', self.driver.title)
+            self.assertTrue(self.course.offering in self.driver.page_source)
+
         def test_admin_student_overview(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
