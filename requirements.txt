@@ -7,7 +7,7 @@ Flask==1.0.4
 Jinja2==2.10.1
 
 # WSGI Containers
-gunicorn==19.7.1
+gunicorn==19.9.0
 envdir==1.0.1
 
 # Errors
