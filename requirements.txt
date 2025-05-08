@@ -110,3 +110,6 @@ selenium==3.3.3
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
 
 Werkzeug==0.14.1
+
+# ensure compatibility
+MarkupSafe==2.0.1
