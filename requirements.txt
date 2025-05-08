@@ -7,7 +7,7 @@ Flask==1.0.4
 Jinja2==2.10.1
 
 # WSGI Containers
-gunicorn==19.7.1
+gunicorn==19.9.0
 envdir==1.0.1
 
 # Errors
@@ -15,7 +15,7 @@ raven[flask]==6.0.0
 
 # Database
 pymysql==0.8.0
-SQLAlchemy>=1.3.0
+SQLAlchemy==1.3.0
 
 # Caching
 redis==2.10.5
@@ -76,7 +76,7 @@ idna<2.9,>=2.5
 # Front end
 itsdangerous==0.24
 cssmin==0.2.0
-jsmin==2.2.1
+jsmin==3.0.1
 hashids==1.2.0
 pygments==2.2.0
 humanize==0.5.1
@@ -110,3 +110,6 @@ selenium==3.3.3
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
 
 Werkzeug==0.14.1
+
+# ensure compatibility
+MarkupSafe==2.0.1
