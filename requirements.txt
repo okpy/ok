@@ -76,7 +76,7 @@ idna<2.9,>=2.5
 # Front end
 itsdangerous==0.24
 cssmin==0.2.0
-jsmin==2.2.1
+jsmin==3.0.1
 hashids==1.2.0
 pygments==2.2.0
 humanize==0.5.1
