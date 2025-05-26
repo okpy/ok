@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\server",
+    "\\server\\controllers",
+    "\\server\\templates",
+    "\\server\\templates\\staff",
+    "\\server\\templates\\staff\\course",
+    "\\server\\templates\\staff\\course\\assignment",
+    "\\server\\templates\\student",
+    "\\server\\templates\\student\\assignment"
+  ],
+  "SelectedNode": "\\server\\controllers\\admin.py",
+  "PreviewInSolutionExplorer": false
+}
