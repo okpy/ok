@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 from urllib.parse import urlparse, urljoin
 from functools import lru_cache
 
+import base64
 import bleach
 from flask import render_template, url_for, Markup
 from hashids import Hashids
@@ -19,6 +20,8 @@ import pytz
 import requests
 import sendgrid
 import sendgrid.helpers.mail as sg_helpers
+
+from word_identifiers import words_to_id, id_to_words
 
 from server import constants
 
@@ -40,6 +43,44 @@ def decode_id(value):
         raise ValueError('Could not decode hash {0} into ID'.format(value))
     return numbers[0]
 
+base62_forward = {}
+base62_forward.update({i : chr(ord("0") + i) for i in range(10)})
+base62_forward.update({i + 10 : chr(ord("A") + i) for i in range(26)})
+base62_forward.update({i + 36 : chr(ord("a") + i) for i in range(26)})
+base62_backward = {c : i for i, c in base62_forward.items()}
+
+def hashid_to_int_direct(value):
+    """
+    direct translation of hashid --> int in 1-padded base 62, without hashing.
+    """
+    result = 1
+    for c in value:
+        result *= 62
+        result += base62_backward[c]
+    return result
+
+def int_to_hashid_direct(number):
+    """
+    direct translation of int --> hashid in 1-padded base 62, without hashing.
+    """
+    result = []
+    while number > 0:
+        result.append(base62_forward[number % 62])
+        number //= 62
+    result.reverse()
+    if result.pop(0) != "1":
+        raise ValueError("Invalid number in 1-padded base 62")
+    return "".join(result)
+
+def encode_word_id(id_number):
+    hashid = encode_id(id_number)
+    integer_id = hashid_to_int_direct(hashid)
+    return "-".join(id_to_words(integer_id))
+
+def decode_word_id(word_id):
+    integer_id = words_to_id(word_id.split("-"))
+    hashid = int_to_hashid_direct(integer_id)
+    return decode_id(hashid)
 
 def convert_markdown(text):
     # https://pythonadventures.wordpress.com/tag/markdown/

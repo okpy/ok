@@ -25,6 +25,16 @@ class HashidConverter(BaseConverter):
     def to_url(self, value):
         return utils.encode_id(value)
 
+class WordidConverter(BaseConverter):
+    def to_python(self, value):
+        try:
+            return utils.decode_word_id(value)
+        except (TypeError, ValueError) as e:
+            raise ValidationError(str(e))
+
+    def to_url(self, value):
+        return utils.encode_word_id(value)
+
 name_part = '[^/]+'
 
 # TODO: Move the regexes to constants.py
@@ -46,5 +56,6 @@ class AssignmentNameConverter(BaseConverter):
 def init_app(app):
     app.url_map.converters['bool'] = BoolConverter
     app.url_map.converters['hashid'] = HashidConverter
+    app.url_map.converters['wordid'] = WordidConverter
     app.url_map.converters['offering'] = OfferingConverter
     app.url_map.converters['assignment_name'] = AssignmentNameConverter

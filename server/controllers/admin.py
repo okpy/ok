@@ -205,6 +205,18 @@ def grading(bid):
 
     return grading_view(backup, form=form)
 
+@admin.route('/grading_word/<wordid:bid>')
+@is_staff()
+def grading_wordid(bid):
+    return grading(bid)
+
+
+@admin.route('/grading_get_word/<hashid:bid>')
+@is_staff()
+def grading_get_wordid(bid):
+    return "word = {!r}".format(utils.encode_word_id(bid))
+
+
 @admin.route('/composition/<hashid:bid>')
 @is_staff()
 def composition(bid):
