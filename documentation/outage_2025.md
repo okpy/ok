@@ -21,8 +21,7 @@ OSError: [Errno 95] Not supported"
 1. We have GKE autoupgrade enabled, and the node OS base image underwent a minor upgrade on 5/2.
 2. This new image no longer supports the socket option `SO_REUSEPORT`
 3. Based on the [this issue](https://github.com/amazonlinux/amazon-linux-2023/issues/901), Gunicorn 19.7.1 does not correctly detect this; `hasattr(socket, 'SO_REUSEPORT')` incorrectly returns `True`, so Gunicorn will attempt to use a socket that doesn't exist. An uncaught `OSError` then occurs.
-4. Left: Gunicorn 19.7.1, Right: Gunicorn 19.8.0+. We see that newer versions have the check `if self.conf.reuse_port`, which prevents Gunicorn from trying to use the socket unless explicitly instructed to do so (which this codebase doesn't).
-![Alt text](image.png)
+4. Based on snippets from Gunicorn [19.7.1](https://github.com/benoitc/gunicorn/blob/19.7.1/gunicorn/sock.py#L42) and Gunicorn [19.8.0+](https://github.com/benoitc/gunicorn/blob/19.8.0/gunicorn/sock.py#L42-L43), We see that newer versions have the check `if self.conf.reuse_port`, which prevents Gunicorn from trying to use the socket unless explicitly instructed to do so (which this codebase doesn't).
 
 ### Fix
 - Gunicorn: 19.7.1 -> 19.8.0, Python: 3.5 -> 3.7
