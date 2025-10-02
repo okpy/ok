@@ -1893,7 +1893,8 @@ def staff_group_add(cid, email, aid):
         return abort(404)
 
     if form.validate_on_submit():
-        target = User.lookup(form.email.data)
+        clean_email = form.email.data.strip() if isinstance(form.email.data, str) else form.email.data # <-- Added
+        target = User.lookup(clean_email)
         if not target or not target.is_enrolled(cid):
             flash("This user is not enrolled", 'warning')
             return redirect(result_page)

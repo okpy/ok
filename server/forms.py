@@ -561,8 +561,11 @@ class ExtensionForm(SubmissionTimeForm):
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
 
-    email = EmailField('Email',
-                       validators=[validators.required(), validators.email()])
+    email = EmailField(
+        'Email',
+        filters=[strip_whitespace],  # <-- Added
+        validators=[validators.required(), validators.email()]
+    )
 
 class StaffRemoveGroupFrom(BaseForm):
     email = SelectField('Email',
