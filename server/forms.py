@@ -563,7 +563,7 @@ class StaffAddGroupFrom(BaseForm):
 
     email = EmailField(
         'Email',
-        filters=[strip_whitespace],  # <-- Added
+        filters=[strip_whitespace],
         validators=[validators.required(), validators.email()]
     )
 

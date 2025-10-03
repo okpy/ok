@@ -4,7 +4,7 @@ from tests import OkTestCase
 class TestStaffGroupAddTrim(OkTestCase):
     def setUp(self):
         super().setUp()
-        self.setup_course()  # generates course, assignment, user1/user2/staff1
+        self.setup_course()
 
     def test_add_member_with_whitespace_email(self):
         self.login(self.staff1.email)
