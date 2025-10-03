@@ -28,38 +28,23 @@ def file_download(file_id, user):
 
     if storage_obj is None:
         abort(404, "File does not exist")
-
     basename = os.path.basename(ext_file.filename)
-
-    def ensure_charset(mtype: str) -> str:
-        if not mtype:
-            return "application/octet-stream"
-        lower = mtype.lower()
-        if "charset=" in lower:
-            return mtype
-        if lower.startswith("text/") or lower in ("application/json", "image/svg+xml"):
-            return mtype + "; charset=utf-8"
-        return mtype
-
-    mtype_with_charset = ensure_charset(ext_file.mimetype)
-
+    # Do not use .download_url for local storage.
     if storage.provider == libcloud.storage.types.Provider.LOCAL:
-        response = Response(
-            storage.get_object_stream(storage_obj),
-            content_type=mtype_with_charset
-        )
+        response = Response(storage.get_object_stream(storage_obj),
+                            mimetype=ext_file.mimetype)
         response.headers["Content-Security-Policy"] = "default-src 'none';"
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Content-Disposition"] = "attachment; filename={0!s}".format(basename)
-        response.headers["Content-Type"] = mtype_with_charset
+        response.headers["Content-Disposition"] = ("attachment; filename={0!s}"
+                                                   .format(basename))
         return response
     else:
         postpend = '&'
         if request.args.get('raw'):
-            postpend += urlencode({'response-content-type': mtype_with_charset})
+            postpend += urlencode({'response-content-type': ext_file.mimetype})
         elif request.args.get('download'):
             postpend += urlencode({'response-content-disposition': 'attachment',
-                                   'filename': basename})
+                                  'filename': basename})
         url = storage.get_blob_url(storage_obj.name)
         return redirect(url + postpend)
 
