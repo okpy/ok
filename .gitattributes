@@ -1,0 +1,4 @@
+# Scripts copied into the Docker image must keep LF line endings,
+# otherwise "#!/bin/sh\r" fails with "not found" inside the container.
+*.sh text eol=lf
+docker/wait-for text eol=lf

@@ -1,10 +1,10 @@
-version: '2'
-
 services:
 
   web:
     image: cs61a/ok-server
     build: ..
+    # Always build from this checkout; never pull the published image.
+    pull_policy: build
     restart: always
     ports:
       - 8080:5000
