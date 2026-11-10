@@ -2,3 +2,4 @@
 # otherwise "#!/bin/sh\r" fails with "not found" inside the container.
 *.sh text eol=lf
 docker/wait-for text eol=lf
+manage.py text eol=lf
