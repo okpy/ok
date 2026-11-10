@@ -24,7 +24,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 
 ADD . .
 
-RUN mv docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
+RUN mkdir -p /etc/nginx/conf.d && \
+    mv docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
     mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf && \
     mv docker/supervisor.conf /etc/supervisor.conf && \
     mv docker/wait-for /wait-for
